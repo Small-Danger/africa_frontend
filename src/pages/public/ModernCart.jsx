@@ -524,7 +524,7 @@ const ModernCart = () => {
                       <div className="flex items-start space-x-3 sm:space-x-4">
                         {/* Image du produit - Cliquable */}
                         <Link 
-                          to={`/product/${item.product_id}`}
+                          to={`/products/${item.product_id}`}
                           className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 hover:opacity-80 transition-opacity"
                         >
                           <img
@@ -537,7 +537,7 @@ const ModernCart = () => {
                         {/* Informations du produit */}
                         <div className="flex-1 min-w-0">
                           <Link 
-                            to={`/product/${item.product_id}`}
+                            to={`/products/${item.product_id}`}
                             className="text-base sm:text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
                           >
                             {item.product?.name || 'Nom du produit'}
