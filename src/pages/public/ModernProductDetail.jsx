@@ -135,44 +135,8 @@ const ModernProductDetail = () => {
         }
       }, 10000); // 10 secondes max
       
-      // Vérifier le cache de session d'abord
-      const sessionCacheKey = `${SESSION_CACHE_KEY}_${id}`;
-      
-      try {
-        // Vérifier le cache du produit
-        const sessionCached = sessionStorage.getItem(sessionCacheKey);
-        if (sessionCached) {
-          const { data, timestamp } = JSON.parse(sessionCached);
-          if (Date.now() - timestamp < SESSION_CACHE_TTL) {
-            if (isMounted) {
-              setProduct(data);
-              setLoading(false);
-              clearTimeout(timeoutId);
-            }
-            
-            // Charger les catégories en arrière-plan
-            loadCategoriesInBackground();
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn('Erreur lors de la lecture du cache de session du produit:', error);
-      }
-      
-      // Vérifier le cache mémoire
-      const cacheKey = `product_${id}`;
-      const cached = productCacheRef.current.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5 minutes
-        if (isMounted) {
-          setProduct(cached.data);
-          setLoading(false);
-          clearTimeout(timeoutId);
-        }
-        
-        // Charger les catégories en arrière-plan
-        loadCategoriesInBackground();
-        return;
-      }
+      // Cache désactivé - chargement direct depuis l'API
+      console.log('🔄 Chargement direct du produit depuis l\'API (cache désactivé)');
 
       // Annuler la requête précédente
       if (abortControllerRef.current) {
@@ -213,22 +177,8 @@ const ModernProductDetail = () => {
             }
           }
           
-          // Mettre en cache de session
-          try {
-            const sessionData = {
-              data: productData,
-              timestamp: Date.now()
-            };
-            sessionStorage.setItem(sessionCacheKey, JSON.stringify(sessionData));
-          } catch (error) {
-            console.warn('Erreur lors de la sauvegarde du cache de session du produit:', error);
-          }
-          
-          // Mettre en cache mémoire
-          productCacheRef.current.set(cacheKey, {
-            data: productData,
-            timestamp: Date.now()
-          });
+          // Cache désactivé - pas de sauvegarde
+          console.log('💾 Cache désactivé - produit non sauvegardé');
           
           console.log('✅ Produit chargé avec succès');
         } else {

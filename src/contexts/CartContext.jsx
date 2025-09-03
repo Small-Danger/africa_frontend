@@ -5,12 +5,18 @@ const CartContext = createContext()
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM':
-      const existingItem = state.items.find(item => item.id === action.payload.id)
+      // Chercher un article existant avec le même product_id et variant_id
+      const existingItem = state.items.find(item => 
+        item.product_id === action.payload.product_id && 
+        item.variant_id === action.payload.variant_id
+      )
+      
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
-            item.id === action.payload.id
+            item.product_id === action.payload.product_id && 
+            item.variant_id === action.payload.variant_id
               ? { ...item, quantity: item.quantity + action.payload.quantity }
               : item
           )
