@@ -522,20 +522,26 @@ const ModernCart = () => {
                   item && item.id ? (
                     <div key={item.id} className="p-4 sm:p-6">
                       <div className="flex items-start space-x-3 sm:space-x-4">
-                        {/* Image du produit */}
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                        {/* Image du produit - Cliquable */}
+                        <Link 
+                          to={`/product/${item.product_id}`}
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 hover:opacity-80 transition-opacity"
+                        >
                           <img
                             src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
                             alt={item.product?.name || 'Produit'}
                             className="w-full h-full object-cover"
                           />
-                        </div>
+                        </Link>
 
                         {/* Informations du produit */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1">
+                          <Link 
+                            to={`/product/${item.product_id}`}
+                            className="text-base sm:text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                          >
                             {item.product?.name || 'Nom du produit'}
-                          </h3>
+                          </Link>
                           <p className="text-xs sm:text-sm text-gray-600 mb-2">
                             Variante: {item.variant?.name || 'Standard'}
                           </p>
