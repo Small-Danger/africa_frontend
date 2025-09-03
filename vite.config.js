@@ -12,5 +12,19 @@ export default defineConfig({
     port: 5173, // Port par défaut
     strictPort: true, // Utilise strictement ce port
     open: false // N'ouvre pas automatiquement le navigateur
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: 4173
   }
 })
