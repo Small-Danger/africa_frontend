@@ -1,8 +1,8 @@
 import { API_CONFIG } from '../config/api';
 
-// Cache simple pour les requêtes API
+// Cache désactivé temporairement
 const apiCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 0; // Cache désactivé
 
 // Configuration de l'API
 const API_BASE_URL = API_CONFIG.BASE_URL;
@@ -21,14 +21,8 @@ class ApiError extends Error {
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  // Vérifier le cache pour les requêtes GET
-  if (options.method === 'GET' || !options.method) {
-    const cacheKey = `${endpoint}_${JSON.stringify(options)}`;
-    const cached = apiCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
-    }
-  }
+  // Cache désactivé - pas de vérification
+  console.log('🔄 Requête directe à l\'API (cache désactivé)');
   
   // Configuration par défaut
   const defaultOptions = {
@@ -74,14 +68,8 @@ async function apiRequest(endpoint, options = {}) {
       );
     }
 
-    // Mettre en cache les requêtes GET réussies
-    if (options.method === 'GET' || !options.method) {
-      const cacheKey = `${endpoint}_${JSON.stringify(options)}`;
-      apiCache.set(cacheKey, {
-        data,
-        timestamp: Date.now()
-      });
-    }
+    // Cache désactivé - pas de sauvegarde
+    console.log('💾 Cache désactivé - réponse non sauvegardée');
 
     return data;
   } catch (error) {

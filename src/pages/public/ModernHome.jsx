@@ -38,13 +38,13 @@ const ModernHome = () => {
   // Hook pour récupérer les bannières
   const { banners, loading: bannersLoading, error: bannersError, refresh: refreshBanners } = useBanners();
   
-  // Cache pour éviter les requêtes redondantes
+  // Cache désactivé temporairement
   const dataCacheRef = useRef(new Map());
   const abortControllerRef = useRef(null);
   
-  // Cache persistant de session
+  // Cache persistant de session - DÉSACTIVÉ
   const SESSION_CACHE_KEY = 'bs_shop_home_cache';
-  const SESSION_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 heures
+  const SESSION_CACHE_TTL = 0; // Cache désactivé
   
   // Nettoyer le cache expiré au chargement
   useEffect(() => {
@@ -104,33 +104,8 @@ const ModernHome = () => {
     let isMounted = true;
 
     const loadData = async () => {
-      // Vérifier le cache de session d'abord
-      try {
-        const sessionCached = sessionStorage.getItem(SESSION_CACHE_KEY);
-        if (sessionCached) {
-          const { data, timestamp } = JSON.parse(sessionCached);
-          if (Date.now() - timestamp < SESSION_CACHE_TTL) {
-            setCategories(data.categories);
-            setAllProducts(data.products);
-            setPopularProducts(data.popularProducts);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn('Erreur lors de la lecture du cache de session:', error);
-      }
-
-      // Vérifier le cache mémoire
-      const cacheKey = 'home_data';
-      const cached = dataCacheRef.current.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < 3 * 60 * 1000) { // 3 minutes
-        setCategories(cached.data.categories);
-        setAllProducts(cached.data.products);
-        setPopularProducts(cached.data.popularProducts);
-        setLoading(false);
-        return;
-      }
+      // Cache désactivé - chargement direct depuis l'API
+      console.log('🔄 Chargement direct depuis l\'API (cache désactivé)');
 
       // Annuler la requête précédente
       if (abortControllerRef.current) {
@@ -178,30 +153,8 @@ const ModernHome = () => {
             .slice(0, 8);
           setPopularProducts(popular);
           
-          // Mettre en cache de session
-          try {
-            const sessionData = {
-              data: {
-                categories: categoriesRes.success ? categoriesRes.data.categories || [] : [],
-                products,
-                popularProducts: popular
-              },
-              timestamp: Date.now()
-            };
-            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessionData));
-          } catch (error) {
-            console.warn('Erreur lors de la sauvegarde du cache de session:', error);
-          }
-
-          // Mettre en cache mémoire
-          dataCacheRef.current.set(cacheKey, {
-            data: {
-              categories: categoriesRes.success ? categoriesRes.data.categories || [] : [],
-              products,
-              popularProducts: popular
-            },
-            timestamp: Date.now()
-          });
+          // Cache désactivé - pas de sauvegarde
+          console.log('💾 Cache désactivé - données non sauvegardées');
         } else {
           console.error('❌ Erreur produits:', productsRes);
           setError('Erreur lors du chargement des produits: ' + (productsRes.message || 'Erreur inconnue'));

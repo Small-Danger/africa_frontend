@@ -10,15 +10,15 @@ const ModernCatalog = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Cache pour éviter les requêtes redondantes
+  // Cache désactivé temporairement
   const cacheRef = useRef(new Map());
   const abortControllerRef = useRef(null);
   
-  // Cache persistant de session
+  // Cache persistant de session - DÉSACTIVÉ
   const SESSION_CACHE_KEY_CATEGORIES = 'bs_shop_categories_cache';
   const SESSION_CACHE_KEY_PRODUCTS = 'bs_shop_products_cache';
-  const SESSION_CACHE_TTL_CATEGORIES = 2 * 60 * 60 * 1000; // 2 heures
-  const SESSION_CACHE_TTL_PRODUCTS = 60 * 60 * 1000; // 1 heure
+  const SESSION_CACHE_TTL_CATEGORIES = 0; // Cache désactivé
+  const SESSION_CACHE_TTL_PRODUCTS = 0; // Cache désactivé
 
   // Charger les catégories depuis l'API avec cache
   useEffect(() => {

@@ -8,9 +8,9 @@ const useBanners = () => {
   // Configuration de l'API
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
   
-  // Configuration du cache
+  // Configuration du cache - DÉSACTIVÉ
   const CACHE_KEY = 'bs_shop_banners_cache';
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  const CACHE_TTL = 0; // Cache désactivé
 
   // Récupérer les bannières depuis le cache
   const getCachedBanners = useCallback(() => {
@@ -51,16 +51,8 @@ const useBanners = () => {
   // Récupérer les bannières actives
   const fetchBanners = useCallback(async (forceRefresh = false) => {
     try {
-      // Vérifier le cache d'abord (sauf si force refresh)
-      if (!forceRefresh) {
-        const cachedBanners = getCachedBanners();
-        if (cachedBanners) {
-          setBanners(cachedBanners);
-          setLoading(false);
-          setError(null);
-          return cachedBanners;
-        }
-      }
+      // Cache désactivé - chargement direct depuis l'API
+      console.log('🔄 Chargement direct des bannières depuis l\'API (cache désactivé)');
 
       setLoading(true);
       setError(null);
@@ -86,10 +78,8 @@ const useBanners = () => {
           const sortedBanners = data.data.sort((a, b) => a.position - b.position);
           setBanners(sortedBanners);
           
-          // Sauvegarder dans le cache
-          setCachedBanners(sortedBanners);
-          
-          console.log('✅ Bannières chargées et mises en cache:', sortedBanners.length);
+          // Cache désactivé - pas de sauvegarde
+          console.log('✅ Bannières chargées (cache désactivé):', sortedBanners.length);
           return sortedBanners;
         } else {
           setBanners([]);
