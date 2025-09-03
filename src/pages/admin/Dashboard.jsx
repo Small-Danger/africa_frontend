@@ -138,7 +138,7 @@ const Dashboard = () => {
         
         // Test de connexion API simple d'abord
         try {
-          const testResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api'}/test`);
+          const testResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api'}/banners`);
           if (testResponse.ok) {
             const testData = await testResponse.json();
             console.log('✅ Test API réussi:', testData);

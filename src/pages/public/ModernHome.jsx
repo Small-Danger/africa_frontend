@@ -81,7 +81,7 @@ const ModernHome = () => {
       setApiStatus('testing');
               // Utiliser l'IP locale pour le test sur téléphone
         const apiUrl = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
-      const response = await fetch(`${apiUrl}/test`);
+      const response = await fetch(`${apiUrl}/banners`);
       if (response.ok) {
         const data = await response.json();
         console.log('✅ API connectée:', data);

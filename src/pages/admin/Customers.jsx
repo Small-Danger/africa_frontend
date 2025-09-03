@@ -749,7 +749,7 @@ const Customers = () => {
     try {
       setApiError(null);
       console.log('Test de connexion au backend...');
-      const response = await fetch(`${API_BASE_URL}/test`);
+      const response = await fetch(`${API_BASE_URL}/banners`);
       console.log('Réponse test:', response.status, response.statusText);
       
       if (response.ok) {

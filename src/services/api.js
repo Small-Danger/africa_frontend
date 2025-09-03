@@ -640,7 +640,7 @@ export const suggestionService = {
 export const testService = {
   // Test général de l'API
   async testApi() {
-    return await apiRequest('/test');
+    return await apiRequest('/banners');
   },
 
   // Test du système d'authentification
