@@ -61,7 +61,7 @@ const Banners = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Configuration de l'API
-  const API_BASE_URL = 'http://192.168.11.180:8000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
   const token = localStorage.getItem('auth_token');
   
   // Headers pour les requêtes API

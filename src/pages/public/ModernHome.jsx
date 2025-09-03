@@ -80,7 +80,7 @@ const ModernHome = () => {
     try {
       setApiStatus('testing');
               // Utiliser l'IP locale pour le test sur téléphone
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://192.168.11.180:8000/api';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
       const response = await fetch(`${apiUrl}/test`);
       if (response.ok) {
         const data = await response.json();
@@ -146,7 +146,7 @@ const ModernHome = () => {
         const isConnected = await testApiConnection();
         if (!isConnected) {
           if (isMounted) {
-            setError('Impossible de se connecter à l\'API. Vérifiez que le backend est démarré sur http://192.168.11.180:8000');
+            setError('Impossible de se connecter à l\'API. Vérifiez que le backend est démarré.');
             setLoading(false);
           }
           return;

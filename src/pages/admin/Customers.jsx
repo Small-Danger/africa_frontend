@@ -85,7 +85,7 @@ const Customers = () => {
   const [notification, setNotification] = useState(null);
 
   // Configuration de l'API
-  const API_BASE_URL = 'http://192.168.11.180:8000/api'; // URL du serveur backend
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api'; // URL du serveur backend
   const token = localStorage.getItem('auth_token');
   
   // Vérifier si le token existe
@@ -861,7 +861,7 @@ const Customers = () => {
       
       let errorMessage = 'Impossible de se connecter en tant qu\'admin';
       if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré sur http://192.168.11.180:8000';
+        errorMessage = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.';
       } else if (error.message.includes('401')) {
         errorMessage = 'Identifiants admin incorrects ou admin non trouvé';
       } else if (error.message.includes('404')) {

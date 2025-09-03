@@ -115,7 +115,7 @@ const Dashboard = () => {
 
         // Vérifier si le token est valide en testant l'endpoint /auth/me
         try {
-          const authResponse = await fetch('http://192.168.11.180:8000/api/auth/me', {
+          const authResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api'}/auth/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Accept': 'application/json'
@@ -138,7 +138,7 @@ const Dashboard = () => {
         
         // Test de connexion API simple d'abord
         try {
-          const testResponse = await fetch('http://192.168.11.180:8000/api/test');
+          const testResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api'}/test`);
           if (testResponse.ok) {
             const testData = await testResponse.json();
             console.log('✅ Test API réussi:', testData);
