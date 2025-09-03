@@ -3,7 +3,7 @@ export const API_CONFIG = {
   // URL de base de l'API (peut être surchargée par les variables d'environnement)
   // Pour tester sur téléphone, remplacez localhost par l'IP de votre ordinateur
   // Exemple: 'http://192.168.11.180:8000/api'
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://192.168.11.180:8000/api',
+  BASE_URL: import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api',
   
   // Timeout des requêtes (en millisecondes)
   TIMEOUT: 30000,
