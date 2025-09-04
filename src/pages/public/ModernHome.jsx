@@ -16,6 +16,7 @@ import { categoryService, productService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
 import SimpleBannerCarousel from '../../components/SimpleBannerCarousel';
 import useBanners from '../../hooks/useBanners';
+import { ShimmerTextVariants } from '../../components/ShimmerText';
 
 const ModernHome = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -302,17 +303,7 @@ const ModernHome = () => {
 
   // Affichage du chargement
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-12 h-12 border-3 border-gray-200 rounded-full animate-spin"></div>
-            <div className="absolute top-0 left-0 w-12 h-12 border-3 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-600 mt-4 text-sm">Chargement...</p>
-        </div>
-      </div>
-    );
+    return <ShimmerTextVariants.PageLoader subtitle="Chargement des produits..." />;
   }
 
   // Affichage de l'erreur

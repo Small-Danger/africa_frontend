@@ -14,6 +14,7 @@ import {
 import { productService, categoryService, cartService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 import ProductSuggestions from '../../components/ProductSuggestions';
+import { ShimmerTextVariants } from '../../components/ShimmerText';
 
 const ModernProductDetail = () => {
   const { id } = useParams();
@@ -468,53 +469,7 @@ const ModernProductDetail = () => {
 
   // Affichage du chargement optimisé
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Contenu de chargement */}
-        <div className="px-3 sm:px-4 py-4">
-          {/* Image de chargement */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden mb-4 sm:mb-6">
-            <div className="h-80 sm:h-96 lg:h-[28rem] bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
-                  <div className="w-8 h-8 bg-gray-300 rounded"></div>
-                </div>
-                <div className="h-4 bg-gray-300 rounded w-32 mx-auto animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Informations de chargement */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-            {/* Titre */}
-            <div className="mb-4 sm:mb-6">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-            </div>
-
-            {/* Prix */}
-            <div className="mb-4 sm:mb-6">
-              <div className="h-8 bg-gray-200 rounded w-32 animate-pulse"></div>
-            </div>
-
-            {/* Description */}
-            <div className="mb-4 sm:mb-6">
-              <div className="h-4 bg-gray-200 rounded w-20 mb-2 animate-pulse"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded w-4/6 animate-pulse"></div>
-              </div>
-            </div>
-
-            {/* Bouton */}
-            <div className="mb-4 sm:mb-6">
-              <div className="h-12 bg-gray-200 rounded-lg w-full animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <ShimmerTextVariants.PageLoader subtitle="Chargement du produit..." />;
   }
 
   // Fonction pour recharger les données

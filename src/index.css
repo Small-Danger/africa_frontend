@@ -50,6 +50,16 @@
   }
 }
 
+/* Animation shimmer pour le texte de chargement */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* Classes d'animation */
 .animate-blob {
   animation: blob 7s infinite;
@@ -73,6 +83,10 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
 }
 
 /* Transitions fluides pour tous les éléments */

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { categoryService, productService } from '../../services/api';
+import { ShimmerTextVariants } from '../../components/ShimmerText';
 
 const ModernCatalog = () => {
   const { categorySlug, subcategorySlug } = useParams();
@@ -200,18 +201,7 @@ const ModernCatalog = () => {
 
   // Affichage du chargement
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-700 mt-6 mb-2">Chargement en cours...</h2>
-          <p className="text-gray-500">Veuillez patienter</p>
-        </div>
-      </div>
-    );
+    return <ShimmerTextVariants.PageLoader subtitle="Chargement du catalogue..." />;
   }
 
   // Affichage de l'erreur
