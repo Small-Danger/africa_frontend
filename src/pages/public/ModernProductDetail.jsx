@@ -604,8 +604,10 @@ const ModernProductDetail = () => {
         </div>
       </div>
 
-      {/* Carousel d'images moderne - Optimisé mobile avec meilleure qualité */}
-      <div className="relative bg-white mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
+      {/* Container principal avec max-width */}
+      <div className="max-w-7xl mx-auto">
+        {/* Carousel d'images moderne - Optimisé mobile avec meilleure qualité */}
+        <div className="relative bg-white mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
         <div className="relative h-80 sm:h-96 lg:h-[28rem] overflow-hidden">
           {productImages.length > 0 ? (
             <img
@@ -876,10 +878,13 @@ const ModernProductDetail = () => {
           )}
         </div>
       </div>
+      </div>
 
-      {/* Section suggestions d'articles similaires */}
+      {/* Section suggestions d'articles similaires - Style Amazon/Shein moderne */}
       <div className="px-3 sm:px-4 pb-4 sm:pb-6">
-        <ProductSuggestions productId={id} cartSessionId={cartSessionId} />
+        <div className="max-w-7xl mx-auto">
+          <ProductSuggestions productId={id} cartSessionId={cartSessionId} />
+        </div>
       </div>
 
       {/* Styles CSS modernes - Utilisation de Tailwind CSS */}
