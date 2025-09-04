@@ -268,9 +268,10 @@ const ModernCatalog = () => {
                               loading="lazy"
                               onError={(e) => {
                                 e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          </div>
                         ) : null}
                         
                         {/* Fallback avec icône si pas d'image - Amélioré */}
@@ -298,7 +299,6 @@ const ModernCatalog = () => {
                         </div>
                       </div>
                       
-                      {/* Contenu de la catégorie */}
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
@@ -453,12 +453,13 @@ const ModernCatalog = () => {
                             imageRendering: 'high-quality',
                             WebkitImageRendering: 'high-quality'
                           }}
-                        loading="eager"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
+                          loading="eager"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      </div>
                     ) : null}
                     
                     {/* Fallback amélioré */}
@@ -518,11 +519,12 @@ const ModernCatalog = () => {
                                       WebkitImageRendering: 'high-quality'
                                     }}
                                     loading="lazy"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                  }}
-                                />
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                </div>
                               ) : null}
                               
                               {/* Fallback amélioré */}
