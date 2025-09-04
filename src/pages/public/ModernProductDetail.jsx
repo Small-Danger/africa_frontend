@@ -774,7 +774,7 @@ const ModernProductDetail = () => {
             <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{safeGet(product, 'description', 'Aucune description disponible')}</p>
           </div>
 
-          {/* Sélection de variante - Optimisée mobile */}
+          {/* Sélection de variante - Design moderne amélioré */}
           {(() => {
             try {
               const variants = safeGet(product, 'variants', []);
@@ -784,24 +784,98 @@ const ModernProductDetail = () => {
               
               if (validVariants.length > 1) {
                 return (
-                  <div className="mb-4 sm:mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Choisir une variante</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                      {validVariants.map((variant) => (
+                  <div className="mb-6 sm:mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-gray-900 text-lg sm:text-xl">Choisir une variante</h3>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{validVariants.length} option{validVariants.length > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {validVariants.map((variant, index) => (
                         <button
                           key={variant.id || `variant-${Math.random()}`}
                           onClick={() => setSelectedVariant(variant)}
-                          className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all ${
+                          className={`group relative p-4 sm:p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                             selectedVariant?.id === variant.id
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                              ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 shadow-lg ring-2 ring-blue-200'
+                              : 'border-gray-200 hover:border-blue-300 text-gray-700 bg-white hover:bg-gray-50 shadow-sm hover:shadow-md'
                           }`}
                         >
+                          {/* Indicateur de sélection */}
+                          {selectedVariant?.id === variant.id && (
+                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          
                           <div className="text-center">
-                            <div className="font-medium text-sm sm:text-base">{variant.name || 'Variante'}</div>
+                            {/* Icône de variante */}
+                            <div className={`w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center transition-all duration-300 ${
+                              selectedVariant?.id === variant.id
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+                            }`}>
+                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                              </svg>
+                            </div>
+                            
+                            {/* Nom de la variante */}
+                            <div className="font-semibold text-sm sm:text-base mb-1">
+                              {variant.name || 'Variante'}
+                            </div>
+                            
+                            {/* Prix de la variante */}
+                            {variant.price && (
+                              <div className={`text-sm font-bold ${
+                                selectedVariant?.id === variant.id
+                                  ? 'text-blue-600'
+                                  : 'text-gray-600'
+                              }`}>
+                                {formatPrice(variant.price)}
+                              </div>
+                            )}
+                            
+                            {/* Badge de stock */}
+                            <div className="mt-2">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                selectedVariant?.id === variant.id
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                <div className={`w-2 h-2 rounded-full mr-1 ${
+                                  selectedVariant?.id === variant.id
+                                    ? 'bg-blue-500'
+                                    : 'bg-gray-400'
+                                }`}></div>
+                                En stock
+                              </span>
+                            </div>
                           </div>
+                          
+                          {/* Effet de survol */}
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/10 group-hover:to-blue-500/5 transition-all duration-300"></div>
                         </button>
                       ))}
+                    </div>
+                    
+                    {/* Message d'aide */}
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-start space-x-2">
+                        <svg className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm text-blue-700">
+                          <span className="font-medium">Astuce :</span> Sélectionnez la variante qui vous convient le mieux. Le prix et les détails se mettront à jour automatiquement.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
