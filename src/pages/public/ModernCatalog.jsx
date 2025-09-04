@@ -254,19 +254,20 @@ const ModernCatalog = () => {
                   >
                     <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu animate-fade-in-up">
                       {/* Image de la catégorie - Optimisée */}
-                      <div className="h-56 bg-gradient-to-br from-blue-50 to-indigo-100 relative overflow-hidden">
+                      <div className="h-56 bg-gray-50 relative overflow-hidden flex items-center justify-center">
                         {category.image_main ? (
-                          <img
-                            src={category.image_main}
-                            alt={category.name}
-                            className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                            style={{
-                              imageRendering: 'high-quality',
-                              WebkitImageRendering: 'high-quality'
-                            }}
-                            loading="lazy"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
+                          <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                            <img
+                              src={category.image_main}
+                              alt={category.name}
+                              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
+                              style={{
+                                imageRendering: 'high-quality',
+                                WebkitImageRendering: 'high-quality'
+                              }}
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
                               e.target.nextSibling.style.display = 'flex';
                             }}
                           />
@@ -441,16 +442,17 @@ const ModernCatalog = () => {
               <div>
                 {/* Header de la catégorie avec image - Optimisé */}
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8 animate-fade-in-up">
-                  <div className="h-64 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 relative overflow-hidden">
+                  <div className="h-64 bg-gray-50 relative overflow-hidden flex items-center justify-center">
                     {currentCategory.image_main ? (
-                      <img
-                        src={currentCategory.image_main}
-                        alt={currentCategory.name}
-                        className="w-full h-full object-cover object-center"
-                        style={{
-                          imageRendering: 'high-quality',
-                          WebkitImageRendering: 'high-quality'
-                        }}
+                      <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                        <img
+                          src={currentCategory.image_main}
+                          alt={currentCategory.name}
+                          className="w-full h-full object-cover object-center rounded-lg"
+                          style={{
+                            imageRendering: 'high-quality',
+                            WebkitImageRendering: 'high-quality'
+                          }}
                         loading="eager"
                         onError={(e) => {
                           e.target.style.display = 'none';
@@ -504,17 +506,18 @@ const ModernCatalog = () => {
                         >
                           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu animate-fade-in-up">
                             {/* Image de la sous-catégorie - Optimisée */}
-                            <div className="h-40 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 relative overflow-hidden">
+                            <div className="h-40 bg-gray-50 relative overflow-hidden flex items-center justify-center">
                               {subcategory.image_main ? (
-                                <img
-                                  src={subcategory.image_main}
-                                  alt={subcategory.name}
-                                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                                  style={{
-                                    imageRendering: 'high-quality',
-                                    WebkitImageRendering: 'high-quality'
-                                  }}
-                                  loading="lazy"
+                                <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                                  <img
+                                    src={subcategory.image_main}
+                                    alt={subcategory.name}
+                                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
+                                    style={{
+                                      imageRendering: 'high-quality',
+                                      WebkitImageRendering: 'high-quality'
+                                    }}
+                                    loading="lazy"
                                   onError={(e) => {
                                     e.target.style.display = 'none';
                                     e.target.nextSibling.style.display = 'flex';
@@ -599,23 +602,25 @@ const ModernCatalog = () => {
                           className="block group"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up">
+                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up h-96 flex flex-col">
                             {/* Image du produit - Optimisée */}
-                            <div className="h-52 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                              <img
-                                src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                                alt={product.name}
-                                className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                                style={{
-                                  imageRendering: 'high-quality',
-                                  WebkitImageRendering: 'high-quality'
-                                }}
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.nextSibling.style.display = 'flex';
-                                }}
-                              />
+                            <div className="h-64 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
+                              <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                                <img
+                                  src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
+                                  style={{
+                                    imageRendering: 'high-quality',
+                                    WebkitImageRendering: 'high-quality'
+                                  }}
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              </div>
                               
                               {/* Image de fallback pour les produits */}
                               <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
@@ -641,7 +646,7 @@ const ModernCatalog = () => {
                             </div>
                             
                             {/* Contenu du produit - Avec prix */}
-                            <div className="p-5">
+                            <div className="p-5 flex-1 flex flex-col justify-between">
                               <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
                                 {product.name}
                               </h3>
