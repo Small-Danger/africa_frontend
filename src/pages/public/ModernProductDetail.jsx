@@ -611,7 +611,7 @@ const ModernProductDetail = () => {
             <img
               src={productImages[currentImageIndex]}
               alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
+              className="w-full h-full object-contain object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
               style={{
                 imageRendering: 'high-quality',
                 WebkitImageRendering: 'high-quality',
@@ -697,7 +697,7 @@ const ModernProductDetail = () => {
                   <img
                     src={image}
                     alt={`${safeGet(product, 'name', 'Produit')} - Miniature ${index + 1}`}
-                    className="w-full h-20 sm:h-20 lg:h-24 object-cover object-center group-hover:scale-110 transition-transform duration-200"
+                    className="w-full h-20 sm:h-20 lg:h-24 object-contain object-center group-hover:scale-110 transition-transform duration-200"
                     style={{
                       imageRendering: 'high-quality',
                       WebkitImageRendering: 'high-quality',

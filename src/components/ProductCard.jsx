@@ -96,13 +96,13 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
       to={`/products/${product.id}`}
       className={`group block ${className}`}
     >
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 h-80 flex flex-col">
         {/* Image du produit */}
-        <div className="relative h-48 overflow-hidden">
+        <div className="relative h-48 overflow-hidden bg-gray-50 flex items-center justify-center flex-shrink-0">
           <img
             src={productImage}
             alt={productName}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               console.error('Erreur de chargement image:', productImage);
               e.target.src = 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop';
@@ -128,7 +128,7 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
         </div>
 
         {/* Informations du produit */}
-        <div className="p-4">
+        <div className="p-4 flex-1 flex flex-col justify-between">
           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             {productName}
           </h3>

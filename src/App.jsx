@@ -23,7 +23,6 @@ import Banners from './pages/admin/Banners'
 import { CartProvider } from './contexts/CartContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
-import WhatsAppButton from './components/WhatsAppButton'
 
 function App() {
   return (
@@ -190,7 +189,6 @@ function App() {
                 </ProtectedRoute>
               } />
             </Routes>
-            <WhatsAppButton />
           </Router>
         </CartProvider>
       </AuthProvider>

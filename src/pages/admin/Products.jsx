@@ -782,10 +782,10 @@ const Products = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 p-4 sm:p-6">
                 {filteredAndSortedProducts.map((product) => (
                   <div key={product.id} className="group bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-200 overflow-hidden">
-                    <div className="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                    <div className="aspect-square bg-gray-50 flex items-center justify-center">
                       {product.image_main && product.image_main !== null ? (
                         <img
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                           src={product.image_main}
                           alt={product.name}
                           onError={(e) => {

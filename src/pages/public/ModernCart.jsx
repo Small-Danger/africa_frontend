@@ -525,12 +525,12 @@ const ModernCart = () => {
                         {/* Image du produit - Cliquable */}
                         <Link 
                           to={`/products/${item.product_id}`}
-                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 hover:opacity-80 transition-opacity"
+                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-80 transition-opacity flex items-center justify-center"
                         >
                           <img
                             src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
                             alt={item.product?.name || 'Produit'}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </Link>
 
