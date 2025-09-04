@@ -599,13 +599,13 @@ const ModernCatalog = () => {
                           className="block group"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up h-96 flex flex-col">
+                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up">
                             {/* Image du produit - Optimisée */}
-                            <div className="h-52 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
+                            <div className="h-52 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
                               <img
                                 src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
                                 alt={product.name}
-                                className="max-w-full max-h-full object-contain object-center group-hover:scale-105 transition-transform duration-700 ease-out"
+                                className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
                                 style={{
                                   imageRendering: 'high-quality',
                                   WebkitImageRendering: 'high-quality'
@@ -641,7 +641,7 @@ const ModernCatalog = () => {
                             </div>
                             
                             {/* Contenu du produit - Avec prix */}
-                            <div className="p-5 flex-1 flex flex-col justify-between">
+                            <div className="p-5">
                               <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
                                 {product.name}
                               </h3>
