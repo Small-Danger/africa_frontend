@@ -580,7 +580,7 @@ const ModernProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Notification de succès */}
       {showSuccess && <SuccessNotification />}
 

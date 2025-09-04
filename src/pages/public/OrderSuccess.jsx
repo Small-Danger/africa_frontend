@@ -93,7 +93,7 @@ const OrderSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 pb-20">
       {/* Header - Optimisé mobile */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100 px-3 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">

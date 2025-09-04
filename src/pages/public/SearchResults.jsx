@@ -106,7 +106,7 @@ const SearchResults = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header de recherche */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 py-6">

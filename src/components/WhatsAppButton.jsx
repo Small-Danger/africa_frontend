@@ -12,13 +12,13 @@ const WhatsAppButton = () => {
   return (
     <button
       onClick={openWhatsApp}
-      className="fixed bottom-20 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 z-50 group"
+      className="fixed top-1/2 right-4 transform -translate-y-1/2 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 z-50 group"
       title="Contacter le support WhatsApp"
     >
       <MessageCircle size={24} />
       
       {/* Tooltip */}
-      <span className="absolute right-16 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+      <span className="absolute right-16 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white text-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
         Besoin d'aide ? Contactez-nous !
       </span>
       

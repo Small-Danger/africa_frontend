@@ -339,7 +339,7 @@ const ModernHome = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pb-20">
 
       {/* Hero Section Moderne - Réorganisé */}
       <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">

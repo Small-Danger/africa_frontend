@@ -365,7 +365,7 @@ const UserProfile = () => {
   const stats = getOrderStats();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header moderne avec gradient */}
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
         <div className="px-4 py-6">
