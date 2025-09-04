@@ -297,7 +297,6 @@ const ModernCatalog = () => {
                           <span className="text-sm font-semibold text-blue-600">Explorer</span>
                         </div>
                       </div>
-                    </div>
                       
                       {/* Contenu de la catégorie */}
                       <div className="p-6">
