@@ -417,27 +417,51 @@ const ModernHome = () => {
                   className="w-1/2 flex-shrink-0 px-2 py-4"
                   style={{ transform: `translateX(-${currentCategorySlide * 100}%)` }}
                 >
-                  <Link to={`/catalog/${category.slug}`} className="group block">
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
-                      <div className="relative h-32 overflow-hidden">
-                        <img
-                          src={category.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=300&fit=crop'}
-                          alt={category.name}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-bold text-gray-900 mb-2">{category.name}</h3>
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">{category.description}</p>
-                        {category.subcategories && category.subcategories.length > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-blue-600 font-medium">
-                              {category.subcategories.length} sous-catégorie{category.subcategories.length > 1 ? 's' : ''}
-                            </span>
-                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <Link to={`/catalog/${category.slug}`} className="group block h-full">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 h-full flex flex-col">
+                      {/* Image de la catégorie - Hauteur fixe */}
+                      <div className="relative h-32 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {category.image_main ? (
+                          <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                            <img
+                              src={category.image_main}
+                              alt={category.name}
+                              className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-110 rounded-lg"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+                            <div className="text-center">
+                              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                                <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                              </div>
+                              <span className="text-blue-600 font-medium text-xs">Catégorie</span>
+                            </div>
                           </div>
                         )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                      </div>
+                      
+                      {/* Contenu de la catégorie - Flex pour occuper l'espace restant */}
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-bold text-gray-900 mb-2 line-clamp-1">{category.name}</h3>
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-2">{category.description}</p>
+                        </div>
+                        
+                        {/* Footer avec sous-catégories */}
+                        <div className="mt-auto">
+                          {category.subcategories && category.subcategories.length > 0 && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-blue-600 font-medium">
+                                {category.subcategories.length} sous-catégorie{category.subcategories.length > 1 ? 's' : ''}
+                              </span>
+                              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Link>

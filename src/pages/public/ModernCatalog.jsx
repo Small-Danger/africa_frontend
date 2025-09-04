@@ -605,27 +605,29 @@ const ModernCatalog = () => {
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up h-96 flex flex-col">
-                            {/* Image du produit - Optimisée */}
+                            {/* Image du produit - Hauteur fixe et optimisée */}
                             <div className="h-64 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
-                              <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                                <img
-                                  src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                                  alt={product.name}
-                                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
-                                  style={{
-                                    imageRendering: 'high-quality',
-                                    WebkitImageRendering: 'high-quality'
-                                  }}
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                  }}
-                                />
-                              </div>
+                              {product.image_main ? (
+                                <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                                  <img
+                                    src={product.image_main}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
+                                    style={{
+                                      imageRendering: 'high-quality',
+                                      WebkitImageRendering: 'high-quality'
+                                    }}
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                </div>
+                              ) : null}
                               
                               {/* Image de fallback pour les produits */}
-                              <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
+                              <div className={`w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center ${product.image_main ? 'hidden' : 'flex'}`}>
                                 <div className="text-center">
                                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
                                     <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -638,7 +640,7 @@ const ModernCatalog = () => {
                               
                               {/* Badge de prix flottant - Toujours visible */}
                               <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
-                                <span className="text-sm sm:text-base font-bold text-blue-600">
+                                <span className="text-sm font-bold text-blue-600">
                                   {Math.round(Number(product.base_price || 0))} FCFA
                                 </span>
                               </div>
@@ -647,21 +649,29 @@ const ModernCatalog = () => {
                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                             
-                            {/* Contenu du produit - Avec prix */}
-                            <div className="p-5 flex-1 flex flex-col justify-between">
-                              <h3 className="font-bold text-gray-900 text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
-                                {product.name}
-                              </h3>
+                            {/* Contenu du produit - Structure fixe pour éviter les coupures */}
+                            <div className="p-4 flex-1 flex flex-col">
+                              {/* Titre - Hauteur fixe */}
+                              <div className="mb-3 h-12 flex items-start">
+                                <h3 className="font-bold text-gray-900 text-base line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
+                                  {product.name}
+                                </h3>
+                              </div>
                               
-                              {product.description && (
-                                <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{product.description}</p>
-                              )}
+                              {/* Description - Hauteur fixe */}
+                              <div className="mb-4 h-10 flex items-start">
+                                {product.description ? (
+                                  <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{product.description}</p>
+                                ) : (
+                                  <div className="h-full"></div>
+                                )}
+                              </div>
                               
-                              {/* Prix principal */}
-                              <div className="mb-4">
-                                <div className="flex items-center justify-between">
+                              {/* Prix - Toujours visible en bas */}
+                              <div className="mt-auto">
+                                <div className="flex items-center justify-between mb-3">
                                   <div>
-                                    <span className="text-2xl font-bold text-blue-600">
+                                    <span className="text-xl font-bold text-blue-600">
                                       {Math.round(Number(product.base_price || 0))} FCFA
                                     </span>
                                   </div>
@@ -671,11 +681,12 @@ const ModernCatalog = () => {
                                     </svg>
                                   </div>
                                 </div>
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Voir détails</span>
-                                <span className="text-xs text-gray-400">Cliquez pour voir</span>
+                                
+                                {/* Footer avec CTA */}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Voir détails</span>
+                                  <span className="text-xs text-gray-400">Cliquez pour voir</span>
+                                </div>
                               </div>
                             </div>
                           </div>
