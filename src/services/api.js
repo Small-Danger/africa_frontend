@@ -61,6 +61,18 @@ async function apiRequest(endpoint, options = {}) {
 
     // Gérer les erreurs HTTP
     if (!response.ok) {
+      // Gérer les erreurs d'authentification
+      if (response.status === 401) {
+        console.warn('🔒 Token expiré, déconnexion automatique');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        
+        // Rediriger vers la page de connexion seulement si on n'y est pas déjà
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+      
       throw new ApiError(
         data.message || 'Erreur de requête',
         response.status,

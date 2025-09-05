@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon, EyeSlashIcon, CubeIcon } from '@heroicons/react/24/outline';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -6,6 +6,7 @@ import Badge from '../ui/Badge';
 import { variantService } from '../../services/api';
 
 const VariantManager = ({ product, onClose, onUpdate }) => {
+  const mountedRef = useRef(true);
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -25,6 +26,10 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
     if (product) {
       loadVariants();
     }
+    
+    return () => {
+      mountedRef.current = false;
+    };
   }, [product]);
 
   const loadVariants = async () => {
@@ -50,16 +55,25 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
         const finalVariants = Array.isArray(variantsData) ? variantsData : [];
         console.log('🎯 Variantes finales à définir:', finalVariants);
         
-        setVariants(finalVariants);
+        // Vérifier que le composant est encore monté avant de mettre à jour l'état
+        if (mountedRef.current) {
+          setVariants(finalVariants);
+        }
       } else {
         console.warn('⚠️ Réponse API non réussie:', response);
-        setVariants([]);
+        if (mountedRef.current) {
+          setVariants([]);
+        }
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement des variantes:', error);
-      setVariants([]);
+      if (mountedRef.current) {
+        setVariants([]);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -123,10 +137,10 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
       
       if (response.success) {
         console.log('✅ Variante sauvegardée avec succès');
-        await loadVariants();
-        if (onUpdate) onUpdate();
         resetForm();
         setShowForm(false);
+        await loadVariants();
+        if (onUpdate) onUpdate();
       } else {
         console.error('❌ Échec de la sauvegarde:', response);
         if (response.errors) {

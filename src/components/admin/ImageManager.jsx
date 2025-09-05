@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PhotoIcon, VideoCameraIcon, TrashIcon, CameraIcon } from '@heroicons/react/24/outline';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -6,6 +6,7 @@ import { imageService, productService } from '../../services/api';
 import { API_CONFIG } from '../../config/api';
 
 const ImageManager = ({ product, onClose, onUpdate }) => {
+  const mountedRef = useRef(true);
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,10 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
     if (product) {
       loadProductMedia();
     }
+    
+    return () => {
+      mountedRef.current = false;
+    };
   }, [product]);
 
   const loadProductMedia = async () => {
@@ -36,13 +41,17 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
         console.log('🖼️ Images finales:', imagesData);
         console.log('🎥 Vidéos finales:', videosData);
         
-        setImages(imagesData);
-        setVideos(videosData);
+        if (mountedRef.current) {
+          setImages(imagesData);
+          setVideos(videosData);
+        }
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement des médias:', error);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
