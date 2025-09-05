@@ -122,13 +122,17 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
       console.log('✅ Réponse sauvegarde:', response);
       
       if (response.success) {
+        console.log('✅ Variante sauvegardée avec succès');
         await loadVariants();
-        onUpdate();
+        if (onUpdate) onUpdate();
         resetForm();
+        setShowForm(false);
       } else {
         console.error('❌ Échec de la sauvegarde:', response);
         if (response.errors) {
           setFormErrors(response.errors);
+        } else {
+          setFormErrors({ general: [response.message || 'Une erreur est survenue'] });
         }
       }
     } catch (error) {
@@ -136,7 +140,9 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
       if (error.response?.data?.errors) {
         setFormErrors(error.response.data.errors);
       } else {
-        setFormErrors({ general: ['Une erreur est survenue lors de la sauvegarde'] });
+        setFormErrors({ 
+          general: [error.message || 'Une erreur est survenue lors de la sauvegarde'] 
+        });
       }
     } finally {
       setActionLoading(false);
@@ -185,15 +191,16 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
       console.log('✅ Réponse suppression:', response);
       
       if (response.success) {
+        console.log('✅ Variante supprimée avec succès');
         await loadVariants();
-        onUpdate();
+        if (onUpdate) onUpdate();
       } else {
         console.error('❌ Échec de la suppression:', response);
-        alert('Erreur lors de la suppression de la variante');
+        alert(response.message || 'Erreur lors de la suppression de la variante');
       }
     } catch (error) {
       console.error('❌ Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de la variante');
+      alert(error.message || 'Erreur lors de la suppression de la variante');
     } finally {
       setActionLoading(false);
     }

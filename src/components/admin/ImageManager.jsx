@@ -47,38 +47,40 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
   };
 
   const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    
     setUploading(true);
-    const newImages = [];
     
-    for (const file of files) {
-      try {
-        const base64 = await convertFileToBase64(file);
-        newImages.push({
-          data: base64,
-          alt_text: file.name,
-          title: file.name,
-          sort_order: images.length + newImages.length
-        });
-      } catch (error) {
-        console.error('Erreur conversion base64:', error);
+    try {
+      const formData = new FormData();
+      
+      // Ajouter chaque fichier au FormData
+      Array.from(files).forEach((file, index) => {
+        formData.append(`images[${index}]`, file);
+        formData.append(`alt_text[${index}]`, file.name);
+        formData.append(`title[${index}]`, file.name);
+        formData.append(`sort_order[${index}]`, (images.length + index).toString());
+      });
+      
+      console.log('📤 Upload des images:', files.length, 'fichiers');
+      
+      const response = await imageService.createImages(product.id, formData);
+      console.log('📡 Réponse upload:', response);
+      
+      if (response.success) {
+        console.log('✅ Images uploadées avec succès');
+        await loadProductMedia();
+        if (onUpdate) onUpdate();
+      } else {
+        console.error('❌ Échec de l\'upload:', response);
+        alert(response.message || 'Erreur lors de l\'upload des images');
       }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload:', error);
+      alert(error.message || 'Erreur lors de l\'upload des images');
+    } finally {
+      setUploading(false);
     }
-
-    if (newImages.length > 0) {
-      try {
-        const response = await productService.updateProduct(product.id, {
-          images: newImages
-        });
-        if (response.success) {
-          await loadProductMedia();
-          onUpdate();
-        }
-      } catch (error) {
-        console.error('Erreur upload images:', error);
-      }
-    }
-    
-    setUploading(false);
   };
 
   const convertFileToBase64 = (file) => {
@@ -154,14 +156,27 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
   };
 
   const deleteMedia = async (mediaId, mediaType) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette image ? Cette action est irréversible.')) {
+      return;
+    }
+    
     try {
-      const response = await imageService.deleteImage(mediaId);
+      console.log('🗑️ Suppression image:', mediaId);
+      
+      const response = await imageService.deleteImage(product.id, mediaId);
+      console.log('📡 Réponse suppression:', response);
+      
       if (response.success) {
+        console.log('✅ Image supprimée avec succès');
         await loadProductMedia();
-        onUpdate();
+        if (onUpdate) onUpdate();
+      } else {
+        console.error('❌ Échec de la suppression:', response);
+        alert(response.message || 'Erreur lors de la suppression de l\'image');
       }
     } catch (error) {
-      console.error('Erreur suppression média:', error);
+      console.error('❌ Erreur lors de la suppression:', error);
+      alert(error.message || 'Erreur lors de la suppression de l\'image');
     }
   };
 
