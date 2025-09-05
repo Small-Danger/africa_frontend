@@ -184,12 +184,6 @@ const ProductSuggestions = ({ productId, cartSessionId }) => {
                         </div>
                       </Link>
                       
-                      {/* Badge de prix flottant */}
-                      <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg">
-                        <span className="text-xs font-bold text-blue-600">
-                          {formatPrice(product.price)}
-                        </span>
-                      </div>
                       
                       {/* Overlay au survol */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

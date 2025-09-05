@@ -520,34 +520,47 @@ const ModernCart = () => {
               <div className="divide-y divide-gray-200">
                 {cartItems && Array.isArray(cartItems) && cartItems.map((item) => 
                   item && item.id ? (
-                    <div key={item.id} className="p-4 sm:p-6">
-                      <div className="flex items-start space-x-3 sm:space-x-4">
-                        {/* Image du produit - Cliquable */}
+                    <div key={item.id} className="p-4 sm:p-6 bg-white rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300 mb-4">
+                      <div className="flex items-start space-x-4">
+                        {/* Image du produit - Style moderne */}
                         <Link 
                           to={`/products/${item.product_id}`}
-                          className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100 hover:opacity-80 transition-opacity"
+                          className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
                         >
-                          <img
-                            src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                            alt={item.product?.name || 'Produit'}
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                            <img
+                              src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                              alt={item.product?.name || 'Produit'}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
+                            />
+                          </div>
                         </Link>
 
-                        {/* Informations du produit */}
+                        {/* Informations du produit - Style modernisé */}
                         <div className="flex-1 min-w-0">
                           <Link 
                             to={`/products/${item.product_id}`}
-                            className="text-base sm:text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                            className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2"
                           >
                             {item.product?.name || 'Nom du produit'}
                           </Link>
-                          <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                            Variante: {item.variant?.name || 'Standard'}
-                          </p>
-                          <p className="text-xs sm:text-sm text-gray-500 mb-3">
-                            Prix unitaire: {formatPrice(item.unit_price)} FCFA
-                          </p>
+                          
+                          {/* Variante avec badge moderne */}
+                          {item.variant?.name && (
+                            <div className="mt-2">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                {item.variant.name}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Prix principal - Style modernisé */}
+                          <div className="mt-3">
+                            <span className="text-xl font-bold text-blue-600">
+                              {formatPrice(item.unit_price)} FCFA
+                            </span>
+                            <span className="text-sm text-gray-500 ml-2">unité</span>
+                          </div>
                           
                           {/* Contrôles de quantité modernes */}
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">

@@ -608,23 +608,25 @@ const ModernProductDetail = () => {
       <div className="max-w-7xl mx-auto">
         {/* Carousel d'images moderne - Optimisé mobile avec meilleure qualité */}
         <div className="relative bg-white mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
-        <div className="relative h-80 sm:h-96 lg:h-[28rem] overflow-hidden">
+        <div className="relative h-80 sm:h-96 lg:h-[28rem] overflow-hidden bg-gray-50 flex items-center justify-center">
           {productImages.length > 0 ? (
-            <img
-              src={productImages[currentImageIndex]}
-              alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
-              style={{
-                imageRendering: 'high-quality',
-                WebkitImageRendering: 'high-quality',
-                filter: 'contrast(1.1) saturate(1.1)'
-              }}
-              loading="eager"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
+            <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+              <img
+                src={productImages[currentImageIndex]}
+                alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in rounded-lg"
+                style={{
+                  imageRendering: 'high-quality',
+                  WebkitImageRendering: 'high-quality',
+                  filter: 'contrast(1.1) saturate(1.1)'
+                }}
+                loading="eager"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            </div>
           ) : null}
           
           {/* Image de fallback améliorée */}
