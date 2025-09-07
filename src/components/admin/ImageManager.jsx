@@ -65,13 +65,19 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
       
       // Ajouter chaque fichier au FormData avec les bons noms de champs
       Array.from(files).forEach((file, index) => {
-        formData.append(`media_files[${index}]`, file);
-        formData.append(`alt_texts[${index}]`, file.name);
-        formData.append(`titles[${index}]`, file.name);
-        formData.append(`sort_orders[${index}]`, (images.length + index).toString());
+        formData.append(`media_files[]`, file);
+        formData.append(`alt_texts[]`, file.name);
+        formData.append(`titles[]`, file.name);
+        formData.append(`sort_orders[]`, (images.length + index).toString());
       });
       
       console.log('📤 Upload des images:', files.length, 'fichiers');
+      
+      // Debug FormData
+      console.log('📤 FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
       
       const response = await imageService.createImages(product.id, formData);
       console.log('📡 Réponse upload:', response);
@@ -154,8 +160,8 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
     }
     
     // Fallback : essayer de construire l'URL depuis l'API
-    if (image.id && image.id !== 'main') {
-      const fallbackUrl = `${API_CONFIG.BASE_URL}/storage/products/${image.id}`;
+    if (image.media_path) {
+      const fallbackUrl = `${API_CONFIG.BASE_URL}/storage/${image.media_path}`;
       console.log('⚠️ Fallback URL construite:', fallbackUrl);
       return fallbackUrl;
     }
