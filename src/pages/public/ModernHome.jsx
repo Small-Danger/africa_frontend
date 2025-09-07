@@ -628,9 +628,6 @@ const ModernHome = () => {
               <span>Appeler</span>
             </button>
           </div>
-          <p className="text-blue-100 text-xs mt-3">
-            {CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}
-          </p>
         </div>
       </div>
     </div>

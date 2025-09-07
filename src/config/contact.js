@@ -1,16 +1,16 @@
 // Configuration des informations de contact
 export const CONTACT_CONFIG = {
   // Numéro de téléphone principal (WhatsApp)
-  WHATSAPP_PHONE: '+22663126843',
+  WHATSAPP_PHONE: '+22663126849',
   
   // Numéro de téléphone formaté pour l'affichage
-  WHATSAPP_PHONE_DISPLAY: '+226 63 12 68 43',
+  WHATSAPP_PHONE_DISPLAY: '+226 63 12 68 49',
   
   // Numéro de téléphone pour les liens WhatsApp (sans +)
-  WHATSAPP_PHONE_LINK: '22663126843',
+  WHATSAPP_PHONE_LINK: '22663126849',
   
   // Format de numéro de téléphone pour les placeholders
-  PHONE_PLACEHOLDER: '+226 63 12 68 43',
+  PHONE_PLACEHOLDER: '+226 63 12 68 49',
   
   // Format de validation des numéros
   PHONE_FORMAT: '+226 ## ## ## ##',

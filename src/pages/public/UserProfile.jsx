@@ -33,6 +33,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { orderService, authService } from '../../services/api';
+import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 
 const UserProfile = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -213,7 +214,6 @@ const UserProfile = () => {
 
   // Fonction pour contacter le support WhatsApp
   const contactSupport = useCallback((type = 'general') => {
-    const supportNumber = '+22663126843';
     let message = '';
     
     switch (type) {
@@ -230,7 +230,7 @@ const UserProfile = () => {
         message = `Bonjour, j'ai besoin d'assistance pour BS Shop. `;
     }
     
-    const whatsappUrl = `https://wa.me/${supportNumber.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = generateWhatsAppLink(message);
     window.open(whatsappUrl, '_blank');
   }, []);
 
@@ -604,7 +604,7 @@ const UserProfile = () => {
                     <Phone size={16} className="text-green-600" />
                     <span className="text-sm font-medium text-green-900">Support WhatsApp</span>
                   </div>
-                  <p className="text-sm text-green-700 mt-1">+226 63 12 68 43</p>
+                  <p className="text-sm text-green-700 mt-1">{CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}</p>
                 </div>
               </div>
             </div>
@@ -897,7 +897,7 @@ const UserProfile = () => {
                         value={editForm.whatsapp_phone}
                         onChange={(e) => setEditForm(prev => ({ ...prev, whatsapp_phone: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+226 XX XX XX XX"
+                        placeholder={CONTACT_CONFIG.PHONE_PLACEHOLDER}
                       />
                       <div className="flex space-x-2">
                         <button
