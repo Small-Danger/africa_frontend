@@ -127,11 +127,10 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
   const getImageUrl = (image) => {
     console.log('=== DEBUG getImageUrl ===');
     console.log('Image reçue:', image);
-    console.log('Clés disponibles:', Object.keys(image));
     
-    // Priorité 1: media_path (URL complète de l'API)
-    if (image.media_path && image.media_path.startsWith('http')) {
-      console.log('✅ Utilisation media_path (URL complète):', image.media_path);
+    // Priorité 1: media_path (URL complète du backend)
+    if (image.media_path) {
+      console.log('✅ Utilisation media_path:', image.media_path);
       return image.media_path;
     }
     
@@ -149,21 +148,6 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
     if (image.image_url) {
       console.log('✅ Utilisation image_url:', image.image_url);
       return image.image_url;
-    }
-    if (image.path) {
-      console.log('✅ Utilisation path:', image.path);
-      return image.path;
-    }
-    if (image.src) {
-      console.log('✅ Utilisation src:', image.src);
-      return image.src;
-    }
-    
-    // Fallback : essayer de construire l'URL depuis l'API
-    if (image.media_path) {
-      const fallbackUrl = `${API_CONFIG.BASE_URL}/storage/${image.media_path}`;
-      console.log('⚠️ Fallback URL construite:', fallbackUrl);
-      return fallbackUrl;
     }
     
     console.warn('❌ Impossible de trouver l\'URL pour l\'image:', image);
