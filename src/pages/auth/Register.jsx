@@ -4,6 +4,7 @@ import { EyeIcon, EyeSlashIcon, LockClosedIcon, EnvelopeIcon, UserIcon, PhoneIco
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { orderService } from '../../services/api';
+import { CONTACT_CONFIG } from '../../config/contact';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -278,7 +279,7 @@ const Register = () => {
                       ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
                       : 'border-gray-200 focus:border-blue-500'
                   }`}
-                  placeholder="+33 1 23 45 67 89"
+                  placeholder={CONTACT_CONFIG.PHONE_PLACEHOLDER}
                   autoComplete="tel"
                 />
               </div>

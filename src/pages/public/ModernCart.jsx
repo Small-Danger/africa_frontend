@@ -5,6 +5,7 @@ import { cartService, orderService, authService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import CartSuggestions from '../../components/CartSuggestions';
+import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 
 const ModernCart = () => {
   const navigate = useNavigate();
@@ -878,7 +879,7 @@ const ModernCart = () => {
                   }
                   message += ` Pouvez-vous m'aider ?`;
                   
-                  const whatsappUrl = `https://wa.me/33600000000?text=${encodeURIComponent(message)}`;
+                  const whatsappUrl = generateWhatsAppLink(message);
                   window.open(whatsappUrl, '_blank');
                   closeWhatsAppModal();
                 }}

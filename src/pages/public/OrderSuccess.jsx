@@ -17,6 +17,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 import { authService } from '../../services/api';
 
 const OrderSuccess = () => {
@@ -72,7 +73,7 @@ const OrderSuccess = () => {
     }
     message += ` Je souhaite payer par Orange Money. Pouvez-vous m'aider ?`;
     
-    const whatsappUrl = `https://wa.me/33600000000?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = generateWhatsAppLink(message);
     window.open(whatsappUrl, '_blank');
   };
 
@@ -265,7 +266,7 @@ const OrderSuccess = () => {
                 <Phone size={16} className="sm:w-5 sm:h-5 text-gray-500" />
                 <span className="text-gray-600 text-sm sm:text-base">Support téléphonique</span>
               </div>
-              <span className="font-medium text-gray-900 text-sm sm:text-base">+33 6 00 00 00 00</span>
+              <span className="font-medium text-gray-900 text-sm sm:text-base">{CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg sm:rounded-xl">

@@ -4,6 +4,7 @@ import {
   cartService,
   orderService
 } from '../../services/api'
+import { CONTACT_CONFIG } from '../../config/contact'
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -319,7 +320,7 @@ const Checkout = () => {
                     value={formData.shipping_phone}
                     onChange={(e) => handleInputChange('shipping_phone', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="+33 6 12 34 56 78"
+                    placeholder={CONTACT_CONFIG.PHONE_PLACEHOLDER}
                   />
                 </div>
               </div>

@@ -10,13 +10,16 @@ import {
   Play,
   Pause,
   ShoppingCart,
-  Heart
+  Heart,
+  MessageCircle,
+  Phone
 } from 'lucide-react';
 import { categoryService, productService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
 import SimpleBannerCarousel from '../../components/SimpleBannerCarousel';
 import useBanners from '../../hooks/useBanners';
 import { ShimmerTextVariants } from '../../components/ShimmerText';
+import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 
 const ModernHome = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -300,6 +303,17 @@ const ModernHome = () => {
       console.error('Erreur lors du rafraîchissement:', error);
     }
   }, [refreshBanners]);
+
+  // Fonctions de contact
+  const handleWhatsAppContact = useCallback(() => {
+    const message = "Bonjour ! J'aimerais avoir des informations sur vos produits. Pouvez-vous m'aider ?";
+    const whatsappUrl = generateWhatsAppLink(message);
+    window.open(whatsappUrl, '_blank');
+  }, []);
+
+  const handlePhoneCall = useCallback(() => {
+    window.open(`tel:${CONTACT_CONFIG.WHATSAPP_PHONE}`, '_self');
+  }, []);
 
   // Affichage du chargement
   if (loading) {
@@ -591,7 +605,7 @@ const ModernHome = () => {
         </div>
       )}
 
-      {/* Section CTA */}
+      {/* Section CTA - Besoin d'aide */}
       <div className="px-4 py-6">
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-center text-white">
           <h3 className="text-lg font-bold mb-2">Besoin d'aide ?</h3>
@@ -599,13 +613,24 @@ const ModernHome = () => {
             Notre équipe est là pour vous conseiller
           </p>
           <div className="flex space-x-3">
-            <button className="flex-1 bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm hover:bg-gray-100 transition-colors">
-              💬 Contacter
+            <button 
+              onClick={handleWhatsAppContact}
+              className="flex-1 bg-white text-blue-600 px-4 py-2 rounded-xl font-medium text-sm hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+            >
+              <MessageCircle size={16} />
+              <span>WhatsApp</span>
             </button>
-            <button className="flex-1 bg-transparent border border-white text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-white/10 transition-colors">
-              📞 Appeler
+            <button 
+              onClick={handlePhoneCall}
+              className="flex-1 bg-transparent border border-white text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-white/10 transition-colors flex items-center justify-center space-x-2"
+            >
+              <Phone size={16} />
+              <span>Appeler</span>
             </button>
           </div>
+          <p className="text-blue-100 text-xs mt-3">
+            {CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}
+          </p>
         </div>
       </div>
     </div>
