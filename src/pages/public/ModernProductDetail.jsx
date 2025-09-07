@@ -606,151 +606,146 @@ const ModernProductDetail = () => {
 
       {/* Container principal avec max-width */}
       <div className="max-w-7xl mx-auto">
-        {/* Section image détachée et centrée */}
-        <div className="flex justify-center mb-6 sm:mb-8">
-          <div className="w-full max-w-md mx-auto">
-            {/* Carousel d'images moderne - Conteneur centré et propre */}
-            <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="relative h-80 sm:h-96 overflow-hidden bg-gray-50 flex items-center justify-center">
-                {productImages.length > 0 ? (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <img
-                      src={productImages[currentImageIndex]}
-                      alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-                      className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
-                      style={{
-                        imageRendering: 'high-quality',
-                        WebkitImageRendering: 'high-quality',
-                        filter: 'contrast(1.1) saturate(1.1)'
-                      }}
-                      loading="eager"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  </div>
-                ) : null}
-                
-                {/* Image de fallback améliorée */}
-                <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 ${productImages.length > 0 ? 'hidden' : 'flex'}`}>
-                  <div className="text-center">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-500 text-sm sm:text-base font-medium">Aucune image disponible</span>
-                  </div>
-                </div>
-                
-                {/* Boutons de navigation du carousel */}
-                {productImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevImage}
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
-                    >
-                      <ChevronLeft size={24} className="text-gray-700" />
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
-                    >
-                      <ChevronRight size={24} className="text-gray-700" />
-                    </button>
-                  </>
-                )}
-                
-                {/* Indicateur de position */}
-                {productImages.length > 1 && (
-                  <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
-                    {currentImageIndex + 1} / {productImages.length}
-                  </div>
-                )}
+        {/* Carousel d'images moderne - Optimisé mobile avec meilleure qualité */}
+        <div className="relative bg-white mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
+        <div className="relative h-80 sm:h-96 lg:h-[28rem] overflow-hidden bg-gray-50 flex items-center justify-center">
+          {productImages.length > 0 ? (
+            <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+              <img
+                src={productImages[currentImageIndex]}
+                alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in rounded-lg"
+                style={{
+                  imageRendering: 'high-quality',
+                  WebkitImageRendering: 'high-quality',
+                  filter: 'contrast(1.1) saturate(1.1)'
+                }}
+                loading="eager"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            </div>
+          ) : null}
+          
+          {/* Image de fallback améliorée */}
+          <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 ${productImages.length > 0 ? 'hidden' : 'flex'}`}>
+            <div className="text-center">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </div>
-              
-              {/* Indicateurs de navigation (points) */}
-              {productImages.length > 1 && (
-                <div className="flex justify-center space-x-2 py-4">
-                  {productImages.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => goToImage(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-200 touch-manipulation ${
-                        index === currentImageIndex 
-                          ? 'bg-blue-600 scale-125' 
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-              
-              {/* Grille des miniatures */}
-              {productImages.length > 1 && (
-                <div className="px-4 pb-4 bg-gray-50">
-                  <div className="grid grid-cols-4 gap-2">
-                    {productImages.map((image, index) => (
-                      <div 
-                        key={`thumbnail-${index}`}
-                        className={`relative group cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-200 shadow-sm ${
-                          index === currentImageIndex 
-                            ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg scale-105' 
-                            : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'
-                        }`}
-                        onClick={() => goToImage(index)}
-                      >
-                        <img
-                          src={image}
-                          alt={`${safeGet(product, 'name', 'Produit')} - Miniature ${index + 1}`}
-                          className="w-full h-16 object-cover object-center group-hover:scale-110 transition-transform duration-200"
-                          style={{
-                            imageRendering: 'high-quality',
-                            WebkitImageRendering: 'high-quality',
-                            filter: 'contrast(1.05) saturate(1.05)'
-                          }}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                        
-                        {/* Image de fallback pour les miniatures */}
-                        <div className="w-full h-16 bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        
-                        {/* Overlay au survol avec effet de zoom */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 transform group-hover:scale-110">
-                            <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                              <svg className="w-3 h-3 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Indicateur de sélection amélioré */}
-                        {index === currentImageIndex && (
-                          <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full shadow-lg ring-1 ring-white">
-                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <span className="text-gray-500 text-sm sm:text-base font-medium">Aucune image disponible</span>
             </div>
           </div>
+          
+          {/* Boutons de navigation du carousel - Optimisés mobile */}
+          {productImages.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
+              >
+                <ChevronLeft size={24} className="text-gray-700 sm:w-6 sm:h-6" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
+              >
+                <ChevronRight size={24} className="text-gray-700 sm:w-6 sm:h-6" />
+              </button>
+            </>
+          )}
+          
+          {/* Indicateur de position - Optimisé mobile */}
+          {productImages.length > 1 && (
+            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/80 backdrop-blur-sm text-white px-3 sm:px-3 py-1.5 rounded-full text-sm sm:text-sm font-medium">
+              {currentImageIndex + 1} / {productImages.length}
+            </div>
+          )}
         </div>
+        
+        {/* Indicateurs de navigation (points) - Optimisés mobile */}
+        {productImages.length > 1 && (
+          <div className="flex justify-center space-x-2 sm:space-x-2 py-3 sm:py-4">
+            {productImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToImage(index)}
+                className={`w-3 h-3 sm:w-3 sm:h-3 rounded-full transition-all duration-200 touch-manipulation ${
+                  index === currentImageIndex 
+                    ? 'bg-blue-600 scale-125' 
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+        
+        {/* Grille des miniatures - Optimisée mobile avec meilleure qualité */}
+        {productImages.length > 1 && (
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4 bg-gray-50">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-3">
+              {productImages.map((image, index) => (
+                <div 
+                  key={`thumbnail-${index}`}
+                  className={`relative group cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-200 shadow-sm ${
+                    index === currentImageIndex 
+                      ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg scale-105' 
+                      : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'
+                  }`}
+                  onClick={() => goToImage(index)}
+                >
+                  <img
+                    src={image}
+                    alt={`${safeGet(product, 'name', 'Produit')} - Miniature ${index + 1}`}
+                    className="w-full h-20 sm:h-20 lg:h-24 object-cover object-center group-hover:scale-110 transition-transform duration-200"
+                    style={{
+                      imageRendering: 'high-quality',
+                      WebkitImageRendering: 'high-quality',
+                      filter: 'contrast(1.05) saturate(1.05)'
+                    }}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                  
+                  {/* Image de fallback pour les miniatures */}
+                  <div className="w-full h-20 sm:h-20 lg:h-24 bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  
+                  {/* Overlay au survol avec effet de zoom */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 transform group-hover:scale-110">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Indicateur de sélection amélioré */}
+                  {index === currentImageIndex && (
+                    <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded-full shadow-lg ring-2 ring-white">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Informations produit modernisées - Optimisées mobile */}
       <div className="px-3 sm:px-4 mb-4 sm:mb-6">

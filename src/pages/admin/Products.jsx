@@ -126,19 +126,11 @@ const Products = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.current_page, pagination.per_page, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder, addNotification]);
+  }, [pagination.current_page, pagination.per_page, searchTerm, statusFilter, categoryFilter, sortBy, sortOrder, categories.length, addNotification]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  // Recharger les données quand les filtres changent
-  useEffect(() => {
-    if (searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' || sortBy !== 'name' || sortOrder !== 'asc') {
-      setPagination(prev => ({ ...prev, current_page: 1 })); // Reset à la page 1
-      fetchData();
-    }
-  }, [searchTerm, statusFilter, categoryFilter, sortBy, sortOrder]);
 
   const handleProductSubmit = async (productData) => {
     try {
