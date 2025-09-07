@@ -605,16 +605,16 @@ const ModernProductDetail = () => {
       </div>
 
       {/* Container principal avec max-width et espacement du header */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Carousel d'images moderne - Décollé du header et centré */}
         <div className="relative bg-white mb-4 sm:mb-5 rounded-3xl overflow-hidden shadow-xl border border-gray-100">
-          <div className="relative h-96 sm:h-[28rem] lg:h-[32rem] overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div className="relative h-80 sm:h-96 lg:h-[24rem] overflow-hidden bg-gray-50 flex items-center justify-center">
           {productImages.length > 0 ? (
-            <div className="w-full max-w-sm sm:max-w-md mx-auto h-full flex items-center justify-center p-4">
+            <div className="w-full h-full flex items-center justify-center">
               <img
                 src={productImages[currentImageIndex]}
                 alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in rounded-2xl"
+                className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
                 style={{
                   imageRendering: 'high-quality',
                   WebkitImageRendering: 'high-quality',

@@ -402,14 +402,20 @@ export const imageService = {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    console.log('📤 Envoi vers:', url);
+    console.log('📤 FormData:', formData);
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: formData, // Pas de Content-Type pour FormData
     });
 
+    console.log('📡 Réponse status:', response.status);
+
     if (!response.ok) {
       const data = await response.json();
+      console.error('❌ Erreur API:', data);
       throw new ApiError(
         data.message || 'Erreur lors de l\'upload des images',
         response.status,

@@ -63,12 +63,12 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
     try {
       const formData = new FormData();
       
-      // Ajouter chaque fichier au FormData
+      // Ajouter chaque fichier au FormData avec les bons noms de champs
       Array.from(files).forEach((file, index) => {
-        formData.append(`images[${index}]`, file);
-        formData.append(`alt_text[${index}]`, file.name);
-        formData.append(`title[${index}]`, file.name);
-        formData.append(`sort_order[${index}]`, (images.length + index).toString());
+        formData.append(`media_files[${index}]`, file);
+        formData.append(`alt_texts[${index}]`, file.name);
+        formData.append(`titles[${index}]`, file.name);
+        formData.append(`sort_orders[${index}]`, (images.length + index).toString());
       });
       
       console.log('📤 Upload des images:', files.length, 'fichiers');
