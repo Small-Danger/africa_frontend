@@ -171,19 +171,20 @@ const ProductSuggestions = ({ productId, cartSessionId }) => {
             <div className="p-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {products.map((product) => (
-                  <div key={product.id} className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-1 transform-gpu">
+                  <Link
+                    key={product.id}
+                    to={`/products/${product.id}`}
+                    className="group block relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-1 transform-gpu"
+                  >
                     {/* Image container avec effet moderne */}
                     <div className="relative h-32 bg-gray-50 overflow-hidden">
-                      <Link to={`/products/${product.id}`} className="block h-full">
-                        <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                          <img
-                            src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-lg"
-                          />
-                        </div>
-                      </Link>
-                      
+                      <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                        <img
+                          src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-lg"
+                        />
+                      </div>
                       
                       {/* Overlay au survol */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -191,32 +192,31 @@ const ProductSuggestions = ({ productId, cartSessionId }) => {
                     
                     {/* Contenu du produit */}
                     <div className="p-3">
-                      <Link to={`/products/${product.id}`} className="block">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-                          {product.name}
-                        </h3>
-                        
-                        {/* Prix principal */}
+                      <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
+                        {product.name}
+                      </h3>
+                      
+                      {/* Prix principal */}
+                      <div className="mb-3">
+                        <span className="text-lg font-bold text-blue-600">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                      
+                      {/* Variant info */}
+                      {product.variant && (
                         <div className="mb-3">
-                          <span className="text-lg font-bold text-blue-600">
-                            {formatPrice(product.price)}
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                            {product.variant.name}
                           </span>
                         </div>
-                        
-                        {/* Variant info */}
-                        {product.variant && (
-                          <div className="mb-3">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                              {product.variant.name}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
+                      )}
                       
                       {/* Bouton d'ajout au panier modernisé */}
                       <button
                         onClick={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           handleAddToCart(product);
                         }}
                         disabled={addingToCart[product.id] || !product.is_available}
@@ -238,18 +238,21 @@ const ProductSuggestions = ({ productId, cartSessionId }) => {
                     
                     {/* Effet de brillance au survol */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  </div>
+                  </Link>
                 ))}
               </div>
               
               {/* Footer avec lien "Voir plus" */}
               <div className="mt-6 text-center">
-                <button className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors">
+                <Link 
+                  to="/catalog" 
+                  className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
+                >
                   <span>Voir plus de suggestions</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                </Link>
               </div>
             </div>
           </div>

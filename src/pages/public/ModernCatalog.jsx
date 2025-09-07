@@ -232,15 +232,25 @@ const ModernCatalog = () => {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const nextPage = currentPage + 1;
-    const startIndex = nextPage * PRODUCTS_PER_PAGE;
+    const startIndex = currentPage * PRODUCTS_PER_PAGE; // Utiliser currentPage au lieu de nextPage
     const endIndex = startIndex + PRODUCTS_PER_PAGE;
     const nextProducts = filteredProducts.slice(startIndex, endIndex);
+    
+    console.log('🔄 Chargement plus de produits:', {
+      currentPage,
+      nextPage,
+      startIndex,
+      endIndex,
+      nextProductsCount: nextProducts.length,
+      totalFiltered: filteredProducts.length,
+      displayedCount: displayedProducts.length
+    });
     
     setDisplayedProducts(prev => [...prev, ...nextProducts]);
     setCurrentPage(nextPage);
     setHasMoreProducts(endIndex < filteredProducts.length);
     setLoadingMore(false);
-  }, [loadingMore, hasMoreProducts, currentPage, filteredProducts]);
+  }, [loadingMore, hasMoreProducts, currentPage, filteredProducts, displayedProducts.length]);
 
   // Affichage du chargement
   if (loading) {
