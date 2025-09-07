@@ -539,9 +539,9 @@ const ModernProductDetail = () => {
       {/* Notification de succès */}
       {showSuccess && <SuccessNotification />}
 
-      {/* Breadcrumb moderne en haut - Optimisé mobile */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100">
-        <div className="px-3 sm:px-4 py-2 sm:py-3">
+      {/* Breadcrumb moderne en haut - Décollé et centré */}
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
               <Link 
@@ -604,17 +604,17 @@ const ModernProductDetail = () => {
         </div>
       </div>
 
-      {/* Container principal avec max-width */}
-      <div className="max-w-7xl mx-auto">
-        {/* Carousel d'images moderne - Optimisé mobile avec meilleure qualité */}
-        <div className="relative bg-white mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg">
-        <div className="relative h-80 sm:h-96 lg:h-[28rem] overflow-hidden bg-gray-50 flex items-center justify-center">
+      {/* Container principal avec max-width et espacement du header */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Carousel d'images moderne - Décollé du header et centré */}
+        <div className="relative bg-white mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+          <div className="relative h-96 sm:h-[28rem] lg:h-[32rem] overflow-hidden bg-gray-50 flex items-center justify-center">
           {productImages.length > 0 ? (
-            <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+            <div className="w-full max-w-sm sm:max-w-md mx-auto h-full flex items-center justify-center p-4">
               <img
                 src={productImages[currentImageIndex]}
                 alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in rounded-lg"
+                className="w-full h-full object-contain object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
                 style={{
                   imageRendering: 'high-quality',
                   WebkitImageRendering: 'high-quality',
@@ -684,10 +684,10 @@ const ModernProductDetail = () => {
           </div>
         )}
         
-        {/* Grille des miniatures - Optimisée mobile avec meilleure qualité */}
+        {/* Grille des miniatures - Centrée et espacée */}
         {productImages.length > 1 && (
-          <div className="px-3 sm:px-4 pb-3 sm:pb-4 bg-gray-50">
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-3">
+          <div className="px-4 pb-4 bg-gray-50">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-w-md mx-auto">
               {productImages.map((image, index) => (
                 <div 
                   key={`thumbnail-${index}`}
@@ -747,9 +747,9 @@ const ModernProductDetail = () => {
         )}
       </div>
 
-      {/* Informations produit modernisées - Optimisées mobile */}
-      <div className="px-3 sm:px-4 mb-4 sm:mb-6">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
+      {/* Informations produit modernisées - Centrées et espacées */}
+      <div className="px-4 mb-6 sm:mb-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
           {/* Titre et note */}
           <div className="mb-4 sm:mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{safeGet(product, 'name', 'Nom du produit')}</h1>
@@ -882,8 +882,8 @@ const ModernProductDetail = () => {
       </div>
       </div>
 
-      {/* Section suggestions d'articles similaires - Style Amazon/Shein moderne */}
-      <div className="px-3 sm:px-4 pb-4 sm:pb-6">
+      {/* Section suggestions d'articles similaires - Centrée et espacée */}
+      <div className="px-4 pb-6 sm:pb-8">
         <div className="max-w-7xl mx-auto">
           <ProductSuggestions productId={id} cartSessionId={cartSessionId} />
         </div>

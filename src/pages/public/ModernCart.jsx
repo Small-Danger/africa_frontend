@@ -520,25 +520,54 @@ const ModernCart = () => {
               <div className="divide-y divide-gray-200">
                 {cartItems && Array.isArray(cartItems) && cartItems.map((item) => 
                   item && item.id ? (
-                    <div key={item.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 transform-gpu mb-6 overflow-hidden">
-                      <div className="p-4 sm:p-6">
-                        <div className="flex items-start space-x-4 sm:space-x-6">
-                          {/* Image du produit - Style moderne amélioré */}
-                          <Link 
-                            to={`/products/${item.product_id}`}
-                            className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
-                          >
-                            <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                              <img
-                                src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                                alt={item.product?.name || 'Produit'}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
-                              />
+                    <div key={item.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 transform-gpu mb-4 sm:mb-6 overflow-hidden">
+                      <div className="p-3 sm:p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-6">
+                          {/* Image du produit - Optimisé mobile */}
+                          <div className="flex items-center space-x-3 sm:block">
+                            <Link 
+                              to={`/products/${item.product_id}`}
+                              className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
+                            >
+                              <div className="w-full h-full flex items-center justify-center">
+                                <img
+                                  src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                                  alt={item.product?.name || 'Produit'}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
+                                />
+                              </div>
+                            </Link>
+                            
+                            {/* Informations principales - Mobile */}
+                            <div className="flex-1 sm:hidden">
+                              <Link 
+                                to={`/products/${item.product_id}`}
+                                className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-1"
+                              >
+                                {item.product?.name || 'Nom du produit'}
+                              </Link>
+                              
+                              {/* Variante mobile */}
+                              {item.variant?.name && (
+                                <div className="mb-2">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                    {item.variant.name}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Prix mobile */}
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-blue-600">
+                                  {formatPrice(item.unit_price)}
+                                </span>
+                                <span className="text-xs text-gray-500">unité</span>
+                              </div>
                             </div>
-                          </Link>
+                          </div>
 
-                          {/* Informations du produit - Style modernisé */}
-                          <div className="flex-1 min-w-0">
+                          {/* Informations du produit - Desktop */}
+                          <div className="flex-1 min-w-0 hidden sm:block">
                             <Link 
                               to={`/products/${item.product_id}`}
                               className="text-lg sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-2"
@@ -604,13 +633,79 @@ const ModernCart = () => {
                             </div>
                           </div>
 
-                          {/* Bouton supprimer - Style modernisé */}
+                          {/* Contrôles mobile - Optimisés */}
+                          <div className="sm:hidden w-full">
+                            {/* Contrôles de quantité mobile */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-medium text-gray-700">Quantité:</span>
+                                <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden">
+                                  <button
+                                    onClick={() => {
+                                      console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
+                                      handleUpdateQuantity(item.id, item.quantity - 1);
+                                    }}
+                                    disabled={item.quantity <= 1}
+                                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    <Minus size={16} />
+                                  </button>
+                                  <span className="w-12 text-center font-bold text-gray-900 border-x-2 border-gray-200 py-2 text-sm bg-gray-50">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
+                                      handleUpdateQuantity(item.id, item.quantity + 1);
+                                    }}
+                                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+                                  >
+                                    <Plus size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                <div className="text-xs text-gray-500">Sous-total</div>
+                                <div className="text-lg font-bold text-blue-600">
+                                  {formatPrice(item.unit_price * item.quantity)}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Actions mobile */}
+                            <div className="flex items-center justify-between">
+                              <button
+                                onClick={() => {
+                                  console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
+                                  handleRemoveItem(item.id);
+                                }}
+                                className="flex items-center space-x-2 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Supprimer cet article"
+                              >
+                                <Trash2 size={16} />
+                                <span className="text-sm font-medium">Supprimer</span>
+                              </button>
+                              
+                              <Link 
+                                to={`/products/${item.product_id}`}
+                                className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              >
+                                <span className="text-sm font-medium">Voir détails</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Bouton supprimer - Desktop */}
                           <button
                             onClick={() => {
                               console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
                               handleRemoveItem(item.id);
                             }}
-                            className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors flex-shrink-0 hover:scale-110 transform"
+                            className="hidden sm:block p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors flex-shrink-0 hover:scale-110 transform"
                             title="Supprimer cet article"
                           >
                             <Trash2 size={24} />
