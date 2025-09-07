@@ -123,34 +123,34 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
     setDragOver(false);
   };
 
-  // Fonction utilitaire pour obtenir l'URL de l'image
-  const getImageUrl = (image) => {
-    console.log('=== DEBUG getImageUrl ===');
-    console.log('Image reçue:', image);
+  // Fonction utilitaire pour obtenir l'URL de l'image/vidéo
+  const getMediaUrl = (media) => {
+    console.log('=== DEBUG getMediaUrl ===');
+    console.log('Média reçu:', media);
     
     // Priorité 1: media_path (URL complète du backend)
-    if (image.media_path) {
-      console.log('✅ Utilisation media_path:', image.media_path);
-      return image.media_path;
+    if (media.media_path) {
+      console.log('✅ Utilisation media_path:', media.media_path);
+      return media.media_path;
     }
     
-    // Priorité 2: data (base64 pour les nouvelles images)
-    if (image.data && image.data.startsWith('data:')) {
-      console.log('✅ Utilisation data (base64):', image.data.substring(0, 50) + '...');
-      return image.data;
+    // Priorité 2: data (base64 pour les nouveaux médias)
+    if (media.data && media.data.startsWith('data:')) {
+      console.log('✅ Utilisation data (base64):', media.data.substring(0, 50) + '...');
+      return media.data;
     }
     
     // Priorité 3: autres propriétés possibles
-    if (image.url) {
-      console.log('✅ Utilisation url:', image.url);
-      return image.url;
+    if (media.url) {
+      console.log('✅ Utilisation url:', media.url);
+      return media.url;
     }
-    if (image.image_url) {
-      console.log('✅ Utilisation image_url:', image.image_url);
-      return image.image_url;
+    if (media.image_url) {
+      console.log('✅ Utilisation image_url:', media.image_url);
+      return media.image_url;
     }
     
-    console.warn('❌ Impossible de trouver l\'URL pour l\'image:', image);
+    console.warn('❌ Impossible de trouver l\'URL pour le média:', media);
     return null;
   };
 
@@ -230,7 +230,7 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
               {images.map((image) => {
                 console.log('🖼️ Rendu image dans le map:', image);
                 console.log('🖼️ Clés de l\'image:', Object.keys(image));
-                const imageUrl = getImageUrl(image);
+                const imageUrl = getMediaUrl(image);
                 console.log('🖼️ URL générée:', imageUrl);
                 
                 return (
@@ -273,24 +273,36 @@ const ImageManager = ({ product, onClose, onUpdate }) => {
               Vidéos ({videos.length})
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {videos.map((video) => (
-                <div key={video.id} className="relative">
-                  <video
-                    src={video.media_path}
-                    className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                    controls
-                  />
-                  {/* Bouton de suppression visible */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteMedia(video.id, 'video')}
-                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg"
-                  >
-                    <TrashIcon className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
+              {videos.map((video) => {
+                const videoUrl = getMediaUrl(video);
+                console.log('🎥 URL vidéo générée:', videoUrl);
+                
+                return (
+                  <div key={video.id} className="relative">
+                    <video
+                      src={videoUrl}
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                      controls
+                      onError={(e) => {
+                        console.error('❌ Erreur chargement vidéo:', video);
+                        console.error('❌ Élément video:', e.target);
+                      }}
+                      onLoad={() => {
+                        console.log('✅ Vidéo chargée avec succès:', video);
+                      }}
+                    />
+                    {/* Bouton de suppression visible */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteMedia(video.id, 'video')}
+                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg"
+                    >
+                      <TrashIcon className="h-3 w-3" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
