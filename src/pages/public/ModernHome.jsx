@@ -146,12 +146,15 @@ const ModernHome = () => {
         
         if (productsRes.success) {
           const products = productsRes.data.products || [];
-          setAllProducts(products);
+          
+          // Prendre seulement quelques produits représentatifs (un par catégorie)
+          const representativeProducts = products.slice(0, 6); // Limiter à 6 produits max
+          setAllProducts(representativeProducts);
           
           // Filtrer les produits populaires (ceux avec un rating élevé)
           const popular = products
             .filter(product => (product.rating || 0) >= 4.0)
-            .slice(0, 8);
+            .slice(0, 4); // Limiter à 4 produits populaires
           setPopularProducts(popular);
           
           // Cache désactivé - pas de sauvegarde
@@ -541,20 +544,20 @@ const ModernHome = () => {
         </div>
       )}
 
-      {/* Carrousel automatique de tous les produits - Style amélioré */}
+      {/* Section Nouveautés - Style identique aux catégories */}
       {allProducts.length > 0 && (
-        <div className="px-4 py-6">
+        <div className="px-4 py-4 md:py-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">Nouveautés</h2>
             <div className="flex items-center space-x-2">
               <button
-                onClick={prevProductSlide}
+                onClick={() => setCurrentProductSlide((prev) => (prev - 1 + Math.ceil(allProducts.length / 2)) % Math.ceil(allProducts.length / 2))}
                 className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
               >
                 <ChevronLeft size={16} className="text-gray-600" />
               </button>
               <button
-                onClick={nextProductSlide}
+                onClick={() => setCurrentProductSlide((prev) => (prev + 1) % Math.ceil(allProducts.length / 2))}
                 className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
               >
                 <ChevronRight size={16} className="text-gray-600" />
@@ -576,7 +579,7 @@ const ModernHome = () => {
             </div>
           </div>
 
-          {/* Indicateurs de slide pour tous les produits */}
+          {/* Indicateurs de slide pour les nouveautés */}
           <div className="flex justify-center mt-4 space-x-2">
             {Array.from({ length: Math.ceil(allProducts.length / 2) }).map((_, index) => (
               <button

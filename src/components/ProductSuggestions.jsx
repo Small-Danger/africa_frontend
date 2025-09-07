@@ -167,78 +167,94 @@ const ProductSuggestions = ({ productId, cartSessionId }) => {
               </div>
             </div>
             
-            {/* Grid de produits modernisé */}
+            {/* Grid de produits modernisé - Style uniforme avec ModernCatalog */}
             <div className="p-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {products.map((product) => (
-                  <div key={product.id} className="group relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-1 transform-gpu">
-                    {/* Image container avec effet moderne */}
-                    <div className="relative h-32 bg-gray-50 overflow-hidden">
-                      <Link to={`/products/${product.id}`} className="block h-full">
+                  <Link 
+                    key={product.id} 
+                    to={`/products/${product.id}`}
+                    className="group block h-full"
+                  >
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 h-80 flex flex-col">
+                      {/* Image du produit - Style moderne uniforme */}
+                      <div className="h-48 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
                         <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
                           <img
                             src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
                             alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-lg"
+                            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out rounded-lg"
+                            style={{
+                              imageRendering: 'high-quality',
+                              WebkitImageRendering: 'high-quality'
+                            }}
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
                           />
                         </div>
-                      </Link>
-                      
-                      
-                      {/* Overlay au survol */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-                    
-                    {/* Contenu du produit */}
-                    <div className="p-3">
-                      <Link to={`/products/${product.id}`} className="block">
-                        <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-                          {product.name}
-                        </h3>
                         
-                        {/* Prix principal */}
-                        <div className="mb-3">
-                          <span className="text-lg font-bold text-blue-600">
-                            {formatPrice(product.price)}
+                        {/* Image de fallback */}
+                        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
+                          <div className="text-center">
+                            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                              <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                            </div>
+                            <span className="text-gray-600 font-medium text-xs">Produit</span>
+                          </div>
+                        </div>
+                        
+                        {/* Badge de prix moderne */}
+                        <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full shadow-lg">
+                          <span className="text-sm font-bold">
+                            {Math.round(Number(product.price || 0))} FCFA
                           </span>
                         </div>
                         
-                        {/* Variant info */}
-                        {product.variant && (
-                          <div className="mb-3">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                              {product.variant.name}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
+                        {/* Overlay au survol */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
                       
-                      {/* Bouton d'ajout au panier modernisé */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(product);
-                        }}
-                        disabled={addingToCart[product.id] || !product.is_available}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                      >
-                        {addingToCart[product.id] ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                            <span>Ajout...</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart size={16} />
-                            <span>Ajouter</span>
-                          </>
-                        )}
-                      </button>
+                      {/* Contenu du produit - Design épuré */}
+                      <div className="p-4 flex-1 flex flex-col">
+                        {/* Titre */}
+                        <div className="mb-3">
+                          <h3 className="font-bold text-gray-900 text-base line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
+                            {product.name}
+                          </h3>
+                        </div>
+                        
+                        {/* Description */}
+                        <div className="mb-4 flex-1">
+                          {product.variant && (
+                            <div className="mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                {product.variant.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Footer avec prix et CTA */}
+                        <div className="mt-auto">
+                          <div className="flex items-center justify-between">
+                            <div className="text-lg font-bold text-blue-600">
+                              {Math.round(Number(product.price || 0))} FCFA
+                            </div>
+                            <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300 group-hover:scale-110">
+                              <svg className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    
-                    {/* Effet de brillance au survol */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  </div>
+                  </Link>
                 ))}
               </div>
               

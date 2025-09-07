@@ -468,7 +468,7 @@ const ModernCart = () => {
               <div className="text-right hidden sm:block">
                 <div className="text-sm text-gray-500">Total</div>
                 <div className="text-xl font-bold text-blue-600">
-                  {formatPrice(cartSummary.total_price)} FCFA
+                  {formatPrice(cartSummary.total_price)}
                 </div>
               </div>
               <div className="bg-blue-100 text-blue-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium">
@@ -520,98 +520,123 @@ const ModernCart = () => {
               <div className="divide-y divide-gray-200">
                 {cartItems && Array.isArray(cartItems) && cartItems.map((item) => 
                   item && item.id ? (
-                    <div key={item.id} className="p-4 sm:p-6 bg-white rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300 mb-4">
-                      <div className="flex items-start space-x-4">
-                        {/* Image du produit - Style moderne */}
-                        <Link 
-                          to={`/products/${item.product_id}`}
-                          className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
-                        >
-                          <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                            <img
-                              src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                              alt={item.product?.name || 'Produit'}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
-                            />
-                          </div>
-                        </Link>
-
-                        {/* Informations du produit - Style modernisé */}
-                        <div className="flex-1 min-w-0">
+                    <div key={item.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 transform-gpu mb-6 overflow-hidden">
+                      <div className="p-4 sm:p-6">
+                        <div className="flex items-start space-x-4 sm:space-x-6">
+                          {/* Image du produit - Style moderne amélioré */}
                           <Link 
                             to={`/products/${item.product_id}`}
-                            className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2"
+                            className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
                           >
-                            {item.product?.name || 'Nom du produit'}
-                          </Link>
-                          
-                          {/* Variante avec badge moderne */}
-                          {item.variant?.name && (
-                            <div className="mt-2">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                {item.variant.name}
-                              </span>
+                            <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
+                              <img
+                                src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                                alt={item.product?.name || 'Produit'}
+                                className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 rounded-lg"
+                                style={{
+                                  imageRendering: 'high-quality',
+                                  WebkitImageRendering: 'high-quality'
+                                }}
+                                loading="lazy"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
                             </div>
-                          )}
-                          
-                          {/* Prix principal - Style modernisé */}
-                          <div className="mt-3">
-                            <span className="text-xl font-bold text-blue-600">
-                              {formatPrice(item.unit_price)} FCFA
-                            </span>
-                            <span className="text-sm text-gray-500 ml-2">unité</span>
-                          </div>
-                          
-                          {/* Contrôles de quantité modernes */}
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                            <div className="flex items-center space-x-2 sm:space-x-3">
-                              <span className="text-xs sm:text-sm text-gray-600">Quantité:</span>
-                              <div className="flex items-center border border-gray-300 rounded-lg">
-                                <button
-                                  onClick={() => {
-                                    console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
-                                    handleUpdateQuantity(item.id, item.quantity - 1);
-                                  }}
-                                  disabled={item.quantity <= 1}
-                                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  <Minus size={16} />
-                                </button>
-                                <span className="w-10 sm:w-12 text-center font-medium text-gray-900 border-x border-gray-300 py-2 text-sm">
-                                  {item.quantity}
+                            
+                            {/* Image de fallback */}
+                            <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
+                              <div className="text-center">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
+                                  <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                  </svg>
+                                </div>
+                                <span className="text-gray-600 font-medium text-xs">Produit</span>
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Informations du produit - Style modernisé */}
+                          <div className="flex-1 min-w-0">
+                            <Link 
+                              to={`/products/${item.product_id}`}
+                              className="text-lg sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-2"
+                            >
+                              {item.product?.name || 'Nom du produit'}
+                            </Link>
+                            
+                            {/* Variante avec badge moderne */}
+                            {item.variant?.name && (
+                              <div className="mb-3">
+                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border border-blue-200">
+                                  {item.variant.name}
                                 </span>
-                                <button
-                                  onClick={() => {
-                                    console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
-                                    handleUpdateQuantity(item.id, item.quantity + 1);
-                                  }}
-                                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                >
-                                  <Plus size={16} />
-                                </button>
+                              </div>
+                            )}
+                            
+                            {/* Prix principal - Style modernisé */}
+                            <div className="mb-4">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-2xl font-bold text-blue-600">
+                                  {formatPrice(item.unit_price)}
+                                </span>
+                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">unité</span>
                               </div>
                             </div>
                             
-                            <div className="text-right">
-                              <div className="text-sm text-gray-500">Sous-total</div>
-                              <div className="text-xl font-bold text-blue-600">
-                                {formatPrice(item.unit_price * item.quantity)} FCFA
+                            {/* Contrôles de quantité modernes */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-sm font-medium text-gray-700">Quantité:</span>
+                                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                                  <button
+                                    onClick={() => {
+                                      console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
+                                      handleUpdateQuantity(item.id, item.quantity - 1);
+                                    }}
+                                    disabled={item.quantity <= 1}
+                                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-white"
+                                  >
+                                    <Minus size={18} />
+                                  </button>
+                                  <span className="w-12 sm:w-16 text-center font-bold text-gray-900 border-x-2 border-gray-200 py-3 text-lg bg-gray-50">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
+                                      handleUpdateQuantity(item.id, item.quantity + 1);
+                                    }}
+                                    className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center hover:bg-gray-50 transition-colors bg-white"
+                                  >
+                                    <Plus size={18} />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="text-right">
+                                <div className="text-sm text-gray-500 mb-1">Sous-total</div>
+                                <div className="text-2xl font-bold text-blue-600">
+                                  {formatPrice(item.unit_price * item.quantity)}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Bouton supprimer */}
-                        <button
-                          onClick={() => {
-                            console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
-                            handleRemoveItem(item.id);
-                          }}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
-                          title="Supprimer cet article"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                          {/* Bouton supprimer - Style modernisé */}
+                          <button
+                            onClick={() => {
+                              console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
+                              handleRemoveItem(item.id);
+                            }}
+                            className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 flex-shrink-0 hover:scale-110 active:scale-95"
+                            title="Supprimer cet article"
+                          >
+                            <Trash2 size={22} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : null
@@ -631,7 +656,7 @@ const ModernCart = () => {
                 {/* Sous-total */}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Sous-total ({cartSummary.total_items} article{cartSummary.total_items > 1 ? 's' : ''})</span>
-                  <span className="font-medium">{formatPrice(cartSummary.total_price)} FCFA</span>
+                  <span className="font-medium">{formatPrice(cartSummary.total_price)}</span>
                 </div>
                 
                 {/* Frais de livraison */}
@@ -649,7 +674,7 @@ const ModernCart = () => {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total</span>
-                    <span className="text-blue-600">{formatPrice(cartSummary.total_price)} FCFA</span>
+                    <span className="text-blue-600">{formatPrice(cartSummary.total_price)}</span>
                   </div>
                 </div>
                 

@@ -7,9 +7,15 @@ const ModernCatalog = () => {
   const { categorySlug, subcategorySlug } = useParams();
   const [currentCategory, setCurrentCategory] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [displayedProducts, setDisplayedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  
+  const PRODUCTS_PER_PAGE = 12;
   
   // Cache désactivé temporairement
   const cacheRef = useRef(new Map());
@@ -168,6 +174,12 @@ const ModernCatalog = () => {
           
           setFilteredProducts(products);
           
+          // Initialiser l'affichage des produits (premiers 12)
+          const initialProducts = products.slice(0, PRODUCTS_PER_PAGE);
+          setDisplayedProducts(initialProducts);
+          setCurrentPage(1);
+          setHasMoreProducts(products.length > PRODUCTS_PER_PAGE);
+          
           // Mettre en cache de session
           try {
             const sessionData = {
@@ -198,6 +210,26 @@ const ModernCatalog = () => {
     
     loadProducts();
   }, [categorySlug, subcategorySlug, categories]);
+
+  // Fonction pour charger plus de produits
+  const loadMoreProducts = useCallback(() => {
+    if (loadingMore || !hasMoreProducts) return;
+    
+    setLoadingMore(true);
+    
+    // Simuler un délai pour l'effet UX
+    setTimeout(() => {
+      const nextPage = currentPage + 1;
+      const startIndex = nextPage * PRODUCTS_PER_PAGE;
+      const endIndex = startIndex + PRODUCTS_PER_PAGE;
+      const newProducts = filteredProducts.slice(startIndex, endIndex);
+      
+      setDisplayedProducts(prev => [...prev, ...newProducts]);
+      setCurrentPage(nextPage);
+      setHasMoreProducts(endIndex < filteredProducts.length);
+      setLoadingMore(false);
+    }, 800); // Délai de 800ms pour l'effet
+  }, [currentPage, filteredProducts, hasMoreProducts, loadingMore]);
 
   // Affichage du chargement
   if (loading) {
@@ -582,31 +614,37 @@ const ModernCatalog = () => {
                 {/* Affichage des produits (seulement si des produits existent) */}
                 {filteredProducts.length > 0 && (
                   <div>
-                    <h3 className="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mr-4">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-3xl font-bold text-gray-900 flex items-center">
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mr-4">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                        {subcategorySlug 
+                          ? 'Produits de cette sous-catégorie'
+                          : currentCategory.subcategories && currentCategory.subcategories.length > 0 
+                            ? 'Produits directs de cette catégorie' 
+                            : 'Produits'
+                        }
+                      </h3>
+                      <div className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
+                        {displayedProducts.length} sur {filteredProducts.length} produits
                       </div>
-                      {subcategorySlug 
-                        ? 'Produits de cette sous-catégorie'
-                        : currentCategory.subcategories && currentCategory.subcategories.length > 0 
-                          ? 'Produits directs de cette catégorie' 
-                          : 'Produits'
-                      }
-                    </h3>
+                    </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {filteredProducts.map((product, index) => (
+                    {/* Grille de produits moderne */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                      {displayedProducts.map((product, index) => (
                         <Link
                           key={product.id}
                           to={`/products/${product.id}`}
                           className="block group"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up h-96 flex flex-col">
-                            {/* Image du produit - Hauteur fixe et optimisée */}
-                            <div className="h-64 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
+                          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 transform-gpu border border-gray-100 animate-fade-in-up h-80 flex flex-col">
+                            {/* Image du produit - Style moderne */}
+                            <div className="h-48 bg-gray-50 relative overflow-hidden flex items-center justify-center flex-shrink-0">
                               {product.image_main ? (
                                 <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
                                   <img
@@ -626,7 +664,7 @@ const ModernCatalog = () => {
                                 </div>
                               ) : null}
                               
-                              {/* Image de fallback pour les produits */}
+                              {/* Image de fallback */}
                               <div className={`w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center ${product.image_main ? 'hidden' : 'flex'}`}>
                                 <div className="text-center">
                                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
@@ -638,9 +676,9 @@ const ModernCatalog = () => {
                                 </div>
                               </div>
                               
-                              {/* Badge de prix flottant - Toujours visible */}
-                              <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
-                                <span className="text-sm font-bold text-blue-600">
+                              {/* Badge de prix moderne */}
+                              <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full shadow-lg">
+                                <span className="text-sm font-bold">
                                   {Math.round(Number(product.base_price || 0))} FCFA
                                 </span>
                               </div>
@@ -649,31 +687,29 @@ const ModernCatalog = () => {
                               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
                             
-                            {/* Contenu du produit - Structure fixe pour éviter les coupures */}
+                            {/* Contenu du produit - Design épuré */}
                             <div className="p-4 flex-1 flex flex-col">
-                              {/* Titre - Hauteur fixe */}
-                              <div className="mb-3 h-12 flex items-start">
+                              {/* Titre */}
+                              <div className="mb-3">
                                 <h3 className="font-bold text-gray-900 text-base line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
                                   {product.name}
                                 </h3>
                               </div>
                               
-                              {/* Description - Hauteur fixe */}
-                              <div className="mb-4 h-10 flex items-start">
+                              {/* Description */}
+                              <div className="mb-4 flex-1">
                                 {product.description ? (
                                   <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{product.description}</p>
                                 ) : (
-                                  <div className="h-full"></div>
+                                  <div className="h-8"></div>
                                 )}
                               </div>
                               
-                              {/* Prix - Toujours visible en bas */}
+                              {/* Footer avec prix et CTA */}
                               <div className="mt-auto">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div>
-                                    <span className="text-xl font-bold text-blue-600">
-                                      {Math.round(Number(product.base_price || 0))} FCFA
-                                    </span>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-lg font-bold text-blue-600">
+                                    {Math.round(Number(product.base_price || 0))} FCFA
                                   </div>
                                   <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300 group-hover:scale-110">
                                     <svg className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -681,18 +717,43 @@ const ModernCatalog = () => {
                                     </svg>
                                   </div>
                                 </div>
-                                
-                                {/* Footer avec CTA */}
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Voir détails</span>
-                                  <span className="text-xs text-gray-400">Cliquez pour voir</span>
-                                </div>
                               </div>
                             </div>
                           </div>
                         </Link>
                       ))}
                     </div>
+
+                    {/* Bouton "Voir plus" - Style moderne */}
+                    {hasMoreProducts && (
+                      <div className="text-center">
+                        <button
+                          onClick={loadMoreProducts}
+                          disabled={loadingMore}
+                          className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Chargement...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                              Voir plus de produits
+                              <span className="ml-2 bg-white/20 px-2 py-1 rounded-full text-xs">
+                                +{filteredProducts.length - displayedProducts.length}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
