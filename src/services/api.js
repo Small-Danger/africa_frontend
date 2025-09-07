@@ -329,6 +329,14 @@ export const productService = {
     return await apiRequest(`/admin/products/${id}`, {
       method: 'DELETE',
     });
+  },
+
+  // Créer plusieurs produits en masse (Admin)
+  async createProductsBatch(productsData) {
+    return await apiRequest('/admin/products/batch', {
+      method: 'POST',
+      body: JSON.stringify(productsData),
+    });
   }
 };
 
@@ -364,6 +372,14 @@ export const variantService = {
   async deleteVariant(productId, variantId) {
     return await apiRequest(`/admin/products/${productId}/variants/${variantId}`, {
       method: 'DELETE',
+    });
+  },
+
+  // Créer plusieurs variantes en batch (Admin)
+  async createVariantsBatch(productId, variantsData) {
+    return await apiRequest(`/admin/products/${productId}/variants/batch`, {
+      method: 'POST',
+      body: JSON.stringify({ variants: variantsData }),
     });
   }
 };

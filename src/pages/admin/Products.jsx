@@ -22,6 +22,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import NotificationContainer from '../../components/ui/NotificationContainer';
 import { useNotification } from '../../hooks/useNotification';
 import ProductForm from '../../components/forms/ProductForm';
+import BatchProductForm from '../../components/forms/BatchProductForm';
 import ImageManager from '../../components/admin/ImageManager';
 import VariantManager from '../../components/admin/VariantManager';
 import { productService, categoryService } from '../../services/api';
@@ -32,6 +33,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showBatchModal, setShowBatchModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showImagesModal, setShowImagesModal] = useState(false);
   const [showVariantsModal, setShowVariantsModal] = useState(false);
@@ -164,6 +166,39 @@ const Products = () => {
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du produit:', error);
       addNotification('error', 'Erreur lors de la sauvegarde du produit');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBatchSubmit = async (batchData) => {
+    try {
+      setActionLoading(true);
+      setFormErrors({});
+      
+      console.log('💾 Sauvegarde en masse:', batchData);
+      
+      const response = await productService.createProductsBatch(batchData);
+      
+      console.log('✅ Réponse sauvegarde en masse:', response);
+      
+      if (response.success) {
+        addNotification(
+          'success', 
+          `${response.data.count} produit(s) créé(s) avec succès`
+        );
+        setShowBatchModal(false);
+        await fetchData(true); // Force refresh
+      } else {
+        if (response.errors) {
+          setFormErrors(response.errors);
+        } else {
+          addNotification('error', response.message || 'Une erreur est survenue');
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde en masse:', error);
+      addNotification('error', 'Erreur lors de la création en masse des produits');
     } finally {
       setActionLoading(false);
     }
@@ -383,6 +418,15 @@ const Products = () => {
             >
               <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Actualiser
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setShowBatchModal(true)}
+              className="shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <PlusIcon className="w-5 h-5 mr-2" />
+              <span className="hidden sm:inline">Créer plusieurs produits</span>
+              <span className="sm:hidden">En masse</span>
             </Button>
             <Button 
               onClick={() => setShowProductModal(true)}
@@ -946,6 +990,16 @@ const Products = () => {
           onClose={() => handleModalClose('product')}
           onSubmit={handleProductSubmit}
           product={editingProduct}
+          categories={categories}
+          loading={actionLoading}
+          errors={formErrors}
+        />
+
+        {/* Formulaire de création en masse */}
+        <BatchProductForm
+          isOpen={showBatchModal}
+          onClose={() => setShowBatchModal(false)}
+          onSubmit={handleBatchSubmit}
           categories={categories}
           loading={actionLoading}
           errors={formErrors}

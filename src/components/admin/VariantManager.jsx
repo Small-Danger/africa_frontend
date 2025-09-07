@@ -12,6 +12,8 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchVariants, setBatchVariants] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     price: '',
@@ -108,8 +110,8 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
       // Préparer les données pour l'API
       const apiData = {
         ...formData,
-        sku: formData.sku || null, // Envoyer null si vide
-        stock_quantity: formData.stock_quantity || null, // Envoyer null si vide
+        sku: formData.sku || '', // Envoyer chaîne vide si vide
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : null, // Envoyer null si vide
         is_active: Boolean(formData.is_active),
         sort_order: parseInt(formData.sort_order) || 0
       };
@@ -175,6 +177,104 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
     setFormErrors({});
     setEditingVariant(null);
     setShowForm(false);
+  };
+
+  // Fonctions pour le mode batch
+  const addBatchVariant = () => {
+    setBatchVariants(prev => [...prev, {
+      name: '',
+      price: '',
+      sku: '',
+      stock_quantity: '',
+      is_active: true,
+      sort_order: prev.length
+    }]);
+  };
+
+  const removeBatchVariant = (index) => {
+    setBatchVariants(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateBatchVariant = (index, field, value) => {
+    setBatchVariants(prev => prev.map((variant, i) => 
+      i === index ? { ...variant, [field]: value } : variant
+    ));
+  };
+
+  const handleBatchSubmit = async (e) => {
+    e.preventDefault();
+    setFormErrors({});
+    setActionLoading(true);
+    
+    try {
+      // Validation des données batch
+      const validationErrors = {};
+      const validVariants = [];
+      
+      batchVariants.forEach((variant, index) => {
+        const variantErrors = {};
+        
+        if (!variant.name.trim()) {
+          variantErrors.name = 'Le nom est obligatoire';
+        }
+        
+        if (!variant.price || parseFloat(variant.price) <= 0) {
+          variantErrors.price = 'Le prix doit être supérieur à 0';
+        }
+        
+        if (Object.keys(variantErrors).length > 0) {
+          validationErrors[`variants.${index}`] = variantErrors;
+        } else {
+          validVariants.push({
+            name: variant.name.trim(),
+            price: parseFloat(variant.price),
+            sku: variant.sku || null,
+            stock_quantity: variant.stock_quantity ? parseInt(variant.stock_quantity) : null,
+            is_active: Boolean(variant.is_active),
+            sort_order: parseInt(variant.sort_order) || 0
+          });
+        }
+      });
+      
+      if (Object.keys(validationErrors).length > 0) {
+        setFormErrors(validationErrors);
+        setActionLoading(false);
+        return;
+      }
+      
+      if (validVariants.length === 0) {
+        setFormErrors({ general: ['Aucune variante valide à créer'] });
+        setActionLoading(false);
+        return;
+      }
+      
+      console.log('💾 Création batch de variantes:', validVariants);
+      
+      const response = await variantService.createVariantsBatch(product.id, validVariants);
+      console.log('✅ Réponse création batch:', response);
+      
+      if (response.success) {
+        console.log('✅ Variantes créées avec succès');
+        await loadVariants();
+        if (onUpdate) onUpdate();
+        setBatchVariants([]);
+        setBatchMode(false);
+      } else {
+        console.error('❌ Échec de la création batch:', response);
+        if (response.errors) {
+          setFormErrors(response.errors);
+        } else {
+          setFormErrors({ general: [response.message || 'Une erreur est survenue'] });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la création batch:', error);
+      setFormErrors({ 
+        general: [error.message || 'Une erreur est survenue lors de la création'] 
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const editVariant = (variant) => {
@@ -306,14 +406,25 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
               </div>
             )}
           </div>
-          <Button 
-            onClick={() => setShowForm(true)} 
-            size="sm"
-            disabled={actionLoading}
-          >
-            <PlusIcon className="w-4 h-4 mr-2" />
-            Ajouter une variante
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={() => setShowForm(true)} 
+              size="sm"
+              disabled={actionLoading}
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Ajouter une variante
+            </Button>
+            <Button 
+              onClick={() => setBatchMode(true)} 
+              size="sm"
+              variant="outline"
+              disabled={actionLoading}
+            >
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Créer plusieurs variantes
+            </Button>
+          </div>
         </div>
 
         {/* Liste des variantes */}
@@ -626,6 +737,174 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
                     </>
                   ) : (
                     editingVariant ? 'Mettre à jour' : 'Ajouter'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* Formulaire de création en batch */}
+        {batchMode && (
+          <Modal isOpen={true} onClose={() => setBatchMode(false)} title="Créer plusieurs variantes" size="6xl">
+            <form onSubmit={handleBatchSubmit} className="space-y-6">
+              {/* En-tête avec bouton d'ajout */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Création en lot de variantes
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Créez plusieurs variantes en une seule fois
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={addBatchVariant}
+                  size="sm"
+                  disabled={actionLoading}
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Ajouter une ligne
+                </Button>
+              </div>
+
+              {/* Tableau des variantes */}
+              {batchVariants.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">
+                    <div className="col-span-3">Nom</div>
+                    <div className="col-span-2">Prix</div>
+                    <div className="col-span-2">SKU</div>
+                    <div className="col-span-2">Stock</div>
+                    <div className="col-span-2">Statut</div>
+                    <div className="col-span-1">Actions</div>
+                  </div>
+                  
+                  {batchVariants.map((variant, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-4 items-start">
+                      {/* Nom */}
+                      <div className="col-span-3">
+                        <input
+                          type="text"
+                          value={variant.name}
+                          onChange={(e) => updateBatchVariant(index, 'name', e.target.value)}
+                          placeholder="Nom de la variante"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {formErrors[`variants.${index}`]?.name && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {formErrors[`variants.${index}`].name}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Prix */}
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={variant.price}
+                          onChange={(e) => updateBatchVariant(index, 'price', e.target.value)}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {formErrors[`variants.${index}`]?.price && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {formErrors[`variants.${index}`].price}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* SKU */}
+                      <div className="col-span-2">
+                        <input
+                          type="text"
+                          value={variant.sku}
+                          onChange={(e) => updateBatchVariant(index, 'sku', e.target.value)}
+                          placeholder="SKU (optionnel)"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      {/* Stock */}
+                      <div className="col-span-2">
+                        <input
+                          type="number"
+                          value={variant.stock_quantity}
+                          onChange={(e) => updateBatchVariant(index, 'stock_quantity', e.target.value)}
+                          placeholder="Stock"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      {/* Statut */}
+                      <div className="col-span-2">
+                        <select
+                          value={variant.is_active}
+                          onChange={(e) => updateBatchVariant(index, 'is_active', e.target.value === 'true')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value={true}>Actif</option>
+                          <option value={false}>Inactif</option>
+                        </select>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="col-span-1">
+                        <Button
+                          type="button"
+                          onClick={() => removeBatchVariant(index)}
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <CubeIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                  <p>Aucune variante à créer</p>
+                  <p className="text-sm">Cliquez sur "Ajouter une ligne" pour commencer</p>
+                </div>
+              )}
+
+              {/* Erreurs générales */}
+              {formErrors.general && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                  <p className="text-red-800 text-sm">{formErrors.general[0]}</p>
+                </div>
+              )}
+
+              {/* Boutons d'action */}
+              <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setBatchMode(false);
+                    setBatchVariants([]);
+                  }}
+                  disabled={actionLoading}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={batchVariants.length === 0 || actionLoading}
+                >
+                  {actionLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Création...
+                    </>
+                  ) : (
+                    `Créer ${batchVariants.length} variante(s)`
                   )}
                 </Button>
               </div>
