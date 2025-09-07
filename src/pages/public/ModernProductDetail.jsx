@@ -607,14 +607,14 @@ const ModernProductDetail = () => {
       {/* Container principal avec max-width et espacement du header */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Carousel d'images moderne - Décollé du header et centré */}
-        <div className="relative bg-white mb-6 sm:mb-8 rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+        <div className="relative bg-white mb-4 sm:mb-5 rounded-3xl overflow-hidden shadow-xl border border-gray-100">
           <div className="relative h-96 sm:h-[28rem] lg:h-[32rem] overflow-hidden bg-gray-50 flex items-center justify-center">
           {productImages.length > 0 ? (
             <div className="w-full max-w-sm sm:max-w-md mx-auto h-full flex items-center justify-center p-4">
               <img
                 src={productImages[currentImageIndex]}
                 alt={`${safeGet(product, 'name', 'Produit')} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in"
+                className="w-full h-full object-contain object-center transition-all duration-500 ease-in-out hover:scale-105 cursor-zoom-in rounded-2xl"
                 style={{
                   imageRendering: 'high-quality',
                   WebkitImageRendering: 'high-quality',
@@ -691,7 +691,7 @@ const ModernProductDetail = () => {
               {productImages.map((image, index) => (
                 <div 
                   key={`thumbnail-${index}`}
-                  className={`relative group cursor-pointer overflow-hidden rounded-lg border-2 transition-all duration-200 shadow-sm ${
+                  className={`relative group cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 shadow-sm ${
                     index === currentImageIndex 
                       ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg scale-105' 
                       : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'
@@ -748,8 +748,8 @@ const ModernProductDetail = () => {
       </div>
 
       {/* Informations produit modernisées - Centrées et espacées */}
-      <div className="px-4 mb-6 sm:mb-8">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+      <div className="px-4 mb-4 sm:mb-5">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
           {/* Titre et note */}
           <div className="mb-4 sm:mb-6">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{safeGet(product, 'name', 'Nom du produit')}</h1>
@@ -831,7 +831,7 @@ const ModernProductDetail = () => {
             <button
               onClick={handleAddToCart}
               disabled={addingToCart || (product.variants && product.variants.length > 0 && !selectedVariant)}
-              className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg flex items-center justify-center space-x-2 sm:space-x-3"
+              className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl sm:rounded-3xl font-bold text-base sm:text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-2 sm:space-x-3"
             >
               {addingToCart ? (
                 <>
@@ -883,7 +883,7 @@ const ModernProductDetail = () => {
       </div>
 
       {/* Section suggestions d'articles similaires - Centrée et espacée */}
-      <div className="px-4 pb-6 sm:pb-8">
+      <div className="px-4 pb-4 sm:pb-5">
         <div className="max-w-7xl mx-auto">
           <ProductSuggestions productId={id} cartSessionId={cartSessionId} />
         </div>
