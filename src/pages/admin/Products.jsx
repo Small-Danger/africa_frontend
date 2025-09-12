@@ -73,7 +73,8 @@ const Products = () => {
         search: searchTerm || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         category_id: categoryFilter !== 'all' ? categoryFilter : undefined,
-        sort: sortBy ? `${sortBy}-${sortOrder}` : undefined
+        sort_by: sortBy || undefined,
+        sort_order: sortOrder || undefined
       };
       
       // Nettoyer les paramètres undefined
@@ -82,26 +83,27 @@ const Products = () => {
       );
       
       console.log('📦 Paramètres produits:', productsParams);
-      const productsResponse = await productService.getProducts(productsParams);
+      const productsResponse = await productService.getProductsAdmin(productsParams);
       console.log('📦 Réponse API produits:', productsResponse);
       
       if (productsResponse.success) {
-        const productsData = productsResponse.data?.products?.data || productsResponse.data?.products || productsResponse.data || [];
+        console.log('📦 Réponse API complète:', productsResponse);
+        
+        // Structure de réponse admin (data directe)
+        const productsData = productsResponse.data || [];
         console.log('📦 Produits extraits:', productsData);
         
         setProducts(Array.isArray(productsData) ? productsData : []);
         
-        // Gestion de la pagination
-        if (productsResponse.data?.pagination) {
-          setPagination(productsResponse.data.pagination);
-        } else if (productsResponse.data?.meta) {
-          setPagination(prev => ({
-            ...prev,
-            total: productsResponse.data.meta.total || productsData.length,
-            last_page: productsResponse.data.meta.last_page || 1,
-            current_page: productsResponse.data.meta.current_page || 1
-          }));
-        }
+        // Gestion de la pagination (structure admin)
+        setPagination({
+          current_page: productsResponse.current_page || 1,
+          per_page: productsResponse.per_page || 10,
+          total: productsResponse.total || 0,
+          last_page: productsResponse.last_page || 1,
+          from: productsResponse.from || 1,
+          to: productsResponse.to || productsData.length
+        });
       } else {
         console.error('❌ Erreur API produits:', productsResponse.message);
         addNotification('error', productsResponse.message || 'Erreur lors du chargement des produits');

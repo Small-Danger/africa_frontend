@@ -321,6 +321,25 @@ export const productService = {
     return await this.getProducts();
   },
 
+  // Récupérer tous les produits (Admin - avec tous les produits)
+  async getProductsAdmin(filters = {}) {
+    const queryParams = new URLSearchParams();
+    
+    if (filters.category_id) queryParams.append('category_id', filters.category_id);
+    if (filters.subcategory_id) queryParams.append('subcategory_id', filters.subcategory_id);
+    if (filters.search) queryParams.append('search', filters.search);
+    if (filters.status) queryParams.append('status', filters.status);
+    if (filters.min_price) queryParams.append('min_price', filters.min_price);
+    if (filters.max_price) queryParams.append('max_price', filters.max_price);
+    if (filters.sort_by) queryParams.append('sort_by', filters.sort_by);
+    if (filters.sort_order) queryParams.append('sort_order', filters.sort_order);
+    if (filters.page) queryParams.append('page', filters.page);
+    if (filters.per_page) queryParams.append('per_page', filters.per_page);
+
+    const endpoint = `/admin/products${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return await apiRequest(endpoint);
+  },
+
   // Récupérer un produit spécifique
   async getProduct(id) {
     return await apiRequest(`/products/${id}`);
