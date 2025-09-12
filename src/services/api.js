@@ -101,11 +101,17 @@ async function apiRequest(endpoint, options = {}) {
 // Fonction pour récupérer le cookie CSRF
 async function getCsrfCookie() {
   try {
-    await fetch(`${API_BASE_URL}/sanctum/csrf-cookie`, {
+    // Essayer d'abord la route API
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/sanctum/csrf-cookie`, {
       method: 'GET',
       credentials: 'include',
     });
-    console.log('✅ Cookie CSRF récupéré');
+    
+    if (response.ok) {
+      console.log('✅ Cookie CSRF récupéré');
+    } else {
+      console.warn('⚠️ Route CSRF non trouvée, continuons sans');
+    }
   } catch (error) {
     console.warn('⚠️ Erreur lors de la récupération du cookie CSRF:', error);
   }
