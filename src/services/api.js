@@ -136,9 +136,6 @@ export const authService = {
 
   // Connexion (client ou admin)
   async login(email, password) {
-    // Récupérer le cookie CSRF avant la connexion
-    await getCsrfCookie();
-    
     const credentials = { email, password };
     const response = await apiRequest('/auth/login', {
       method: 'POST',
