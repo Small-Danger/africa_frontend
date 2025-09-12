@@ -7,6 +7,22 @@ const CACHE_TTL = 0; // Cache désactivé
 // Configuration de l'API
 const API_BASE_URL = API_CONFIG.BASE_URL;
 
+// Fonction pour récupérer le cookie CSRF
+async function getCsrfCookie() {
+  try {
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/sanctum/csrf-cookie`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      console.warn('Impossible de récupérer le cookie CSRF');
+    }
+  } catch (error) {
+    console.warn('Erreur lors de la récupération du cookie CSRF:', error);
+  }
+}
+
 // Classe pour gérer les erreurs API
 class ApiError extends Error {
   constructor(message, status, errors = {}) {
@@ -121,6 +137,9 @@ async function getCsrfCookie() {
 export const authService = {
   // Inscription d'un nouveau client
   async register(userData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     const response = await apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -136,6 +155,9 @@ export const authService = {
 
   // Connexion (client ou admin)
   async login(email, password) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     const credentials = { email, password };
     const response = await apiRequest('/auth/login', {
       method: 'POST',
@@ -177,6 +199,9 @@ export const authService = {
 
   // Mot de passe oublié
   async forgotPassword(emailOrPhone) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify(emailOrPhone),
@@ -230,6 +255,9 @@ export const categoryService = {
 
   // Créer une catégorie (Admin)
   async createCategory(categoryData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     // Maintenant on envoie toujours en JSON pour une meilleure compatibilité
     console.log('=== API SERVICE - Création catégorie ===');
     console.log('Type de données reçues:', typeof categoryData);
@@ -269,6 +297,9 @@ export const categoryService = {
 
   // Mettre à jour une catégorie (Admin)
   async updateCategory(id, categoryData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     // Vérifier si c'est un FormData (pour les images) ou un objet JSON
     const isFormData = categoryData instanceof FormData;
     
@@ -281,6 +312,9 @@ export const categoryService = {
 
   // Supprimer une catégorie (Admin)
   async deleteCategory(id) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest(`/admin/categories/${id}`, {
       method: 'DELETE',
     });
@@ -330,6 +364,9 @@ export const productService = {
 
   // Créer un produit (Admin)
   async createProduct(productData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest('/admin/products', {
       method: 'POST',
       body: JSON.stringify(productData),
@@ -338,6 +375,9 @@ export const productService = {
 
   // Mettre à jour un produit (Admin)
   async updateProduct(id, productData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest(`/admin/products/${id}`, {
       method: 'PUT',
       body: JSON.stringify(productData),
@@ -346,6 +386,9 @@ export const productService = {
 
   // Supprimer un produit (Admin)
   async deleteProduct(id) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest(`/admin/products/${id}`, {
       method: 'DELETE',
     });
@@ -353,6 +396,9 @@ export const productService = {
 
   // Créer plusieurs produits en masse (Admin)
   async createProductsBatch(productsData) {
+    // Récupérer le cookie CSRF pour les requêtes sensibles
+    await getCsrfCookie();
+    
     return await apiRequest('/admin/products/batch', {
       method: 'POST',
       body: JSON.stringify(productsData),
