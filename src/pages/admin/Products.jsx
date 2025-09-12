@@ -86,21 +86,23 @@ const Products = () => {
       console.log('📦 Réponse API produits:', productsResponse);
       
       if (productsResponse.success) {
-        const productsData = productsResponse.data?.products?.data || productsResponse.data?.products || productsResponse.data || [];
-        console.log('📦 Produits extraits:', productsData);
+        console.log('📦 Réponse API complète:', productsResponse);
         
-        setProducts(Array.isArray(productsData) ? productsData : []);
-        
-        // Gestion de la pagination
-        if (productsResponse.data?.pagination) {
-          setPagination(productsResponse.data.pagination);
-        } else if (productsResponse.data?.meta) {
-          setPagination(prev => ({
-            ...prev,
-            total: productsResponse.data.meta.total || productsData.length,
-            last_page: productsResponse.data.meta.last_page || 1,
-            current_page: productsResponse.data.meta.current_page || 1
-          }));
+        // Structure Laravel standard avec pagination
+        if (productsResponse.data?.data) {
+          setProducts(Array.isArray(productsResponse.data.data) ? productsResponse.data.data : []);
+          setPagination({
+            current_page: productsResponse.data.current_page || 1,
+            per_page: productsResponse.data.per_page || 10,
+            total: productsResponse.data.total || 0,
+            last_page: productsResponse.data.last_page || 1,
+            from: productsResponse.data.from || 1,
+            to: productsResponse.data.to || 10
+          });
+        } else {
+          // Fallback pour autres structures
+          const productsData = productsResponse.data?.products || productsResponse.data || [];
+          setProducts(Array.isArray(productsData) ? productsData : []);
         }
       } else {
         console.error('❌ Erreur API produits:', productsResponse.message);
