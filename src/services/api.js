@@ -30,6 +30,7 @@ async function apiRequest(endpoint, options = {}) {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
+    credentials: 'include', // Important pour les cookies CSRF
   };
 
   // Ajouter le token d'authentification si disponible
@@ -97,6 +98,19 @@ async function apiRequest(endpoint, options = {}) {
   }
 }
 
+// Fonction pour récupérer le cookie CSRF
+async function getCsrfCookie() {
+  try {
+    await fetch(`${API_BASE_URL}/sanctum/csrf-cookie`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    console.log('✅ Cookie CSRF récupéré');
+  } catch (error) {
+    console.warn('⚠️ Erreur lors de la récupération du cookie CSRF:', error);
+  }
+}
+
 // Service d'authentification
 export const authService = {
   // Inscription d'un nouveau client
@@ -116,6 +130,9 @@ export const authService = {
 
   // Connexion (client ou admin)
   async login(email, password) {
+    // Récupérer le cookie CSRF avant la connexion
+    await getCsrfCookie();
+    
     const credentials = { email, password };
     const response = await apiRequest('/auth/login', {
       method: 'POST',
