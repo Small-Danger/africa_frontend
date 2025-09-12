@@ -84,7 +84,7 @@ const ModernHome = () => {
     try {
       setApiStatus('testing');
               // Utiliser l'IP locale pour le test sur téléphone
-        const apiUrl = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://api.afrikraga.com/api';
       const response = await fetch(`${apiUrl}/banners`);
       if (response.ok) {
         const data = await response.json();
@@ -439,7 +439,7 @@ const ModernHome = () => {
                           <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
                             <img
                               src={category.image_main}
-                              alt={category.name}
+                          alt={category.name}
                               className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-110 rounded-lg"
                             />
                           </div>
@@ -462,19 +462,19 @@ const ModernHome = () => {
                       <div className="p-4 flex-1 flex flex-col justify-between">
                         <div>
                           <h3 className="font-bold text-gray-900 mb-2 line-clamp-1">{category.name}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-2">{category.description}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-2">{category.description}</p>
                         </div>
                         
                         {/* Footer avec sous-catégories */}
                         <div className="mt-auto">
-                          {category.subcategories && category.subcategories.length > 0 && (
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-blue-600 font-medium">
-                                {category.subcategories.length} sous-catégorie{category.subcategories.length > 1 ? 's' : ''}
-                              </span>
-                              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                            </div>
-                          )}
+                        {category.subcategories && category.subcategories.length > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-blue-600 font-medium">
+                              {category.subcategories.length} sous-catégorie{category.subcategories.length > 1 ? 's' : ''}
+                            </span>
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          </div>
+                        )}
                         </div>
                       </div>
                     </div>

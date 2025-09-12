@@ -6,7 +6,7 @@ const useBanners = () => {
   const [error, setError] = useState(null);
 
   // Configuration de l'API
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-7228.up.railway.app/api';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.afrikraga.com/api';
   
   // Configuration du cache - DÉSACTIVÉ
   const CACHE_KEY = 'bs_shop_banners_cache';

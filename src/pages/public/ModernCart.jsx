@@ -466,12 +466,12 @@ const ModernCart = () => {
             </div>
             
             <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="text-right hidden sm:block">
-                  <div className="text-sm text-gray-500">Total</div>
-                  <div className="text-xl font-bold text-blue-600">
+              <div className="text-right hidden sm:block">
+                <div className="text-sm text-gray-500">Total</div>
+                <div className="text-xl font-bold text-blue-600">
                     {formatPrice(cartSummary.total_price)}
                   </div>
-                </div>
+              </div>
               <div className="bg-blue-100 text-blue-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium">
                 {cartSummary.total_items} article{cartSummary.total_items > 1 ? 's' : ''}
               </div>
@@ -531,12 +531,12 @@ const ModernCart = () => {
                               className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
                             >
                               <div className="w-full h-full flex items-center justify-center">
-                                <img
-                                  src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                                  alt={item.product?.name || 'Produit'}
+                          <img
+                            src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
+                            alt={item.product?.name || 'Produit'}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
-                                />
-                              </div>
+                          />
+                        </div>
                             </Link>
                             
                             {/* Informations principales - Mobile */}
@@ -573,7 +573,7 @@ const ModernCart = () => {
                               to={`/products/${item.product_id}`}
                               className="text-lg sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-2"
                             >
-                              {item.product?.name || 'Nom du produit'}
+                            {item.product?.name || 'Nom du produit'}
                             </Link>
                             
                             {/* Variante avec badge moderne */}
@@ -594,8 +594,8 @@ const ModernCart = () => {
                                 <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">unité</span>
                               </div>
                             </div>
-                            
-                            {/* Contrôles de quantité modernes */}
+                          
+                          {/* Contrôles de quantité modernes */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                               <div className="flex items-center space-x-3">
                                 <span className="text-sm font-medium text-gray-700">Quantité:</span>
@@ -641,32 +641,32 @@ const ModernCart = () => {
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm font-medium text-gray-700">Quantité:</span>
                                 <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden">
-                                  <button
-                                    onClick={() => {
-                                      console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
-                                      handleUpdateQuantity(item.id, item.quantity - 1);
-                                    }}
-                                    disabled={item.quantity <= 1}
+                                <button
+                                  onClick={() => {
+                                    console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
+                                    handleUpdateQuantity(item.id, item.quantity - 1);
+                                  }}
+                                  disabled={item.quantity <= 1}
                                     className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
-                                    <Minus size={16} />
-                                  </button>
+                                >
+                                  <Minus size={16} />
+                                </button>
                                   <span className="w-12 text-center font-bold text-gray-900 border-x-2 border-gray-200 py-2 text-sm bg-gray-50">
-                                    {item.quantity}
-                                  </span>
-                                  <button
-                                    onClick={() => {
-                                      console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
-                                      handleUpdateQuantity(item.id, item.quantity + 1);
-                                    }}
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
+                                    handleUpdateQuantity(item.id, item.quantity + 1);
+                                  }}
                                     className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                  >
-                                    <Plus size={16} />
-                                  </button>
-                                </div>
+                                >
+                                  <Plus size={16} />
+                                </button>
                               </div>
-                              
-                              <div className="text-right">
+                            </div>
+                            
+                            <div className="text-right">
                                 <div className="text-xs text-gray-500">Sous-total</div>
                                 <div className="text-lg font-bold text-blue-600">
                                   {formatPrice(item.unit_price * item.quantity)}
@@ -697,20 +697,20 @@ const ModernCart = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                               </Link>
-                            </div>
                           </div>
+                        </div>
 
                           {/* Bouton supprimer - Desktop */}
-                          <button
-                            onClick={() => {
-                              console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
-                              handleRemoveItem(item.id);
-                            }}
+                        <button
+                          onClick={() => {
+                            console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
+                            handleRemoveItem(item.id);
+                          }}
                             className="hidden sm:block p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors flex-shrink-0 hover:scale-110 transform"
-                            title="Supprimer cet article"
-                          >
+                          title="Supprimer cet article"
+                        >
                             <Trash2 size={24} />
-                          </button>
+                        </button>
                         </div>
                       </div>
                     </div>
