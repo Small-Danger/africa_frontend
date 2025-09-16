@@ -278,7 +278,7 @@ const BatchProductForm = ({
         is_active: product.is_active,
         sort_order: index,
         // Inclure les variantes si l'option est activée
-        ...(includeVariants && getProductVariants(index).length > 0 && {
+        ...(includeVariants && {
           variants: getProductVariants(index).map(variant => ({
             name: variant.name.trim(),
             price: parseFloat(variant.price) || 0,
@@ -290,6 +290,9 @@ const BatchProductForm = ({
         })
       }))
     };
+    
+    // Debug: afficher les données envoyées
+    console.log('Données envoyées pour création en lot:', JSON.stringify(submitData, null, 2));
     
     await onSubmit(submitData);
   };
