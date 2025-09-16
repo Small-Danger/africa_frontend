@@ -445,9 +445,9 @@ const BatchProductForm = ({
                       <div className="space-y-4">
                         {/* Nom du produit */}
                         <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
-                          Nom du produit *
-                        </label>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">
+                            Nom du produit *
+                          </label>
                           <Input
                             value={product.name}
                             onChange={(e) => updateProduct(index, 'name', e.target.value)}
@@ -458,9 +458,9 @@ const BatchProductForm = ({
 
                         {/* Description */}
                         <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
-                          Description *
-                        </label>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">
+                            Description *
+                          </label>
                           <textarea
                             value={product.description}
                             onChange={(e) => updateProduct(index, 'description', e.target.value)}
@@ -473,10 +473,10 @@ const BatchProductForm = ({
 
                         {/* Prix de base */}
                         <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                          <CurrencyEuroIcon className="h-4 w-4 mr-2" />
-                          Prix de base *
-                        </label>
+                          <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                            <CurrencyEuroIcon className="h-4 w-4 mr-2" />
+                            Prix de base *
+                          </label>
                           <Input
                             type="number"
                             value={product.base_price}
