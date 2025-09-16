@@ -400,17 +400,17 @@ const BatchProductForm = ({
                   />
                   <span className="text-sm text-gray-700">Inclure des variantes</span>
                 </label>
-              <Button
-                type="button"
-                onClick={addProduct}
-                variant="outline"
-                size="sm"
-                className="flex items-center space-x-2"
-              >
-                <PlusIcon className="h-4 w-4" />
-                <span>Ajouter une ligne</span>
-              </Button>
-            </div>
+                <Button
+                  type="button"
+                  onClick={addProduct}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  <span>Ajouter une ligne</span>
+                </Button>
+              </div>
 
             {/* Tableau des produits */}
             {products.length === 0 ? (
