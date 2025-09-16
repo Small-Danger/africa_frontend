@@ -170,10 +170,13 @@ const ModernProductDetail = () => {
           setProduct(productData);
           
           // Sélectionner la première variante disponible
+          console.log('🔍 Variantes reçues du produit:', productData.variants);
           if (productData.variants && Array.isArray(productData.variants) && productData.variants.length > 0) {
-            const validVariants = productData.variants.filter(v => v && v.id && v.name);
+            const validVariants = productData.variants.filter(v => v && v.id && v.name && (v.is_active !== false));
+            console.log('✅ Variantes valides filtrées:', validVariants);
             if (validVariants.length > 0) {
-              const availableVariant = validVariants.find(v => v.is_active !== false) || validVariants[0];
+              const availableVariant = validVariants[0];
+              console.log('🎯 Variante sélectionnée automatiquement:', availableVariant);
               setSelectedVariant(availableVariant);
             }
           }
@@ -339,6 +342,11 @@ const ModernProductDetail = () => {
   };
 
   const handleAddToCart = async () => {
+    console.log('🛒 Tentative d\'ajout au panier');
+    console.log('📦 Produit:', product);
+    console.log('🎯 Variante sélectionnée:', selectedVariant);
+    console.log('📊 Variantes disponibles:', product?.variants);
+    
     if (!product) {
       setError('Produit non trouvé');
       return;
@@ -365,6 +373,8 @@ const ModernProductDetail = () => {
         image: product.image_main,
         quantity: quantity
       };
+      
+      console.log('🛒 Élément à ajouter au panier:', itemToAdd);
       
       // Ajout instantané dans le contexte (UI réactive)
       addItem(itemToAdd);
@@ -773,10 +783,10 @@ const ModernProductDetail = () => {
             try {
               const variants = safeGet(product, 'variants', []);
               const validVariants = variants && Array.isArray(variants) 
-                ? variants.filter(v => v && v.id && v.name && typeof v.name === 'string')
+                ? variants.filter(v => v && v.id && v.name && typeof v.name === 'string' && (v.is_active !== false))
                 : [];
               
-              if (validVariants.length > 1) {
+              if (validVariants.length > 0) {
                 return (
                   <div className="mb-4 sm:mb-6">
                     <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Choisir une variante</h3>
