@@ -649,39 +649,40 @@ const ModernCatalog = () => {
                       }
                     </h3>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                       {displayedProducts.map((product, index) => (
                         <Link
                           key={product.id}
                           to={`/products/${product.id}`}
-                          className="block group"
+                          className="block group touch-manipulation"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="bg-white rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-700 hover:-translate-y-3 transform-gpu border border-gray-100 animate-fade-in-up h-[420px] flex flex-col relative">
-                            {/* Badge de nouveauté ou promotion (optionnel) */}
-                            <div className="absolute top-4 left-4 z-10">
-                              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                Nouveau
+                          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl overflow-hidden hover:shadow-xl sm:hover:shadow-2xl transition-all duration-500 sm:duration-700 hover:-translate-y-2 sm:hover:-translate-y-3 transform-gpu border border-gray-100 animate-fade-in-up h-[380px] sm:h-[420px] flex flex-col relative active:scale-95">
+                            {/* Badge de nouveauté ou promotion (optionnel) - Mobile optimisé */}
+                            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10">
+                              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs font-bold shadow-lg">
+                                <span className="hidden sm:inline">Nouveau</span>
+                                <span className="sm:hidden">NEW</span>
                               </div>
                             </div>
                             
-                            {/* Badge de prix flottant - Style premium */}
-                            <div className="absolute top-4 right-4 z-10">
-                              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-2xl shadow-xl backdrop-blur-sm">
-                                <span className="text-sm font-bold">
+                            {/* Badge de prix flottant - Mobile optimisé */}
+                            <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl shadow-xl backdrop-blur-sm">
+                                <span className="text-xs sm:text-sm font-bold">
                                   {Math.round(Number(product.base_price || 0))} FCFA
                                 </span>
                               </div>
                             </div>
                             
-                            {/* Image du produit - Style commercial premium */}
-                            <div className="h-72 bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center flex-shrink-0">
+                            {/* Image du produit - Mobile first optimisé */}
+                            <div className="h-64 sm:h-72 bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden flex items-center justify-center flex-shrink-0">
                               {product.image_main ? (
-                                <div className="w-full h-full flex items-center justify-center p-4">
+                                <div className="w-full h-full flex items-center justify-center p-3 sm:p-4">
                                   <img
                                     src={product.image_main}
                                     alt={product.name}
-                                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out rounded-2xl shadow-lg"
+                                    className="w-full h-full object-cover object-center group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-500 sm:duration-700 ease-out rounded-xl sm:rounded-2xl shadow-lg"
                                     style={{
                                       imageRendering: 'high-quality',
                                       WebkitImageRendering: 'high-quality'
@@ -695,117 +696,117 @@ const ModernCatalog = () => {
                                 </div>
                               ) : null}
                               
-                              {/* Image de fallback premium */}
+                              {/* Image de fallback premium - Mobile optimisé */}
                               <div className={`w-full h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center ${product.image_main ? 'hidden' : 'flex'}`}>
                                 <div className="text-center">
-                                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl">
-                                    <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-xl">
+                                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                     </svg>
                                   </div>
-                                  <span className="text-blue-600 font-semibold text-sm">Produit Premium</span>
+                                  <span className="text-blue-600 font-semibold text-xs sm:text-sm">Produit Premium</span>
                                 </div>
                               </div>
                               
-                              {/* Overlay premium au survol */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                              {/* Overlay premium au survol - Desktop seulement */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500 hidden sm:block"></div>
                               
-                              {/* Bouton d'action rapide au survol */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-                                <div className="bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl">
-                                  <span className="text-gray-800 font-semibold text-sm flex items-center">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {/* Bouton d'action rapide au survol - Desktop seulement */}
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 sm:group-hover:opacity-100 transition-all duration-500 transform translate-y-4 sm:group-hover:translate-y-0 hidden sm:flex">
+                                <div className="bg-white/95 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl shadow-2xl">
+                                  <span className="text-gray-800 font-semibold text-xs sm:text-sm flex items-center">
+                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
-                                    Voir les détails
+                                    Voir détails
                                   </span>
                                 </div>
                               </div>
                             </div>
                             
-                            {/* Contenu du produit - Design commercial premium */}
-                            <div className="p-6 flex-1 flex flex-col relative">
-                              {/* Titre - Style commercial */}
-                              <div className="mb-4 h-14 flex items-start">
-                                <h3 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
+                            {/* Contenu du produit - Mobile first optimisé */}
+                            <div className="p-4 sm:p-6 flex-1 flex flex-col relative">
+                              {/* Titre - Mobile optimisé */}
+                              <div className="mb-3 sm:mb-4 h-12 sm:h-14 flex items-start">
+                                <h3 className="font-bold text-gray-900 text-base sm:text-lg line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
                                   {product.name}
                                 </h3>
                               </div>
                               
-                              {/* Description - Style commercial */}
-                              <div className="mb-5 h-12 flex items-start">
+                              {/* Description - Mobile optimisé */}
+                              <div className="mb-4 sm:mb-5 h-10 sm:h-12 flex items-start">
                                 {product.description ? (
-                                  <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{product.description}</p>
+                                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">{product.description}</p>
                                 ) : (
                                   <div className="h-full"></div>
                                 )}
                               </div>
                               
-                              {/* Prix et CTA - Design commercial premium */}
+                              {/* Prix et CTA - Mobile first design */}
                               <div className="mt-auto">
-                                <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center justify-between mb-3 sm:mb-4">
                                   <div className="flex flex-col">
-                                    <span className="text-2xl font-bold text-gray-900">
+                                    <span className="text-lg sm:text-2xl font-bold text-gray-900">
                                       {Math.round(Number(product.base_price || 0))} FCFA
                                     </span>
-                                    <span className="text-xs text-gray-500">Prix unitaire</span>
+                                    <span className="text-xs text-gray-500 hidden sm:block">Prix unitaire</span>
                                   </div>
-                                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 group-hover:scale-110 shadow-lg">
-                                    <svg className="w-6 h-6 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 group-hover:scale-110 shadow-lg">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
                                   </div>
                                 </div>
                                 
-                                {/* Footer commercial */}
+                                {/* Footer commercial - Mobile optimisé */}
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <div className="flex items-center space-x-1.5 sm:space-x-2">
+                                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
                                     <span className="text-xs text-gray-500 font-medium">En stock</span>
                                   </div>
-                                  <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-1 rounded-full">
-                                    Découvrir
+                                  <span className="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-1 sm:px-3 sm:py-1 rounded-full">
+                                    Voir
                                   </span>
                                 </div>
                               </div>
                             </div>
                             
-                            {/* Bordure d'accent au survol */}
-                            <div className="absolute inset-0 rounded-3xl border-2 border-transparent group-hover:border-blue-200 transition-all duration-500 pointer-events-none"></div>
+                            {/* Bordure d'accent au survol - Desktop seulement */}
+                            <div className="absolute inset-0 rounded-2xl sm:rounded-3xl border-2 border-transparent sm:group-hover:border-blue-200 transition-all duration-500 pointer-events-none hidden sm:block"></div>
                           </div>
                         </Link>
                       ))}
                     </div>
                     
-                    {/* Bouton "Voir plus" - Style commercial premium */}
+                    {/* Bouton "Voir plus" - Mobile first optimisé */}
                     {hasMoreProducts && (
-                      <div className="flex justify-center mt-16">
+                      <div className="flex justify-center mt-12 sm:mt-16 px-4">
                         <button
                           onClick={loadMoreProducts}
                           disabled={loadingMore}
-                          className="group relative inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold rounded-3xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden"
+                          className="group relative inline-flex items-center justify-center px-6 py-4 sm:px-10 sm:py-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-bold rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl hover:shadow-2xl sm:hover:shadow-3xl transform hover:scale-105 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none overflow-hidden w-full sm:w-auto max-w-sm sm:max-w-none"
                         >
-                          {/* Effet de brillance au survol */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                          {/* Effet de brillance au survol - Desktop seulement */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full sm:group-hover:translate-x-full transition-transform duration-1000 hidden sm:block"></div>
                           
                           {loadingMore ? (
                             <>
-                              <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin mr-4"></div>
-                              <span className="text-lg">Chargement des produits...</span>
+                              <div className="w-5 h-5 sm:w-6 sm:h-6 border-2 sm:border-3 border-white border-t-transparent rounded-full animate-spin mr-3 sm:mr-4"></div>
+                              <span className="text-sm sm:text-lg">Chargement...</span>
                             </>
                           ) : (
                             <>
-                              <div className="flex items-center space-x-3">
-                                <svg className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <div className="flex items-center space-x-2 sm:space-x-3 w-full justify-center">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                 </svg>
-                                <span className="text-lg">Découvrir plus de produits</span>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-sm bg-white/25 px-3 py-1 rounded-full font-semibold">
-                                    +{filteredProducts.length - displayedProducts.length} articles
+                                <span className="text-sm sm:text-lg">Plus de produits</span>
+                                <div className="flex items-center space-x-1 sm:space-x-2">
+                                  <span className="text-xs sm:text-sm bg-white/25 px-2 py-1 sm:px-3 sm:py-1 rounded-full font-semibold">
+                                    +{filteredProducts.length - displayedProducts.length}
                                   </span>
-                                  <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 sm:w-6 sm:h-6 group-hover:translate-x-1 sm:group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                   </svg>
                                 </div>
@@ -996,14 +997,51 @@ const ModernCatalog = () => {
           }
         }
         
-        /* Optimisations pour mobile */
+        /* Optimisations mobile-first */
         @media (max-width: 640px) {
           .animate-fade-in-up {
             animation-delay: 0s !important;
           }
           
           .product-card:hover {
-            transform: translateY(-4px) scale(1.01);
+            transform: translateY(-2px) scale(1.005);
+          }
+          
+          /* Amélioration de la zone tactile */
+          .touch-manipulation {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          /* Optimisation des transitions pour mobile */
+          .group:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease-out;
+          }
+          
+          /* Amélioration de la lisibilité sur mobile */
+          .text-shadow-mobile {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          }
+          
+          /* Espacement optimisé pour les doigts */
+          .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+          }
+        }
+        
+        /* Optimisations pour tablettes */
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .product-card:hover {
+            transform: translateY(-6px) scale(1.015);
+          }
+        }
+        
+        /* Optimisations pour desktop */
+        @media (min-width: 1025px) {
+          .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
           }
         }
         
