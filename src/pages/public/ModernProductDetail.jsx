@@ -549,20 +549,19 @@ const ModernProductDetail = () => {
       {/* Notification de succès */}
       {showSuccess && <SuccessNotification />}
 
-      {/* Breadcrumb moderne en haut - Décollé et centré */}
+      {/* Breadcrumb moderne en haut - Mobile first optimisé */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none flex-1 min-w-0">
               <Link 
                 to="/catalog" 
-                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-700 rounded-lg font-medium transition-all duration-200 hover:bg-blue-100 active:scale-95 whitespace-nowrap text-xs sm:text-sm"
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 md:py-2 bg-blue-50 text-blue-700 rounded-lg font-medium transition-all duration-200 hover:bg-blue-100 active:scale-95 whitespace-nowrap text-xs sm:text-sm touch-manipulation"
               >
                 <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-                <span className="hidden sm:inline">Accueil</span>
-                <span className="sm:hidden">Accueil</span>
+                <span>Accueil</span>
               </Link>
               
               <div className="flex items-center space-x-1">
@@ -573,7 +572,7 @@ const ModernProductDetail = () => {
               
               <Link 
                 to="/catalog" 
-                className="px-2 sm:px-3 py-1.5 sm:py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-all duration-200 active:scale-95 whitespace-nowrap text-xs sm:text-sm"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 md:py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-all duration-200 active:scale-95 whitespace-nowrap text-xs sm:text-sm touch-manipulation"
               >
                 <span>Catalogue</span>
               </Link>
@@ -586,9 +585,9 @@ const ModernProductDetail = () => {
               
               <Link 
                 to={`/catalog/${category.toLowerCase().replace(' ', '-')}`} 
-                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-100 text-gray-900 rounded-lg font-medium whitespace-nowrap text-xs sm:text-sm"
+                className="px-2 sm:px-3 py-1 sm:py-1.5 md:py-2 bg-gray-100 text-gray-900 rounded-lg font-medium whitespace-nowrap text-xs sm:text-sm"
               >
-                <span className="truncate max-w-20 sm:max-w-none">{category}</span>
+                <span className="truncate max-w-16 sm:max-w-20 md:max-w-none">{category}</span>
               </Link>
               
               <div className="flex items-center space-x-1">
@@ -597,16 +596,16 @@ const ModernProductDetail = () => {
                 </svg>
               </div>
               
-              <div className="px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-100 text-blue-900 rounded-lg font-medium whitespace-nowrap text-xs sm:text-sm">
-                <span className="truncate max-w-20 sm:max-w-none">{subcategory}</span>
+              <div className="px-2 sm:px-3 py-1 sm:py-1.5 md:py-2 bg-blue-100 text-blue-900 rounded-lg font-medium whitespace-nowrap text-xs sm:text-sm">
+                <span className="truncate max-w-16 sm:max-w-20 md:max-w-none">{subcategory}</span>
               </div>
             </div>
             
             <button 
               onClick={() => window.history.back()}
-              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-all duration-200 active:scale-95 ml-2 sm:ml-3 flex-shrink-0"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-all duration-200 active:scale-95 ml-1 sm:ml-2 md:ml-3 flex-shrink-0 touch-manipulation"
             >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -614,11 +613,11 @@ const ModernProductDetail = () => {
         </div>
       </div>
 
-      {/* Container principal avec max-width et espacement du header */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Carousel d'images moderne - Décollé du header et centré */}
-        <div className="relative bg-white mb-4 sm:mb-5 rounded-3xl overflow-hidden shadow-xl border border-gray-100">
-          <div className="relative h-80 sm:h-96 lg:h-[24rem] overflow-hidden bg-gray-50 flex items-center justify-center">
+      {/* Container principal avec max-width et espacement du header - Mobile first */}
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Carousel d'images moderne - Mobile optimisé */}
+        <div className="relative bg-white mb-3 sm:mb-4 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg sm:shadow-xl border border-gray-100">
+          <div className="relative h-72 sm:h-80 md:h-96 lg:h-[24rem] overflow-hidden bg-gray-50 flex items-center justify-center">
           {productImages.length > 0 ? (
             <div className="w-full h-full flex items-center justify-center">
               <img
@@ -651,40 +650,40 @@ const ModernProductDetail = () => {
             </div>
           </div>
           
-          {/* Boutons de navigation du carousel - Optimisés mobile */}
+          {/* Boutons de navigation du carousel - Mobile first optimisés */}
           {productImages.length > 1 && (
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
+                className="absolute left-2 sm:left-3 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-2.5 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation active:scale-95"
               >
-                <ChevronLeft size={24} className="text-gray-700 sm:w-6 sm:h-6" />
+                <ChevronLeft size={20} className="text-gray-700 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               </button>
               <button
                 onClick={nextImage}
-                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-3 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation"
+                className="absolute right-2 sm:right-3 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm p-2.5 sm:p-3 rounded-full shadow-lg hover:bg-white transition-all duration-200 hover:scale-110 touch-manipulation active:scale-95"
               >
-                <ChevronRight size={24} className="text-gray-700 sm:w-6 sm:h-6" />
+                <ChevronRight size={20} className="text-gray-700 sm:w-5 sm:h-5 md:w-6 md:h-6" />
               </button>
             </>
           )}
           
-          {/* Indicateur de position - Optimisé mobile */}
+          {/* Indicateur de position - Mobile first optimisé */}
           {productImages.length > 1 && (
-            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/80 backdrop-blur-sm text-white px-3 sm:px-3 py-1.5 rounded-full text-sm sm:text-sm font-medium">
+            <div className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 bg-black/80 backdrop-blur-sm text-white px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
               {currentImageIndex + 1} / {productImages.length}
             </div>
           )}
         </div>
         
-        {/* Indicateurs de navigation (points) - Optimisés mobile */}
+        {/* Indicateurs de navigation (points) - Mobile first optimisés */}
         {productImages.length > 1 && (
-          <div className="flex justify-center space-x-2 sm:space-x-2 py-3 sm:py-4">
+          <div className="flex justify-center space-x-1.5 sm:space-x-2 py-2 sm:py-3 md:py-4">
             {productImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => goToImage(index)}
-                className={`w-3 h-3 sm:w-3 sm:h-3 rounded-full transition-all duration-200 touch-manipulation ${
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full transition-all duration-200 touch-manipulation active:scale-90 ${
                   index === currentImageIndex 
                     ? 'bg-blue-600 scale-125' 
                     : 'bg-gray-300 hover:bg-gray-400'
@@ -694,14 +693,14 @@ const ModernProductDetail = () => {
           </div>
         )}
         
-        {/* Grille des miniatures - Centrée et espacée */}
+        {/* Grille des miniatures - Mobile first optimisée */}
         {productImages.length > 1 && (
-          <div className="px-4 pb-4 bg-gray-50">
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 max-w-md mx-auto">
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4 bg-gray-50">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-3 max-w-lg mx-auto">
               {productImages.map((image, index) => (
                 <div 
                   key={`thumbnail-${index}`}
-                  className={`relative group cursor-pointer overflow-hidden rounded-xl border-2 transition-all duration-200 shadow-sm ${
+                  className={`relative group cursor-pointer overflow-hidden rounded-lg sm:rounded-xl border-2 transition-all duration-200 shadow-sm touch-manipulation active:scale-95 ${
                     index === currentImageIndex 
                       ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg scale-105' 
                       : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-105'
@@ -711,7 +710,7 @@ const ModernProductDetail = () => {
                   <img
                     src={image}
                     alt={`${safeGet(product, 'name', 'Produit')} - Miniature ${index + 1}`}
-                    className="w-full h-20 sm:h-20 lg:h-24 object-cover object-center group-hover:scale-110 transition-transform duration-200"
+                    className="w-full h-16 sm:h-20 md:h-24 object-cover object-center group-hover:scale-110 transition-transform duration-200"
                     style={{
                       imageRendering: 'high-quality',
                       WebkitImageRendering: 'high-quality',
@@ -724,28 +723,28 @@ const ModernProductDetail = () => {
                     }}
                   />
                   
-                  {/* Image de fallback pour les miniatures */}
-                  <div className="w-full h-20 sm:h-20 lg:h-24 bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {/* Image de fallback pour les miniatures - Mobile optimisée */}
+                  <div className="w-full h-16 sm:h-20 md:h-24 bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center hidden">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
                   
-                  {/* Overlay au survol avec effet de zoom */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 transform group-hover:scale-110">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {/* Overlay au survol avec effet de zoom - Desktop seulement */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-all duration-200 items-center justify-center hidden sm:flex">
+                    <div className="opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 transform sm:group-hover:scale-110">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Indicateur de sélection amélioré */}
+                  {/* Indicateur de sélection amélioré - Mobile optimisé */}
                   {index === currentImageIndex && (
-                    <div className="absolute top-1 right-1 bg-blue-600 text-white text-xs px-2 py-1 rounded-full shadow-lg ring-2 ring-white">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-blue-600 text-white text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full shadow-lg ring-1 sm:ring-2 ring-white">
+                      <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
@@ -757,28 +756,28 @@ const ModernProductDetail = () => {
         )}
       </div>
 
-      {/* Informations produit modernisées - Centrées et espacées */}
-      <div className="px-4 mb-4 sm:mb-5">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
-          {/* Titre et note */}
-          <div className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{safeGet(product, 'name', 'Nom du produit')}</h1>
+      {/* Informations produit modernisées - Alignées avec l'image */}
+      <div className="px-3 sm:px-4 mb-4 sm:mb-5">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl border border-gray-100 p-4 sm:p-6 md:p-8">
+          {/* Titre et note - Mobile first */}
+          <div className="mb-3 sm:mb-4 md:mb-6">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 leading-tight">{safeGet(product, 'name', 'Nom du produit')}</h1>
           </div>
 
-          {/* Prix */}
-          <div className="mb-4 sm:mb-6">
-            <span className="text-2xl sm:text-3xl font-bold text-blue-600">
+          {/* Prix - Mobile optimisé */}
+          <div className="mb-3 sm:mb-4 md:mb-6">
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">
               {selectedVariant ? formatPrice(selectedVariant.price) : formatPrice(safeGet(product, 'base_price', 0))}
             </span>
           </div>
 
-          {/* Description */}
-          <div className="mb-4 sm:mb-6">
+          {/* Description - Mobile first */}
+          <div className="mb-3 sm:mb-4 md:mb-6">
             <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Description</h3>
             <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{safeGet(product, 'description', 'Aucune description disponible')}</p>
           </div>
 
-          {/* Sélection de variante - Optimisée mobile */}
+          {/* Sélection de variante - Mobile first optimisée */}
           {(() => {
             try {
               const variants = safeGet(product, 'variants', []);
@@ -788,14 +787,14 @@ const ModernProductDetail = () => {
               
               if (validVariants.length > 0) {
                 return (
-                  <div className="mb-4 sm:mb-6">
+                  <div className="mb-3 sm:mb-4 md:mb-6">
                     <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Choisir une variante</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                       {validVariants.map((variant) => (
                         <button
                           key={variant.id || `variant-${Math.random()}`}
                           onClick={() => setSelectedVariant(variant)}
-                          className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all ${
+                          className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all touch-manipulation active:scale-95 ${
                             selectedVariant?.id === variant.id
                               ? 'border-blue-500 bg-blue-50 text-blue-700'
                               : 'border-gray-200 hover:border-gray-300 text-gray-700'
@@ -816,42 +815,42 @@ const ModernProductDetail = () => {
             }
           })()}
 
-          {/* Sélection de quantité - Optimisée mobile */}
-          <div className="mb-4 sm:mb-6">
+          {/* Sélection de quantité - Mobile first optimisée */}
+          <div className="mb-3 sm:mb-4 md:mb-6">
             <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Quantité</h3>
             <div className="flex items-center space-x-3 sm:space-x-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors text-base sm:text-lg font-medium"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors text-base sm:text-lg font-medium touch-manipulation active:scale-95"
               >
                 -
               </button>
               <span className="w-16 sm:w-20 text-center font-bold text-gray-900 text-base sm:text-lg">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors text-base sm:text-lg font-medium"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors text-base sm:text-lg font-medium touch-manipulation active:scale-95"
               >
                 +
               </button>
             </div>
           </div>
 
-          {/* Bouton d'ajout au panier - Optimisé mobile */}
-          <div className="mb-4 sm:mb-6">
+          {/* Bouton d'ajout au panier - Mobile first optimisé */}
+          <div className="mb-3 sm:mb-4 md:mb-6">
             <button
               onClick={handleAddToCart}
               disabled={addingToCart || (product.variants && product.variants.length > 0 && !selectedVariant)}
-              className="w-full bg-blue-600 text-white py-4 sm:py-5 rounded-2xl sm:rounded-3xl font-bold text-base sm:text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-2 sm:space-x-3"
+              className="w-full bg-blue-600 text-white py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl md:rounded-3xl font-bold text-sm sm:text-base md:text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-xl flex items-center justify-center space-x-2 sm:space-x-3 touch-manipulation active:scale-95"
             >
               {addingToCart ? (
                 <>
-                  <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent"></div>
-                  <span className="text-sm sm:text-base">Ajout en cours...</span>
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 border-2 border-white border-t-transparent"></div>
+                  <span className="text-xs sm:text-sm md:text-base">Ajout en cours...</span>
                 </>
               ) : (
                 <>
-                  <ShoppingCart size={20} className="sm:w-6 sm:h-6" />
-                  <span className="text-sm sm:text-base">
+                  <ShoppingCart size={18} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  <span className="text-xs sm:text-sm md:text-base">
                     {(() => {
                       if (product.variants && product.variants.length > 0 && !selectedVariant) {
                         return 'Sélectionnez une variante';
@@ -866,23 +865,23 @@ const ModernProductDetail = () => {
               )}
             </button>
             
-            {/* Message d'aide si pas de variante sélectionnée */}
+            {/* Message d'aide si pas de variante sélectionnée - Mobile optimisé */}
             {product.variants && product.variants.length > 0 && !selectedVariant && (
-              <p className="text-center text-sm text-gray-500 mt-3">
+              <p className="text-center text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3">
                 ⚠️ Veuillez sélectionner une variante avant d'ajouter au panier
               </p>
             )}
             
             {/* Message d'aide pour les produits sans variante */}
             {(!product.variants || product.variants.length === 0) && (
-              <p className="text-center text-sm text-green-600 mt-3">
+              <p className="text-center text-xs sm:text-sm text-green-600 mt-2 sm:mt-3">
               </p>
             )}
           </div>
 
-          {/* Affichage des erreurs */}
+          {/* Affichage des erreurs - Mobile optimisé */}
           {error && (
-            <div className="mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl">
+            <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl">
               <p className="text-red-600 text-xs sm:text-sm">
                 <span className="font-medium">Erreur :</span> {error}
               </p>
@@ -892,14 +891,99 @@ const ModernProductDetail = () => {
       </div>
       </div>
 
-      {/* Section suggestions d'articles similaires - Centrée et espacée */}
-      <div className="px-4 pb-4 sm:pb-5">
+      {/* Section suggestions d'articles similaires - Mobile first optimisée */}
+      <div className="px-3 sm:px-4 pb-4 sm:pb-5">
         <div className="max-w-7xl mx-auto">
           <ProductSuggestions productId={id} cartSessionId={cartSessionId} />
         </div>
       </div>
 
-      {/* Styles CSS modernes - Utilisation de Tailwind CSS */}
+      {/* Styles CSS modernes - Mobile first optimisés */}
+      <style jsx>{`
+        /* Optimisations mobile-first */
+        @media (max-width: 640px) {
+          .touch-manipulation {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          /* Amélioration des zones tactiles */
+          .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+          }
+          
+          /* Optimisation des transitions pour mobile */
+          .group:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease-out;
+          }
+          
+          /* Amélioration de la lisibilité sur mobile */
+          .text-shadow-mobile {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          }
+          
+          /* Scrollbar personnalisée pour mobile */
+          .scrollbar-none {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          
+          .scrollbar-none::-webkit-scrollbar {
+            display: none;
+          }
+        }
+        
+        /* Optimisations pour tablettes */
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .group:hover {
+            transform: translateY(-2px) scale(1.01);
+          }
+        }
+        
+        /* Optimisations pour desktop */
+        @media (min-width: 1025px) {
+          .group:hover {
+            transform: translateY(-4px) scale(1.02);
+          }
+        }
+        
+        /* Animations fluides */
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        /* Effet de parallaxe subtil pour les images */
+        .parallax-bg {
+          background-attachment: fixed;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-size: cover;
+        }
+        
+        /* Amélioration du contraste des textes */
+        .text-shadow {
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Focus ring pour l'accessibilité */
+        .focus-ring:focus {
+          outline: 2px solid #3b82f6;
+          outline-offset: 2px;
+        }
+      `}</style>
     </div>
   );
 };
