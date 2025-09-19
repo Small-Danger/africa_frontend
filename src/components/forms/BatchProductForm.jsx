@@ -302,6 +302,7 @@ const BatchProductForm = ({
     setStep(1);
     setSelectedCategoryId('');
     setProducts([]);
+    setProductVariants({});
     onClose();
   };
 
@@ -354,7 +355,7 @@ const BatchProductForm = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                 <TagIcon className="h-4 w-4 mr-2" />
                 Catégorie *
               </label>
@@ -448,7 +449,7 @@ const BatchProductForm = ({
                       <div className="space-y-4">
                         {/* Nom du produit */}
                         <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        <label className="text-sm font-medium text-gray-700 mb-1">
                           Nom du produit *
                         </label>
                           <Input
@@ -461,7 +462,7 @@ const BatchProductForm = ({
 
                         {/* Description */}
                         <div>
-                        <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        <label className="text-sm font-medium text-gray-700 mb-1">
                           Description *
                         </label>
                           <textarea
@@ -508,7 +509,7 @@ const BatchProductForm = ({
 
                       {/* Colonne droite - Image */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <label className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                           <PhotoIcon className="h-4 w-4 mr-2" />
                           Image principale *
                         </label>
@@ -552,12 +553,16 @@ const BatchProductForm = ({
                       </div>
                     </div>
 
-                    {/* Section des variantes */}
+                    {/* Section des variantes - Interface compacte en lignes */}
                     {includeVariants && (
                       <div className="mt-4 border-t border-gray-200 pt-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h5 className="text-sm font-medium text-gray-900">
+                          <h5 className="text-sm font-medium text-gray-900 flex items-center">
+                            <CubeIcon className="h-4 w-4 mr-2" />
                             Variantes du produit
+                            <span className="ml-2 text-xs text-gray-500">
+                              ({getProductVariants(index).length}/5)
+                            </span>
                           </h5>
                           <Button
                             type="button"
@@ -565,103 +570,119 @@ const BatchProductForm = ({
                             variant="outline"
                             size="sm"
                             className="flex items-center space-x-1"
+                            disabled={getProductVariants(index).length >= 5}
                           >
                             <PlusIcon className="h-3 w-3" />
-                            <span>Ajouter une variante</span>
+                            <span>Ajouter</span>
                           </Button>
                         </div>
 
                         {getProductVariants(index).length === 0 ? (
-                          <div className="text-center py-4 border-2 border-dashed border-gray-300 rounded-lg">
-                            <p className="text-sm text-gray-600">
-                              Aucune variante ajoutée. Cliquez sur "Ajouter une variante" pour commencer.
+                          <div className="text-center py-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                            <p className="text-xs text-gray-600">
+                              Aucune variante. Cliquez sur "Ajouter" pour créer des variantes.
                             </p>
                           </div>
                         ) : (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
+                            {/* En-tête du tableau compact */}
+                            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+                              <div className="col-span-3">Nom</div>
+                              <div className="col-span-2">Prix</div>
+                              <div className="col-span-2">SKU</div>
+                              <div className="col-span-2">Stock</div>
+                              <div className="col-span-2">Statut</div>
+                              <div className="col-span-1">Action</div>
+                            </div>
+                            
+                            {/* Lignes des variantes */}
                             {getProductVariants(index).map((variant, variantIndex) => (
-                              <div key={variantIndex} className="bg-white border border-gray-200 rounded-lg p-3">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-medium text-gray-600">
-                                    Variante {variantIndex + 1}
-                                  </span>
+                              <div key={variantIndex} className="grid grid-cols-12 gap-2 items-center bg-white border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
+                                {/* Nom de la variante */}
+                                <div className="col-span-3">
+                                  <Input
+                                    value={variant.name}
+                                    onChange={(e) => updateVariant(index, variantIndex, 'name', e.target.value)}
+                                    placeholder="Ex: Taille M"
+                                    size="sm"
+                                    className="text-xs"
+                                  />
+                                </div>
+                                
+                                {/* Prix */}
+                                <div className="col-span-2">
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={variant.price}
+                                    onChange={(e) => updateVariant(index, variantIndex, 'price', e.target.value)}
+                                    placeholder="0.00"
+                                    size="sm"
+                                    className="text-xs"
+                                  />
+                                </div>
+                                
+                                {/* SKU */}
+                                <div className="col-span-2">
+                                  <Input
+                                    value={variant.sku}
+                                    onChange={(e) => updateVariant(index, variantIndex, 'sku', e.target.value)}
+                                    placeholder="SKU-001"
+                                    size="sm"
+                                    className="text-xs"
+                                  />
+                                </div>
+                                
+                                {/* Stock */}
+                                <div className="col-span-2">
+                                  <Input
+                                    type="number"
+                                    value={variant.stock_quantity}
+                                    onChange={(e) => updateVariant(index, variantIndex, 'stock_quantity', e.target.value)}
+                                    placeholder="0"
+                                    size="sm"
+                                    className="text-xs"
+                                  />
+                                </div>
+                                
+                                {/* Statut actif */}
+                                <div className="col-span-2 flex items-center justify-center">
+                                  <label className="flex items-center space-x-1 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={variant.is_active}
+                                      onChange={(e) => updateVariant(index, variantIndex, 'is_active', e.target.checked)}
+                                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-3 w-3"
+                                    />
+                                    <span className="text-xs text-gray-700">
+                                      {variant.is_active ? 'Actif' : 'Inactif'}
+                                    </span>
+                                  </label>
+                                </div>
+                                
+                                {/* Bouton supprimer */}
+                                <div className="col-span-1 flex justify-center">
                                   <Button
                                     type="button"
                                     onClick={() => removeVariantFromProduct(index, variantIndex)}
                                     variant="ghost"
                                     size="sm"
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1"
                                   >
                                     <TrashIcon className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                  <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                                      Nom de la variante
-                                    </label>
-                                    <Input
-                                      value={variant.name}
-                                      onChange={(e) => updateVariant(index, variantIndex, 'name', e.target.value)}
-                                      placeholder="Ex: Taille M, Couleur Rouge"
-                                      size="sm"
-                                    />
-                                  </div>
-                                  
-                                  <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                                      Prix
-                                    </label>
-                                    <Input
-                                      type="number"
-                                      step="0.01"
-                                      value={variant.price}
-                                      onChange={(e) => updateVariant(index, variantIndex, 'price', e.target.value)}
-                                      placeholder="0.00"
-                                      size="sm"
-                                    />
-                                  </div>
-                                  
-                                  <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                                      SKU
-                                    </label>
-                                    <Input
-                                      value={variant.sku}
-                                      onChange={(e) => updateVariant(index, variantIndex, 'sku', e.target.value)}
-                                      placeholder="SKU-001"
-                                      size="sm"
-                                    />
-                                  </div>
-                                  
-                                  <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-1 block">
-                                      Stock
-                                    </label>
-                                    <Input
-                                      type="number"
-                                      value={variant.stock_quantity}
-                                      onChange={(e) => updateVariant(index, variantIndex, 'stock_quantity', e.target.value)}
-                                      placeholder="0"
-                                      size="sm"
-                                    />
-                                  </div>
-                                  
-                                  <div className="flex items-center space-x-2">
-                                    <input
-                                      type="checkbox"
-                                      checked={variant.is_active}
-                                      onChange={(e) => updateVariant(index, variantIndex, 'is_active', e.target.checked)}
-                                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <label className="text-xs text-gray-700">
-                                      Actif
-                                    </label>
-                                  </div>
-                                </div>
                               </div>
                             ))}
+                            
+                            {/* Message d'information sur la limite */}
+                            {getProductVariants(index).length >= 5 && (
+                              <div className="text-center py-2">
+                                <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-lg">
+                                  ⚠️ Limite de 5 variantes par produit atteinte
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
