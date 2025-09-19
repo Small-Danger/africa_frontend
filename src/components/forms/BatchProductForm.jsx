@@ -10,7 +10,8 @@ import {
   StarIcon,
   CheckIcon,
   ExclamationTriangleIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  CubeIcon
 } from '@heroicons/react/24/outline';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
