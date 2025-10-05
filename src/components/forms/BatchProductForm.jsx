@@ -697,7 +697,7 @@ const BatchProductForm = ({
             {uploading && (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-sm text-gray-600 mt-2">Traitement des images...</p>
+                <p className="text-sm text-gray-600 mt-2">Traitement des images....</p>
               </div>
             )}
           </div>
