@@ -37,6 +37,10 @@ const BatchProductForm = ({
   // États pour la gestion des variantes
   const [includeVariants, setIncludeVariants] = useState(false);
   const [productVariants, setProductVariants] = useState({}); // { productIndex: [variants] }
+  
+  // États pour les variantes communes
+  const [useCommonVariants, setUseCommonVariants] = useState(false);
+  const [commonVariants, setCommonVariants] = useState([]);
 
   // Charger les catégories avec hiérarchie
   useEffect(() => {
@@ -249,6 +253,38 @@ const BatchProductForm = ({
     return productVariants[productIndex] || [];
   };
 
+  // Gestion des variantes communes
+  const addCommonVariant = () => {
+    setCommonVariants([...commonVariants, {
+      name: '',
+      price: '',
+      sku: '',
+      stock_quantity: '',
+      is_active: true,
+      sort_order: commonVariants.length
+    }]);
+  };
+
+  const updateCommonVariant = (index, field, value) => {
+    setCommonVariants(commonVariants.map((variant, i) => 
+      i === index ? { ...variant, [field]: value } : variant
+    ));
+  };
+
+  const removeCommonVariant = (index) => {
+    setCommonVariants(commonVariants.filter((_, i) => i !== index));
+  };
+
+  const toggleVariantMode = (mode) => {
+    if (mode === 'common') {
+      setUseCommonVariants(true);
+      setIncludeVariants(false);
+    } else {
+      setUseCommonVariants(false);
+      setIncludeVariants(true);
+    }
+  };
+
   // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -271,26 +307,43 @@ const BatchProductForm = ({
     
     const submitData = {
       category_id: parseInt(selectedCategoryId),
-      products: products.map((product, index) => ({
-        name: product.name.trim(),
-        description: product.description.trim(),
-        base_price: parseFloat(product.base_price),
-        image_main: product.image_main,
-        is_active: product.is_active,
-        sort_order: index,
-        // Inclure les variantes si l'option est activée
-        ...(includeVariants && {
-          variants: getProductVariants(index).map(variant => ({
+      products: products.map((product, index) => {
+        const productData = {
+          name: product.name.trim(),
+          description: product.description.trim(),
+          base_price: parseFloat(product.base_price),
+          image_main: product.image_main,
+          is_active: product.is_active,
+          sort_order: index
+        };
+        
+        // Inclure les variantes individuelles si l'option est activée
+        if (includeVariants && !useCommonVariants) {
+          productData.variants = getProductVariants(index).map(variant => ({
             name: variant.name.trim(),
             price: parseFloat(variant.price) || 0,
             sku: variant.sku.trim(),
             stock_quantity: parseInt(variant.stock_quantity) || 0,
             is_active: variant.is_active,
             sort_order: variant.sort_order || 0
-          }))
-        })
-      }))
+          }));
+        }
+        
+        return productData;
+      })
     };
+
+    // Ajouter les variantes communes si activées
+    if (useCommonVariants && commonVariants.length > 0) {
+      submitData.common_variants = commonVariants.map(variant => ({
+        name: variant.name.trim(),
+        price: parseFloat(variant.price) || 0,
+        sku: variant.sku.trim(),
+        stock_quantity: parseInt(variant.stock_quantity) || 0,
+        is_active: variant.is_active,
+        sort_order: variant.sort_order || 0
+      }));
+    }
     
     // Debug: afficher les données envoyées
     console.log('Données envoyées pour création en lot:', JSON.stringify(submitData, null, 2));
@@ -304,6 +357,9 @@ const BatchProductForm = ({
     setSelectedCategoryId('');
     setProducts([]);
     setProductVariants({});
+    setUseCommonVariants(false);
+    setCommonVariants([]);
+    setIncludeVariants(false);
     onClose();
   };
 
@@ -396,15 +452,28 @@ const BatchProductForm = ({
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={includeVariants}
-                    onChange={(e) => setIncludeVariants(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">Inclure des variantes</span>
-                </label>
+                <div className="flex items-center space-x-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="variantMode"
+                      checked={useCommonVariants}
+                      onChange={() => toggleVariantMode('common')}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Variantes communes</span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="variantMode"
+                      checked={includeVariants && !useCommonVariants}
+                      onChange={() => toggleVariantMode('individual')}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Variantes individuelles</span>
+                  </label>
+                </div>
                 <Button
                   type="button"
                   onClick={addProduct}
@@ -417,6 +486,99 @@ const BatchProductForm = ({
                 </Button>
               </div>
             </div>
+
+            {/* Section des variantes communes */}
+            {useCommonVariants && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <CubeIcon className="h-5 w-5 text-blue-600" />
+                    <h4 className="text-sm font-medium text-blue-900">
+                      Variantes communes
+                    </h4>
+                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                      Appliquées à tous les produits
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addCommonVariant}
+                    variant="outline"
+                    size="sm"
+                    className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                  >
+                    <PlusIcon className="h-4 w-4 mr-1" />
+                    Ajouter une variante
+                  </Button>
+                </div>
+
+                {commonVariants.length === 0 ? (
+                  <div className="text-center py-4 text-gray-500">
+                    <CubeIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm">Aucune variante commune définie</p>
+                    <p className="text-xs text-gray-400">Cliquez sur "Ajouter une variante" pour commencer</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {commonVariants.map((variant, index) => (
+                      <div key={index} className="bg-white border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            Variante {index + 1}
+                          </span>
+                          <Button
+                            type="button"
+                            onClick={() => removeCommonVariant(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1">
+                              Nom *
+                            </label>
+                            <Input
+                              value={variant.name}
+                              onChange={(e) => updateCommonVariant(index, 'name', e.target.value)}
+                              placeholder="Ex: Taille S"
+                              size="sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1">
+                              Prix *
+                            </label>
+                            <Input
+                              type="number"
+                              value={variant.price}
+                              onChange={(e) => updateCommonVariant(index, 'price', e.target.value)}
+                              placeholder="0.00"
+                              size="sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-gray-600 mb-1">
+                              SKU
+                            </label>
+                            <Input
+                              value={variant.sku}
+                              onChange={(e) => updateCommonVariant(index, 'sku', e.target.value)}
+                              placeholder="SKU-001"
+                              size="sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Tableau des produits */}
             {products.length === 0 ? (
