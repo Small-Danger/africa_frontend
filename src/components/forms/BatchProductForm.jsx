@@ -316,7 +316,6 @@ const BatchProductForm = ({
           is_active: product.is_active,
           sort_order: index
         };
-        
         // Inclure les variantes individuelles si l'option est activée
         if (includeVariants && !useCommonVariants) {
           productData.variants = getProductVariants(index).map(variant => ({
