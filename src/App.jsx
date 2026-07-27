@@ -20,6 +20,13 @@ import Categories from './pages/admin/Categories'
 import Orders from './pages/admin/Orders'
 import Customers from './pages/admin/Customers'
 import Banners from './pages/admin/Banners'
+import PosProtectedRoute from './components/auth/PosProtectedRoute'
+import PosLayout from './pages/pos/PosLayout'
+import PosCashSessionGate from './pages/pos/PosCashSessionGate'
+import PosSale from './pages/pos/PosSale'
+import PosCashSessionClose from './pages/pos/PosCashSessionClose'
+import PosOrderHistory from './pages/pos/PosOrderHistory'
+import PosCashMovement from './pages/pos/PosCashMovement'
 import { CartProvider } from './contexts/CartContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -188,6 +195,30 @@ function App() {
                   <AdminLayout><Banners /></AdminLayout>
                 </ProtectedRoute>
               } />
+
+              {/* Module caisse (POS) — indépendant du site public et de l'admin */}
+              <Route path="/pos" element={
+                <PosProtectedRoute>
+                  <PosLayout />
+                </PosProtectedRoute>
+              }>
+                <Route index element={
+                  <PosCashSessionGate>
+                    <PosSale />
+                  </PosCashSessionGate>
+                } />
+                <Route path="history" element={
+                  <PosCashSessionGate>
+                    <PosOrderHistory />
+                  </PosCashSessionGate>
+                } />
+                <Route path="movements" element={
+                  <PosCashSessionGate>
+                    <PosCashMovement />
+                  </PosCashSessionGate>
+                } />
+                <Route path="close" element={<PosCashSessionClose />} />
+              </Route>
             </Routes>
            </Router>
         </CartProvider>
