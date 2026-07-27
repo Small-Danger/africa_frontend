@@ -1,6 +1,10 @@
-# Railway / Nixpacks — Vite 7 exige Node.js >= 20.19
+# Railway / Nixpacks — fallback si Dockerfile non utilisé
 [variables]
 NIXPACKS_NODE_VERSION = "20"
+NODE_VERSION = "20"
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = ["npm ci --include=optional"]
