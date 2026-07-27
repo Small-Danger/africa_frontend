@@ -1,0 +1,9 @@
+# Railway / Nixpacks — Vite 7 exige Node.js >= 20.19
+[variables]
+NIXPACKS_NODE_VERSION = "20"
+
+[phases.install]
+cmds = ["npm ci --include=optional"]
+
+[phases.build]
+cmds = ["npm run build"]
