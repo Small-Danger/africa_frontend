@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, User, Package, Tag } from 'lucide-react';
+import { Search, ShoppingCart, User } from 'lucide-react';
 import { cartService, authService, productService, categoryService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import SearchOverlay from './SearchOverlay';
-import { formatPrice } from '../utils/productPrice';
+import SearchSuggestionRow from './SearchSuggestionRow';
 
 const ModernHeader = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,6 +104,10 @@ const ModernHeader = () => {
             name: product.name,
             type: 'product',
             price: product.min_price ?? product.base_price,
+            min_price: product.min_price ?? product.base_price,
+            min_price_label: product.min_price_label ?? null,
+            has_variants: product.has_variants,
+            variants_count: product.variants_count,
             image: product.image_main,
             category: product.category?.name || '',
           }));
@@ -121,6 +125,8 @@ const ModernHeader = () => {
             name: category.name,
             type: 'category',
             slug: category.slug,
+            image: category.image_main,
+            description: category.description,
           }));
 
         setSearchResults([...results, ...matchingCategories]);
@@ -237,31 +243,13 @@ const ModernHeader = () => {
               <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] max-h-80 overflow-y-auto">
                 <div className="p-2">
                   {searchResults.map((result, index) => (
-                    <button
+                    <SearchSuggestionRow
                       key={`${result.type}-${result.id}-${index}`}
-                      type="button"
+                      result={result}
+                      compact
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSuggestionClick(result)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-brand-green-light transition-colors text-left"
-                    >
-                      <div
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          result.type === 'product' ? 'bg-brand-green-light' : 'bg-brand-orange-light'
-                        }`}
-                      >
-                        {result.type === 'product' ? (
-                          <Package size={15} className="text-brand-green" />
-                        ) : (
-                          <Tag size={15} className="text-brand-orange" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate text-sm">{result.name}</p>
-                        {result.type === 'product' && result.price != null && (
-                          <p className="text-xs text-brand-green font-medium">{formatPrice(result.price)}</p>
-                        )}
-                      </div>
-                    </button>
+                    />
                   ))}
                   {searchQuery.trim().length >= 2 && (
                     <button

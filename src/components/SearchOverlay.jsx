@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Package, Tag, ArrowRight } from 'lucide-react';
-import { formatPrice } from '../utils/productPrice';
+import { Search, X, Package, ArrowRight } from 'lucide-react';
+import SearchSuggestionRow from './SearchSuggestionRow';
 
 /**
  * Panneau de recherche plein écran — évite que le header « bouge »
@@ -120,36 +120,14 @@ const SearchOverlay = ({
           <ul className="space-y-2">
             {searchResults.map((result, index) => (
               <li key={`${result.type}-${result.id}-${index}`}>
-                <button
-                  type="button"
+                <SearchSuggestionRow
+                  result={result}
+                  showArrow
                   onClick={() => {
                     onSuggestionClick(result);
                     onClose();
                   }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-brand-cream border border-gray-100 active:bg-brand-green-light transition-colors text-left"
-                >
-                  <div
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      result.type === 'product' ? 'bg-brand-green-light' : 'bg-brand-orange-light'
-                    }`}
-                  >
-                    {result.type === 'product' ? (
-                      <Package size={18} className="text-brand-green" />
-                    ) : (
-                      <Tag size={18} className="text-brand-orange" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{result.name}</p>
-                    {result.type === 'product' && result.price != null && (
-                      <p className="text-sm text-brand-green font-medium">{formatPrice(result.price)}</p>
-                    )}
-                    {result.type === 'category' && (
-                      <p className="text-xs text-gray-500">Catégorie</p>
-                    )}
-                  </div>
-                  <ArrowRight size={16} className="text-gray-400 flex-shrink-0" />
-                </button>
+                />
               </li>
             ))}
           </ul>
