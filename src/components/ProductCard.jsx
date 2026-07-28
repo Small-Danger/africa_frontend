@@ -122,14 +122,14 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
           )}
 
           {/* Badge de prix */}
-          <div className="absolute bottom-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
+          <div className="absolute bottom-3 right-3 bg-brand-green text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
             {formatPrice(minPrice)}
           </div>
         </div>
 
         {/* Informations du produit */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-green transition-colors">
             {productName}
           </h3>
           
@@ -147,7 +147,7 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
             </span>
             
             {variantsCount > 0 && (
-              <span className="text-blue-600 font-medium">
+              <span className="text-brand-orange font-medium">
                 À partir de {formatPrice(minPrice)}
               </span>
             )}

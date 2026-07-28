@@ -7,10 +7,9 @@ import { useCart } from '../contexts/CartContext';
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin, isClient } = useAuth();
+  const { isAdmin } = useAuth();
   const { getTotalItems } = useCart();
 
-  // Utiliser le contexte du panier pour obtenir le nombre d'articles
   const cartItemCount = getTotalItems();
 
   const isActive = (path) => {
@@ -31,7 +30,7 @@ const MobileNavigation = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
-          
+
           const handleClick = (e) => {
             if (item.path === '/profile') {
               if (!authService.isAuthenticated()) {
@@ -43,7 +42,7 @@ const MobileNavigation = () => {
               }
             }
           };
-          
+
           return (
             <Link
               key={item.path}
@@ -51,14 +50,14 @@ const MobileNavigation = () => {
               onClick={handleClick}
               className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-200 relative ${
                 active
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-brand-green bg-brand-green-light'
+                  : 'text-gray-500 hover:text-brand-green'
               }`}
             >
               <div className="relative">
                 <Icon size={20} className="mb-1" />
                 {item.showBadge && cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                  <span className="absolute -top-2 -right-2 bg-brand-orange text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}

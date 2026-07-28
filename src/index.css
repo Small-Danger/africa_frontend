@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-green: #0B5E3C;
+  --color-brand-green-dark: #094A30;
+  --color-brand-green-light: #E8F5EF;
+  --color-brand-orange: #F39200;
+  --color-brand-orange-dark: #D97E00;
+  --color-brand-orange-light: #FFF4E5;
+  --color-brand-cream: #FAFAF8;
+}
+
 /* Styles personnalisés */
 /* Animations personnalisées pour les pages d'authentification */
 @keyframes blob {
@@ -43,11 +53,17 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 20px rgba(11, 94, 60, 0.25);
   }
   50% {
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 40px rgba(243, 146, 0, 0.35);
   }
+}
+
+:root {
+  --brand-green: #0B5E3C;
+  --brand-orange: #F39200;
+  --brand-cream: #FAFAF8;
 }
 
 /* Animation shimmer pour le texte de chargement */
@@ -98,7 +114,16 @@
 
 /* Amélioration des focus states */
 .focus-ring {
-  @apply focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-4 focus:ring-brand-green/20 focus:ring-offset-2;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Effet de glassmorphism amélioré */
