@@ -16,6 +16,9 @@ const PosSale = () => {
   const [clientPhone, setClientPhone] = useState('');
   const [clientResults, setClientResults] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [clientSearching, setClientSearching] = useState(false);
+  const [clientStatus, setClientStatus] = useState('idle');
+  const [clientStatusMessage, setClientStatusMessage] = useState('');
   const [walkInName, setWalkInName] = useState('');
   const [discountAmount, setDiscountAmount] = useState('');
   const [discountReason, setDiscountReason] = useState('');
@@ -70,20 +73,57 @@ const PosSale = () => {
   }, [searchQuery, runSearch]);
 
   useEffect(() => {
-    if (!clientPhone.trim()) {
-      setClientResults([]);
+    if (selectedClient) {
       return;
     }
+
+    const digits = clientPhone.replace(/\D/g, '');
+    if (!clientPhone.trim() || digits.length < 4) {
+      setClientResults([]);
+      setClientSearching(false);
+      setClientStatus(digits.length > 0 && digits.length < 4 ? 'too_short' : 'idle');
+      setClientStatusMessage(
+        digits.length > 0 && digits.length < 4 ? 'Saisissez au moins 4 chiffres' : ''
+      );
+      return;
+    }
+
+    let cancelled = false;
+    setClientSearching(true);
+    setClientStatus('searching');
+    setClientStatusMessage('Recherche en cours...');
+
     const t = setTimeout(async () => {
       try {
         const res = await posService.searchClients(clientPhone.trim());
-        setClientResults(res.data || []);
-      } catch {
+        if (cancelled) return;
+
+        const results = res.data || [];
+        const meta = res.meta || {};
+        setClientResults(results);
+        setClientStatus(meta.status || (results.length ? 'partial' : 'not_found'));
+        setClientStatusMessage(meta.message || '');
+
+        if (meta.exact_match && !selectedClient) {
+          setSelectedClient(meta.exact_match);
+          setWalkInName(meta.exact_match.name);
+          setClientResults([]);
+        }
+      } catch (err) {
+        if (cancelled) return;
         setClientResults([]);
+        setClientStatus('error');
+        setClientStatusMessage(err.message || 'Erreur lors de la recherche client');
+      } finally {
+        if (!cancelled) setClientSearching(false);
       }
     }, 400);
-    return () => clearTimeout(t);
-  }, [clientPhone]);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [clientPhone, selectedClient]);
 
   const addToCart = (item) => {
     setCart((prev) => {
@@ -150,8 +190,24 @@ const PosSale = () => {
     updatePayment(index, 'amount', String(Math.max(0, remaining)));
   };
 
+  const clearClient = () => {
+    setSelectedClient(null);
+    setClientPhone('');
+    setWalkInName('');
+    setClientResults([]);
+    setClientStatus('idle');
+    setClientStatusMessage('');
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return;
+
+    const phoneDigits = clientPhone.replace(/\D/g, '');
+    if (phoneDigits.length >= 4 && !selectedClient && !walkInName.trim()) {
+      setError('Saisissez le nom du client pour enregistrer ce nouveau numéro');
+      return;
+    }
+
     setSubmitting(true);
     setError('');
     try {
@@ -165,7 +221,9 @@ const PosSale = () => {
         discount_amount: discount,
         discount_reason: discountReason || null,
         client_id: selectedClient?.id || null,
-        walk_in_name: !selectedClient && walkInName ? walkInName : null,
+        client_phone: clientPhone.trim() || null,
+        client_name: walkInName.trim() || selectedClient?.name || null,
+        walk_in_name: !selectedClient && !clientPhone.trim() && walkInName ? walkInName : null,
         payments: payments.map((p) => ({
           method: p.method,
           amount: parseFloat(p.amount),
@@ -177,17 +235,29 @@ const PosSale = () => {
       setPayments([{ method: 'especes', amount: '' }]);
       setDiscountAmount('');
       setDiscountReason('');
-      setSelectedClient(null);
-      setWalkInName('');
-      setClientPhone('');
+      clearClient();
       searchRef.current?.focus();
     } catch (err) {
+      const nameErr = err.errors?.client_name;
       const stockErr = err.errors?.stock;
-      setError(stockErr ? stockErr.join(', ') : err.message);
+      setError(
+        nameErr ? nameErr.join(', ') : stockErr ? stockErr.join(', ') : err.message
+      );
     } finally {
       setSubmitting(false);
     }
   };
+
+  const clientStatusClass =
+    clientStatus === 'exact' || selectedClient
+      ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+      : clientStatus === 'partial'
+        ? 'text-blue-700 bg-blue-50 border-blue-200'
+        : clientStatus === 'not_found'
+          ? 'text-amber-700 bg-amber-50 border-amber-200'
+          : clientStatus === 'error'
+            ? 'text-red-700 bg-red-50 border-red-200'
+            : 'text-slate-600 bg-slate-50 border-slate-200';
 
   return (
     <div className="h-[calc(100vh-56px)] flex flex-col lg:flex-row">
@@ -272,54 +342,84 @@ const PosSale = () => {
         <div className="p-4 space-y-4 flex-1">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Client (optionnel) — téléphone
+              Client — téléphone WhatsApp
             </label>
             <Input
               value={clientPhone}
               onChange={(e) => {
                 setClientPhone(e.target.value);
                 setSelectedClient(null);
+                setError('');
               }}
-              placeholder="+226..."
+              placeholder="Ex: 70 12 34 56 ou +22670123456"
+              autoComplete="off"
             />
+            {(clientSearching || clientStatusMessage) && (
+              <p className={`text-xs mt-2 px-3 py-2 rounded-lg border ${clientStatusClass}`}>
+                {clientSearching ? 'Recherche en cours...' : clientStatusMessage}
+              </p>
+            )}
             {clientResults.length > 0 && !selectedClient && (
-              <ul className="mt-1 border rounded-lg bg-white">
+              <ul className="mt-2 border rounded-lg bg-white shadow-sm">
                 {clientResults.map((c) => (
                   <li key={c.id}>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm"
+                      className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm border-b last:border-b-0"
                       onClick={() => {
                         setSelectedClient(c);
-                        setClientPhone(c.phone || c.whatsapp_phone || '');
+                        setWalkInName(c.name);
+                        setClientPhone(c.display_phone || c.phone || c.whatsapp_phone || '');
                         setClientResults([]);
+                        setClientStatus('exact');
+                        setClientStatusMessage('Client existant sélectionné');
                       }}
                     >
-                      {c.name} — {c.phone || c.whatsapp_phone}
+                      <span className="font-medium">{c.name}</span>
+                      <span className="text-slate-500 ml-2">
+                        {c.display_phone || c.phone || c.whatsapp_phone}
+                      </span>
                     </button>
                   </li>
                 ))}
               </ul>
             )}
             {selectedClient && (
-              <p className="text-sm text-emerald-700 mt-1">
-                Client : {selectedClient.name}
+              <div className="mt-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <p className="text-sm text-emerald-800 font-medium">
+                  ✓ Client enregistré : {selectedClient.name}
+                </p>
+                <p className="text-xs text-emerald-700 mt-1">
+                  {selectedClient.display_phone ||
+                    selectedClient.phone ||
+                    selectedClient.whatsapp_phone}
+                </p>
                 <button
                   type="button"
-                  className="ml-2 text-slate-500 underline"
-                  onClick={() => setSelectedClient(null)}
+                  className="mt-2 text-xs text-slate-600 underline"
+                  onClick={clearClient}
                 >
-                  retirer
+                  Changer de client
                 </button>
-              </p>
+              </div>
             )}
             {!selectedClient && (
-              <Input
-                className="mt-2"
-                value={walkInName}
-                onChange={(e) => setWalkInName(e.target.value)}
-                placeholder="Nom client passage (optionnel)"
-              />
+              <div className="mt-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  {clientStatus === 'not_found' && clientPhone.trim()
+                    ? 'Nom du nouveau client *'
+                    : 'Nom du client (si nouveau ou sans téléphone)'}
+                </label>
+                <Input
+                  value={walkInName}
+                  onChange={(e) => setWalkInName(e.target.value)}
+                  placeholder={
+                    clientStatus === 'not_found'
+                      ? 'Obligatoire pour enregistrer ce numéro'
+                      : 'Optionnel'
+                  }
+                />
+              </div>
             )}
           </div>
 
