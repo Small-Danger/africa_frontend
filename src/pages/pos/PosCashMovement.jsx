@@ -52,31 +52,34 @@ const PosCashMovement = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold text-slate-900 mb-6">Mouvements de caisse</h1>
+    <div className="p-4 lg:p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold text-slate-900 mb-1">Mouvements de caisse</h1>
+      <p className="text-sm text-slate-500 mb-6">Entrées et sorties d&apos;espèces hors ventes</p>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 p-6 mb-6 space-y-4">
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="type"
-              value="entree"
-              checked={type === 'entree'}
-              onChange={() => setType('entree')}
-            />
-            <span className="text-emerald-700 font-medium">Entrée (+)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="type"
-              value="sortie"
-              checked={type === 'sortie'}
-              onChange={() => setType('sortie')}
-            />
-            <span className="text-red-700 font-medium">Sortie (−)</span>
-          </label>
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 mb-6 space-y-4 shadow-sm">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setType('entree')}
+            className={`py-4 rounded-xl border-2 font-semibold transition-all ${
+              type === 'entree'
+                ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
+                : 'border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
+          >
+            + Entrée d&apos;argent
+          </button>
+          <button
+            type="button"
+            onClick={() => setType('sortie')}
+            className={`py-4 rounded-xl border-2 font-semibold transition-all ${
+              type === 'sortie'
+                ? 'border-red-400 bg-red-50 text-red-800'
+                : 'border-slate-200 text-slate-600 hover:border-slate-300'
+            }`}
+          >
+            − Sortie d&apos;argent
+          </button>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Montant (FCFA)</label>

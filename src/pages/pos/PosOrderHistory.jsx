@@ -64,25 +64,32 @@ const PosOrderHistory = () => {
   }
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 lg:p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-slate-900">Historique — session en cours</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Historique des ventes</h1>
+          <p className="text-sm text-slate-500 mt-1">Session de caisse en cours</p>
+        </div>
         <Button variant="secondary" size="sm" onClick={loadOrders}>
           Actualiser
         </Button>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {error && (
+        <p className="text-red-600 text-sm mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
+      )}
 
       {orders.length === 0 ? (
-        <p className="text-slate-500">Aucune vente enregistrée dans cette session.</p>
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <p className="text-slate-500">Aucune vente pour l&apos;instant — les ventes apparaîtront ici.</p>
+        </div>
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
             <div
               key={order.id}
-              className={`bg-white rounded-xl border p-4 ${
-                order.status === 'annulée' ? 'border-red-200 opacity-75' : 'border-slate-200'
+              className={`bg-white rounded-2xl border p-5 shadow-sm ${
+                order.status === 'annulée' ? 'border-red-200 opacity-80' : 'border-slate-200'
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
