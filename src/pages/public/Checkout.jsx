@@ -169,7 +169,7 @@ const Checkout = () => {
   if (loading) {
     return (
       <div className="text-center py-16">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-green mx-auto mb-4"></div>
         <h2 className="text-xl font-semibold text-gray-700">Chargement de la commande...</h2>
       </div>
     );
@@ -196,7 +196,7 @@ const Checkout = () => {
         </p>
         <button
           onClick={() => navigate('/catalog')}
-          className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          className="bg-brand-orange hover:bg-brand-orange-dark transition-colors"
         >
           Voir le catalogue
         </button>
@@ -236,7 +236,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_first_name}
                     onChange={(e) => handleInputChange('shipping_first_name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   />
                 </div>
                 
@@ -249,7 +249,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_last_name}
                     onChange={(e) => handleInputChange('shipping_last_name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   />
                 </div>
                 
@@ -262,7 +262,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_address}
                     onChange={(e) => handleInputChange('shipping_address', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     placeholder="123 Rue de la Paix"
                   />
                 </div>
@@ -276,7 +276,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_city}
                     onChange={(e) => handleInputChange('shipping_city', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   />
                 </div>
                 
@@ -289,7 +289,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_postal_code}
                     onChange={(e) => handleInputChange('shipping_postal_code', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   />
                 </div>
                 
@@ -301,7 +301,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_country}
                     onChange={(e) => handleInputChange('shipping_country', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   >
                     <option value="France">France</option>
                     <option value="Belgique">Belgique</option>
@@ -319,7 +319,7 @@ const Checkout = () => {
                     required
                     value={formData.shipping_phone}
                     onChange={(e) => handleInputChange('shipping_phone', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     placeholder={CONTACT_CONFIG.PHONE_PLACEHOLDER}
                   />
                 </div>
@@ -337,7 +337,7 @@ const Checkout = () => {
                     type="checkbox"
                     checked={formData.use_same_address}
                     onChange={(e) => handleInputChange('use_same_address', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300 rounded"
                   />
                   <span className="ml-2 text-sm text-gray-700">
                     Même adresse que la livraison
@@ -356,7 +356,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_first_name}
                       onChange={(e) => handleInputChange('billing_first_name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     />
                   </div>
                   
@@ -369,7 +369,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_last_name}
                       onChange={(e) => handleInputChange('billing_last_name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     />
                   </div>
                   
@@ -382,7 +382,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_address}
                       onChange={(e) => handleInputChange('billing_address', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     />
                   </div>
                   
@@ -395,7 +395,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_city}
                       onChange={(e) => handleInputChange('billing_city', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     />
                   </div>
                   
@@ -408,7 +408,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_postal_code}
                       onChange={(e) => handleInputChange('billing_postal_code', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     />
                   </div>
                   
@@ -420,7 +420,7 @@ const Checkout = () => {
                       required={!formData.use_same_address}
                       value={formData.billing_country}
                       onChange={(e) => handleInputChange('billing_country', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                     >
                       <option value="France">France</option>
                       <option value="Belgique">Belgique</option>
@@ -452,7 +452,7 @@ const Checkout = () => {
                         value="standard"
                         checked={formData.shipping_method === 'standard'}
                         onChange={(e) => handleInputChange('shipping_method', e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
                       />
                       <span className="ml-3">
                         <span className="block text-sm font-medium text-gray-900">
@@ -471,7 +471,7 @@ const Checkout = () => {
                         value="express"
                         checked={formData.shipping_method === 'express'}
                         onChange={(e) => handleInputChange('shipping_method', e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
                       />
                       <span className="ml-3">
                         <span className="block text-sm font-medium text-gray-900">
@@ -498,7 +498,7 @@ const Checkout = () => {
                         value="card"
                         checked={formData.payment_method === 'card'}
                         onChange={(e) => handleInputChange('payment_method', e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
                       />
                       <span className="ml-3">
                         <span className="block text-sm font-medium text-gray-900">
@@ -517,7 +517,7 @@ const Checkout = () => {
                         value="paypal"
                         checked={formData.payment_method === 'paypal'}
                         onChange={(e) => handleInputChange('payment_method', e.target.value)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300"
                       />
                       <span className="ml-3">
                         <span className="block text-sm font-medium text-gray-900">
@@ -542,15 +542,15 @@ const Checkout = () => {
                     required
                     checked={formData.accept_terms}
                     onChange={(e) => handleInputChange('accept_terms', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300 rounded mt-1"
                   />
                   <span className="ml-3 text-sm text-gray-700">
                     J'accepte les{' '}
-                    <a href="#" className="text-blue-600 hover:text-blue-800 underline">
+                    <a href="#" className="text-brand-green hover:text-brand-green-dark underline">
                       conditions générales de vente
                     </a>{' '}
                     et la{' '}
-                    <a href="#" className="text-blue-600 hover:text-blue-800 underline">
+                    <a href="#" className="text-brand-green hover:text-brand-green-dark underline">
                       politique de confidentialité
                     </a>
                     *
@@ -562,7 +562,7 @@ const Checkout = () => {
                     type="checkbox"
                     checked={formData.accept_marketing}
                     onChange={(e) => handleInputChange('accept_marketing', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    className="h-4 w-4 text-brand-green focus:ring-brand-green border-gray-300 rounded mt-1"
                   />
                   <span className="ml-3 text-sm text-gray-700">
                     J'accepte de recevoir des offres promotionnelles et des newsletters
@@ -636,7 +636,7 @@ const Checkout = () => {
               <button
                 type="submit"
                 disabled={submitting || !formData.accept_terms}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors mt-6"
+                className="w-full bg-brand-orange text-white py-3 px-4 rounded-lg font-semibold hover:bg-brand-orange-dark disabled:opacity-50 transition-colors mt-6"
               >
                 {submitting ? 'Traitement...' : 'Confirmer la commande'}
               </button>

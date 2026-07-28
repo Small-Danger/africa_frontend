@@ -1,8 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { EnvelopeIcon, ArrowLeftIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { Mail, CheckCircle, Lock, MessageCircle, Inbox, MousePointerClick, KeyRound } from 'lucide-react';
 import { useNotification } from '../../contexts/NotificationContext';
 import { authService } from '../../services/api';
+import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
+import AuthLayout, {
+  AuthInput,
+  AuthAlert,
+  AuthSubmitButton,
+} from '../../components/auth/AuthLayout';
+
+const STEPS = [
+  {
+    icon: Mail,
+    title: 'Entrez votre email',
+    text: 'L\'adresse associée à votre compte AfrikRaga',
+  },
+  {
+    icon: Inbox,
+    title: 'Consultez votre boîte mail',
+    text: 'Le lien arrive en quelques minutes (vérifiez les spams)',
+  },
+  {
+    icon: KeyRound,
+    title: 'Choisissez un nouveau mot de passe',
+    text: 'Cliquez sur le lien reçu pour sécuriser votre compte',
+  },
+];
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -13,31 +37,32 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email) {
-      setErrors({ email: 'L\'email est requis' });
+      setErrors({ email: 'Indiquez votre adresse email' });
       return;
     }
-    
+
     if (!/\S+@\S+\.\S+/.test(email)) {
       setErrors({ email: 'Format d\'email invalide' });
       return;
     }
-    
+
     setIsLoading(true);
-    
+    setErrors({});
+
     try {
       const response = await authService.forgotPassword(email);
-      
+
       if (response.success) {
-        showSuccess('Email de réinitialisation envoyé avec succès !');
+        showSuccess('Email envoyé ! Consultez votre boîte de réception.');
         setIsSubmitted(true);
       } else {
         showError(response.message || 'Erreur lors de l\'envoi');
-        setErrors({ general: response.message || 'Erreur lors de l\'envoi' });
+        setErrors({ general: response.message || 'Impossible d\'envoyer l\'email pour le moment.' });
       }
     } catch (error) {
-      const errorMessage = error.message || 'Erreur lors de l\'envoi. Veuillez réessayer.';
+      const errorMessage = error.message || 'Impossible d\'envoyer l\'email. Réessayez dans quelques instants.';
       showError(errorMessage);
       setErrors({ general: errorMessage });
     } finally {
@@ -45,172 +70,172 @@ const ForgotPassword = () => {
     }
   };
 
+  const handleResend = async () => {
+    setIsSubmitted(false);
+    setErrors({});
+  };
+
+  const whatsappHelpUrl = generateWhatsAppLink(
+    `Bonjour ${CONTACT_CONFIG.COMPANY.name} ! Je n'ai pas reçu l'email de réinitialisation de mot de passe pour ${email}. Pouvez-vous m'aider ?`
+  );
+
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        </div>
-
-        <div className="relative w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl mb-6 transform scale-0 animate-scale-in">
-              <CheckCircleIcon className="h-10 w-10 text-white" />
+      <AuthLayout
+        title="C'est envoyé !"
+        subtitle="Vérifiez votre boîte mail pour réinitialiser votre mot de passe."
+        backTo="/auth/login"
+        backLabel="Connexion"
+        badge="🇲🇦 Récupération de compte"
+        legalNote={`Besoin d'aide ? ${CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}`}
+        footer={
+          <p>
+            <Link to="/auth/login" className="text-brand-green font-semibold hover:text-brand-green-dark">
+              ← Retour à la connexion
+            </Link>
+          </p>
+        }
+      >
+        <div className="space-y-5">
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-2xl bg-brand-green-light flex items-center justify-center mx-auto mb-4 ring-4 ring-brand-green/10">
+              <CheckCircle size={32} className="text-brand-green" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Email envoyé !</h1>
-            <p className="text-gray-600">
-              Nous avons envoyé un lien de réinitialisation à <span className="font-semibold text-gray-900">{email}</span>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Nous avons envoyé un lien sécurisé à
+            </p>
+            <p className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-green-light text-brand-green-dark text-sm font-semibold border border-brand-green/15">
+              <Mail size={15} />
+              {email}
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 text-center">
-            <p className="text-gray-600 mb-6">
-              Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.
+          <div className="rounded-xl bg-brand-cream/80 border border-gray-100 p-4 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Prochaines étapes</p>
+            {STEPS.slice(1).map(({ icon: Icon, title, text }, index) => (
+              <div key={title} className="flex items-start gap-3">
+                <span className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0 text-brand-green text-xs font-bold">
+                  {index + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                    <Icon size={14} className="text-brand-green" />
+                    {title}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            to="/auth/login"
+            className="block w-full py-3.5 rounded-xl font-bold text-sm text-center text-white bg-brand-orange hover:bg-brand-orange-dark transition-all hover:shadow-md"
+          >
+            Retour à la connexion
+          </Link>
+
+          <div className="rounded-xl border border-brand-green/15 bg-white p-4">
+            <p className="text-xs text-gray-600 mb-3">
+              Toujours rien reçu après 5 minutes ?
             </p>
-            
-            <div className="space-y-4">
-              <Link
-                to="/auth/login"
-                className="inline-flex items-center justify-center w-full py-4 px-6 rounded-2xl font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={handleResend}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-brand-green bg-brand-green-light hover:bg-brand-green-light/80 transition-colors"
               >
-                <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                Retour à la connexion
-              </Link>
-              
-              <p className="text-sm text-gray-500">
-                Vous n'avez pas reçu l'email ?{' '}
-                <button
-                  onClick={() => setIsSubmitted(false)}
-                  className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
-                >
-                  Réessayer
-                </button>
-              </p>
+                Renvoyer l&apos;email
+              </button>
+              <a
+                href={whatsappHelpUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-brand-green hover:bg-brand-green-dark transition-colors flex items-center justify-center gap-1.5"
+              >
+                <MessageCircle size={14} />
+                Aide WhatsApp
+              </a>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-gray-500">
-              © 2024 BS Shop. Tous droits réservés.
-            </p>
-          </div>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-80 h-80 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-      </div>
-
-      <div className="relative w-full max-w-md">
-        {/* Logo et titre */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-2xl mb-6 transform hover:scale-105 transition-transform duration-300">
-            <span className="text-white font-bold text-2xl">BS</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mot de passe oublié ?</h1>
-          <p className="text-gray-600">
-            Pas de panique ! Entrez votre email et nous vous enverrons un lien de réinitialisation.
+    <AuthLayout
+      title="Mot de passe oublié ?"
+      subtitle="Pas de panique — nous vous enverrons un lien sécurisé pour créer un nouveau mot de passe."
+      backTo="/auth/login"
+      backLabel="Connexion"
+      badge="🇲🇦 Récupération de compte"
+      footer={
+        <p>
+          Vous vous en souvenez ?{' '}
+          <Link to="/auth/login" className="text-brand-green font-semibold hover:text-brand-green-dark">
+            Se connecter
+          </Link>
+        </p>
+      }
+    >
+      <div className="mb-5 flex items-start gap-3 rounded-xl bg-brand-green-light/60 border border-brand-green/10 p-4">
+        <div className="w-10 h-10 rounded-xl bg-brand-green flex items-center justify-center flex-shrink-0">
+          <Lock size={18} className="text-white" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-brand-green-dark">Votre compte est protégé</p>
+          <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+            Seul le titulaire de l&apos;email recevra le lien. Personne d&apos;autre ne peut modifier votre mot de passe.
           </p>
         </div>
+      </div>
 
-        {/* Formulaire */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Adresse email
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (errors.email) {
-                      setErrors({ ...errors, email: '' });
-                    }
-                  }}
-                  className={`block w-full pl-12 pr-4 py-4 border-2 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 ${
-                    errors.email 
-                      ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' 
-                      : 'border-gray-200 focus:border-blue-500'
-                  }`}
-                  placeholder="votre@email.com"
-                  autoComplete="email"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-red-600 flex items-center">
-                  <span className="w-1.5 h-1.5 bg-red-600 rounded-full mr-2"></span>
-                  {errors.email}
-                </p>
-              )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {errors.general && <AuthAlert type="error" message={errors.general} />}
+
+        <AuthInput
+          id="email"
+          name="email"
+          type="email"
+          label="Adresse email du compte"
+          icon={Mail}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+          }}
+          error={errors.email}
+          autoComplete="email"
+          placeholder="votre@email.com"
+          hint="Utilisez l'email renseigné lors de votre inscription"
+        />
+
+        <AuthSubmitButton loading={isLoading} loadingText="Envoi en cours…">
+          <span className="inline-flex items-center gap-2">
+            <MousePointerClick size={18} />
+            Envoyer le lien de réinitialisation
+          </span>
+        </AuthSubmitButton>
+      </form>
+
+      <div className="mt-5 pt-5 border-t border-gray-100">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-3">Comment ça marche</p>
+        <div className="space-y-2.5">
+          {STEPS.map(({ icon: Icon, title, text }, index) => (
+            <div key={title} className="flex items-center gap-2.5 text-xs text-gray-600">
+              <span className="w-5 h-5 rounded-full bg-brand-cream border border-gray-200 flex items-center justify-center text-[10px] font-bold text-brand-green flex-shrink-0">
+                {index + 1}
+              </span>
+              <Icon size={13} className="text-brand-green flex-shrink-0" />
+              <span>
+                <strong className="text-gray-800">{title}</strong> — {text}
+              </span>
             </div>
-
-            {/* Erreur générale */}
-            {errors.general && (
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-                <p className="text-sm text-red-600">{errors.general}</p>
-              </div>
-            )}
-
-            {/* Bouton d'envoi */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-4 px-6 rounded-2xl font-semibold text-white transition-all duration-300 transform ${
-                isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl'
-              }`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Envoi en cours...
-                </div>
-              ) : (
-                'Envoyer le lien de réinitialisation'
-              )}
-            </button>
-          </form>
-
-          {/* Lien de retour */}
-          <div className="text-center mt-6">
-            <Link
-              to="/auth/login"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Retour à la connexion
-            </Link>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            © 2024 BS Shop. Tous droits réservés.
-          </p>
+          ))}
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

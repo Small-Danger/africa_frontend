@@ -1,11 +1,289 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, MessageCircle, CheckCircle, X } from 'lucide-react';
-import { cartService, orderService, authService } from '../../services/api';
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ChevronLeft,
+  Home,
+  ChevronRight,
+  MessageCircle,
+  CheckCircle,
+  X,
+  Package,
+  Truck,
+  Shield,
+  ShoppingCart,
+} from 'lucide-react';
+import { cartService, orderService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import CartSuggestions from '../../components/CartSuggestions';
-import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
+import { generateWhatsAppLink } from '../../config/contact';
+
+const formatPriceDisplay = (price) => {
+  if (price === null || price === undefined || price === '') return '0 FCFA';
+  const numPrice = Number(price);
+  if (Number.isNaN(numPrice)) return '0 FCFA';
+  return `${Math.round(numPrice).toLocaleString('fr-FR')} FCFA`;
+};
+
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop';
+
+const CartPageHeader = ({ itemCount, totalItems, totalPrice }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+    <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-brand-green-light/40 to-brand-cream border-b border-gray-100">
+      <Link
+        to="/catalog"
+        className="flex-shrink-0 inline-flex items-center gap-0.5 px-2.5 py-1.5 rounded-lg bg-white border border-gray-200 text-brand-green text-xs font-semibold hover:border-brand-green transition-colors shadow-sm"
+      >
+        <ChevronLeft size={16} strokeWidth={2.5} />
+        <span>Catalogue</span>
+      </Link>
+      <nav className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto scrollbar-hide" aria-label="Fil d'Ariane">
+        <Link
+          to="/"
+          className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-gray-600 bg-white/80 hover:text-brand-green transition-colors"
+        >
+          <Home size={12} />
+          <span>Accueil</span>
+        </Link>
+        <ChevronRight size={12} className="text-gray-300 flex-shrink-0" />
+        <span className="flex-shrink-0 px-2 py-1 rounded-lg text-[11px] font-semibold text-brand-green bg-brand-green-light">
+          Panier
+        </span>
+      </nav>
+    </div>
+    <div className="px-4 py-3 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-lg md:text-xl font-bold text-gray-900">Mon panier</h1>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {itemCount} article{itemCount > 1 ? 's' : ''} · {totalItems} unité{totalItems > 1 ? 's' : ''}
+        </p>
+      </div>
+      <div className="flex-shrink-0 text-right">
+        <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Total</p>
+        <p className="text-lg md:text-xl font-bold text-brand-green">{formatPriceDisplay(totalPrice)}</p>
+      </div>
+    </div>
+    <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
+  </div>
+);
+
+const QuantityControl = ({ quantity, onDecrease, onIncrease, size = 'md' }) => {
+  const btnClass = size === 'sm' ? 'w-9 h-9' : 'w-10 h-10 md:w-11 md:h-11';
+  const textClass = size === 'sm' ? 'w-10 text-sm' : 'w-11 md:w-12 text-base';
+
+  return (
+    <div className="inline-flex items-center border-2 border-gray-200 rounded-xl overflow-hidden bg-white">
+      <button
+        type="button"
+        onClick={onDecrease}
+        disabled={quantity <= 1}
+        className={`${btnClass} flex items-center justify-center hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-brand-green`}
+        aria-label="Diminuer la quantité"
+      >
+        <Minus size={size === 'sm' ? 14 : 16} />
+      </button>
+      <span className={`${textClass} text-center font-bold text-gray-900 border-x-2 border-gray-200 py-2 bg-brand-cream/50`}>
+        {quantity}
+      </span>
+      <button
+        type="button"
+        onClick={onIncrease}
+        className={`${btnClass} flex items-center justify-center hover:bg-brand-cream transition-colors text-brand-green`}
+        aria-label="Augmenter la quantité"
+      >
+        <Plus size={size === 'sm' ? 14 : 16} />
+      </button>
+    </div>
+  );
+};
+
+const CartLineItem = ({ item, onUpdateQuantity, onRemove }) => {
+  const unitPrice = item.unit_price ?? item.price ?? 0;
+  const lineTotal = unitPrice * (item.quantity || 1);
+
+  return (
+    <article className="p-4 md:p-5 hover:bg-brand-cream/30 transition-colors">
+      <div className="flex gap-3 md:gap-4">
+        <Link
+          to={`/products/${item.product_id}`}
+          className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-brand-cream border border-gray-100 hover:border-brand-green/30 transition-colors"
+        >
+          <img
+            src={item.product?.image_main || item.image || PLACEHOLDER_IMAGE}
+            alt={item.product?.name || 'Produit'}
+            className="w-full h-full object-cover"
+          />
+        </Link>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <Link
+                to={`/products/${item.product_id}`}
+                className="text-sm md:text-base font-bold text-gray-900 hover:text-brand-green transition-colors line-clamp-2"
+              >
+                {item.product?.name || item.name || 'Produit'}
+              </Link>
+              {item.variant?.name && (
+                <span className="inline-flex mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-brand-green-light text-brand-green border border-brand-green/15">
+                  {item.variant.name}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Supprimer"
+              aria-label="Supprimer cet article"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Prix unitaire</p>
+              <p className="text-sm font-bold text-brand-green">{formatPriceDisplay(unitPrice)}</p>
+            </div>
+            <QuantityControl
+              quantity={item.quantity}
+              onDecrease={() => onUpdateQuantity(item.id, item.quantity - 1)}
+              onIncrease={() => onUpdateQuantity(item.id, item.quantity + 1)}
+            />
+            <div className="text-right ml-auto md:ml-0">
+              <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Sous-total</p>
+              <p className="text-base md:text-lg font-bold text-gray-900">{formatPriceDisplay(lineTotal)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+const OrderSummaryCard = ({
+  totalItems,
+  totalPrice,
+  creatingOrder,
+  onCheckout,
+  onClearCart,
+  showClearButton,
+  className = '',
+}) => (
+  <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+    <div className="px-4 py-4 md:px-5 border-b border-gray-100 bg-gradient-to-r from-brand-green-light/20 to-white">
+      <h2 className="text-base md:text-lg font-bold text-gray-900">Résumé</h2>
+      <p className="text-xs text-gray-500 mt-0.5">{totalItems} article{totalItems > 1 ? 's' : ''} au total</p>
+    </div>
+
+    <div className="p-4 md:p-5 space-y-3">
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-600">Sous-total</span>
+        <span className="font-semibold text-gray-900">{formatPriceDisplay(totalPrice)}</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-600 flex items-center gap-1.5">
+          <Truck size={14} className="text-brand-green" />
+          Livraison
+        </span>
+        <span className="font-semibold text-brand-green">Gratuite</span>
+      </div>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-600">Taxes</span>
+        <span className="font-medium text-gray-700">Incluses</span>
+      </div>
+
+      <div className="border-t border-gray-100 pt-3">
+        <div className="flex justify-between items-baseline">
+          <span className="text-base font-bold text-gray-900">Total</span>
+          <span className="text-xl font-bold text-brand-green">{formatPriceDisplay(totalPrice)}</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onCheckout}
+        disabled={creatingOrder}
+        className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white py-3.5 rounded-xl font-bold text-sm md:text-base transition-all hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {creatingOrder ? (
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+            <span>Création en cours…</span>
+          </>
+        ) : (
+          <>
+            <ShoppingCart size={18} />
+            <span>Passer la commande</span>
+          </>
+        )}
+      </button>
+
+      {showClearButton && (
+        <button
+          type="button"
+          onClick={onClearCart}
+          className="w-full py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+        >
+          <Trash2 size={15} />
+          Vider le panier
+        </button>
+      )}
+
+      <div className="flex items-center justify-center gap-4 pt-1 text-[10px] text-gray-400">
+        <span className="inline-flex items-center gap-1">
+          <Shield size={12} className="text-brand-green" />
+          Sécurisé
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Truck size={12} className="text-brand-green" />
+          Livraison offerte
+        </span>
+      </div>
+    </div>
+    <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
+  </div>
+);
+
+const CartEmptyState = () => (
+  <div className="min-h-screen bg-brand-cream pb-24">
+    <div className="max-w-3xl mx-auto px-4 pt-4">
+      <CartPageHeader itemCount={0} totalItems={0} totalPrice={0} />
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden text-center px-6 py-12 md:py-16">
+        <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-brand-green-light flex items-center justify-center mx-auto mb-6">
+          <ShoppingBag size={40} className="text-brand-green" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Votre panier est vide</h2>
+        <p className="text-sm text-gray-500 max-w-sm mx-auto mb-8">
+          Parcourez notre catalogue et découvrez les trésors du Maroc livrés chez vous.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            to="/catalog"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-orange hover:bg-brand-orange-dark text-white rounded-xl font-bold text-sm transition-all hover:shadow-md"
+          >
+            <Package size={18} />
+            Découvrir le catalogue
+          </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:border-brand-green hover:text-brand-green transition-colors"
+          >
+            <Home size={18} />
+            Retour à l&apos;accueil
+          </Link>
+        </div>
+        <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green mt-10" aria-hidden />
+      </div>
+    </div>
+  </div>
+);
 
 const ModernCart = () => {
   const navigate = useNavigate();
@@ -16,16 +294,16 @@ const ModernCart = () => {
   // Vérification de sécurité pour le contexte
   if (!cartContext) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du panier...</p>
         </div>
       </div>
     );
   }
   
-  const { items: contextItems, isUpdating, addItem, removeItem, updateQuantity, clearCart, replaceItems, getTotalItems, getTotalPrice } = cartContext;
+  const { items: contextItems, removeItem, updateQuantity, clearCart, replaceItems, getTotalItems, getTotalPrice } = cartContext;
   
   // Utiliser directement le contexte (pas d'état local)
   const cartItems = contextItems || [];
@@ -44,12 +322,10 @@ const ModernCart = () => {
   const [orderData, setOrderData] = useState(null);
   
   // Cache pour éviter les requêtes redondantes
-  const cartCacheRef = useRef(null);
   const abortControllerRef = useRef(null);
   
   // Cache persistant de session
   const SESSION_CACHE_KEY = 'bs_shop_cart_cache';
-  const SESSION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   // Gérer le message de bienvenue depuis la navigation
   useEffect(() => {
@@ -59,14 +335,6 @@ const ModernCart = () => {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, navigate, location.pathname]);
-
-  // Fonction utilitaire pour formater les prix de manière sécurisée
-  const formatPrice = useCallback((price) => {
-    if (price === null || price === undefined || price === '') return '0 FCFA';
-    const numPrice = Number(price);
-    if (isNaN(numPrice)) return '0 FCFA';
-    return `${Math.round(numPrice)} FCFA`;
-  }, []);
 
   const loadCart = useCallback(async () => {
     // Vider le cache de session pour forcer le rechargement depuis l'API
@@ -356,38 +624,43 @@ const ModernCart = () => {
   // Affichage du chargement
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement du panier...</p>
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center pb-24">
+        <div className="text-center px-4">
+          <div className="w-14 h-14 rounded-2xl bg-brand-green-light flex items-center justify-center mx-auto mb-4">
+            <div className="animate-spin rounded-full h-7 w-7 border-2 border-brand-green border-t-transparent" />
+          </div>
+          <p className="text-sm font-medium text-gray-700">Chargement de votre panier…</p>
+          <p className="text-xs text-gray-400 mt-1">Un instant</p>
         </div>
       </div>
     );
   }
 
-
-
   // Affichage de l'erreur
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {error.includes('création de la commande') ? 'Erreur de validation' : 'Erreur de chargement'}
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center pb-24 px-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 max-w-md w-full text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4 text-2xl">
+            ⚠️
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
+            {error.includes('création de la commande') ? 'Erreur de commande' : 'Erreur de chargement'}
           </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="flex space-x-3 justify-center">
-            <button 
-              onClick={() => setError(null)} 
-              className="bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+          <p className="text-sm text-gray-500 mb-6">{error}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
             >
               Retour au panier
             </button>
             {!error.includes('création de la commande') && (
-              <button 
-                onClick={loadCart} 
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              <button
+                type="button"
+                onClick={loadCart}
+                className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-brand-orange text-white hover:bg-brand-orange-dark transition-colors"
               >
                 Réessayer
               </button>
@@ -399,493 +672,202 @@ const ModernCart = () => {
   }
 
   if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="text-gray-600 hover:text-gray-800 transition-colors">
-                <ArrowLeft size={24} />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Panier d'achat</h1>
-                <p className="text-sm text-gray-500">Votre panier est vide</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenu panier vide */}
-        <div className="max-w-7xl mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <ShoppingBag size={64} className="text-gray-400" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Votre panier est vide</h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
-              Découvrez nos produits et ajoutez-les à votre panier pour commencer vos achats.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/catalog"
-                className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 hover:shadow-lg"
-              >
-                <ShoppingBag size={20} className="mr-2" />
-                Découvrir nos produits
-              </Link>
-              <Link
-                to="/"
-                className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200"
-              >
-                Retour à l'accueil
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <CartEmptyState />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header moderne style e-commerce */}
-      <div className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <Link to="/" className="text-gray-600 hover:text-gray-800 transition-colors">
-                <ArrowLeft size={20} className="sm:w-6 sm:h-6" />
-              </Link>
-              <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-900">Panier d'achat</h1>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {cartItems.length} article{cartItems.length > 1 ? 's' : ''} dans votre panier
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="text-right hidden sm:block">
-                <div className="text-sm text-gray-500">Total</div>
-                <div className="text-xl font-bold text-blue-600">
-                    {formatPrice(cartSummary.total_price)}
-                  </div>
-              </div>
-              <div className="bg-blue-100 text-blue-800 px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-xs sm:text-sm font-medium">
-                {cartSummary.total_items} article{cartSummary.total_items > 1 ? 's' : ''}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-brand-cream pb-32 md:pb-12">
+      <div className="max-w-6xl mx-auto px-4 pt-4">
+        <CartPageHeader
+          itemCount={cartItems.length}
+          totalItems={cartSummary.total_items}
+          totalPrice={cartSummary.total_price}
+        />
 
-      {/* Message de bienvenue pour les nouveaux utilisateurs */}
-      {welcomeMessage && (
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+        {welcomeMessage && (
+          <div className="mb-4 bg-white border border-brand-green/20 rounded-2xl p-4 flex items-start justify-between gap-3 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-brand-green-light flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="h-5 w-5 text-brand-green" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-800">{welcomeMessage}</p>
-                <p className="text-xs text-green-600 mt-1">
-                  Vous êtes maintenant connecté et pouvez finaliser votre commande.
+                <p className="text-sm font-semibold text-gray-900">{welcomeMessage}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Vous pouvez maintenant finaliser votre commande.
                 </p>
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setWelcomeMessage(null)}
-              className="flex-shrink-0 text-green-400 hover:text-green-600 transition-colors"
+              className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Fermer"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Contenu principal */}
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
-          
-          {/* Liste des articles - Style Amazon/Jumia */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Articles dans votre panier ({cartItems.length})
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 md:px-5 md:py-4 border-b border-gray-100 flex items-center justify-between">
+                <h2 className="text-sm md:text-base font-bold text-gray-900">
+                  Vos articles
                 </h2>
+                <span className="text-[11px] font-semibold text-brand-green bg-brand-green-light px-2.5 py-1 rounded-full">
+                  {cartItems.length} ligne{cartItems.length > 1 ? 's' : ''}
+                </span>
               </div>
-              
-              <div className="divide-y divide-gray-200">
-                {cartItems && Array.isArray(cartItems) && cartItems.map((item) => 
-                  item && item.id ? (
-                    <div key={item.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-500 hover:-translate-y-1 transform-gpu mb-4 sm:mb-6 overflow-hidden">
-                      <div className="p-3 sm:p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-6">
-                          {/* Image du produit - Optimisé mobile */}
-                          <div className="flex items-center space-x-3 sm:block">
-                            <Link 
-                              to={`/products/${item.product_id}`}
-                              className="w-20 h-20 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 hover:opacity-90 transition-all duration-300 hover:scale-105 group"
-                            >
-                              <div className="w-full h-full flex items-center justify-center">
-                          <img
-                            src={item.product?.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                            alt={item.product?.name || 'Produit'}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 rounded-lg"
-                          />
-                        </div>
-                            </Link>
-                            
-                            {/* Informations principales - Mobile */}
-                            <div className="flex-1 sm:hidden">
-                              <Link 
-                                to={`/products/${item.product_id}`}
-                                className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-1"
-                              >
-                                {item.product?.name || 'Nom du produit'}
-                              </Link>
-                              
-                              {/* Variante mobile */}
-                              {item.variant?.name && (
-                                <div className="mb-2">
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                    {item.variant.name}
-                                  </span>
-                                </div>
-                              )}
-                              
-                              {/* Prix mobile */}
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg font-bold text-blue-600">
-                                  {formatPrice(item.unit_price)}
-                                </span>
-                                <span className="text-xs text-gray-500">unité</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Informations du produit - Desktop */}
-                          <div className="flex-1 min-w-0 hidden sm:block">
-                            <Link 
-                              to={`/products/${item.product_id}`}
-                              className="text-lg sm:text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors cursor-pointer line-clamp-2 mb-2"
-                            >
-                            {item.product?.name || 'Nom du produit'}
-                            </Link>
-                            
-                            {/* Variante avec badge moderne */}
-                            {item.variant?.name && (
-                              <div className="mb-3">
-                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border border-blue-200">
-                                  {item.variant.name}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {/* Prix principal - Style modernisé */}
-                            <div className="mb-4">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-2xl font-bold text-blue-600">
-                                  {formatPrice(item.unit_price)}
-                                </span>
-                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">unité</span>
-                              </div>
-                            </div>
-                          
-                          {/* Contrôles de quantité modernes */}
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                              <div className="flex items-center space-x-3">
-                                <span className="text-sm font-medium text-gray-700">Quantité:</span>
-                                <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                                  <button
-                                    onClick={() => {
-                                      console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
-                                      handleUpdateQuantity(item.id, item.quantity - 1);
-                                    }}
-                                    disabled={item.quantity <= 1}
-                                    className="w-12 sm:w-16 h-12 sm:h-14 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-lg font-bold"
-                                  >
-                                    <Minus size={20} />
-                                  </button>
-                                  <span className="w-12 sm:w-16 text-center font-bold text-gray-900 border-x-2 border-gray-200 py-3 text-lg bg-gray-50">
-                                    {item.quantity}
-                                  </span>
-                                  <button
-                                    onClick={() => {
-                                      console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
-                                      handleUpdateQuantity(item.id, item.quantity + 1);
-                                    }}
-                                    className="w-12 sm:w-16 h-12 sm:h-14 flex items-center justify-center hover:bg-gray-50 transition-colors text-lg font-bold"
-                                  >
-                                    <Plus size={20} />
-                                  </button>
-                                </div>
-                              </div>
-                              
-                              <div className="text-right">
-                                <div className="text-sm text-gray-500 mb-1">Sous-total</div>
-                                <div className="text-2xl font-bold text-blue-600">
-                                  {formatPrice(item.unit_price * item.quantity)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Contrôles mobile - Optimisés */}
-                          <div className="sm:hidden w-full">
-                            {/* Contrôles de quantité mobile */}
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm font-medium text-gray-700">Quantité:</span>
-                                <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden">
-                                <button
-                                  onClick={() => {
-                                    console.log('🔍 Item ID dans JSX:', item.id, 'Item complet:', item);
-                                    handleUpdateQuantity(item.id, item.quantity - 1);
-                                  }}
-                                  disabled={item.quantity <= 1}
-                                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                >
-                                  <Minus size={16} />
-                                </button>
-                                  <span className="w-12 text-center font-bold text-gray-900 border-x-2 border-gray-200 py-2 text-sm bg-gray-50">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={() => {
-                                    console.log('🔍 Item ID dans JSX (plus):', item.id, 'Item complet:', item);
-                                    handleUpdateQuantity(item.id, item.quantity + 1);
-                                  }}
-                                    className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                >
-                                  <Plus size={16} />
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="text-right">
-                                <div className="text-xs text-gray-500">Sous-total</div>
-                                <div className="text-lg font-bold text-blue-600">
-                                  {formatPrice(item.unit_price * item.quantity)}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Actions mobile */}
-                            <div className="flex items-center justify-between">
-                              <button
-                                onClick={() => {
-                                  console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
-                                  handleRemoveItem(item.id);
-                                }}
-                                className="flex items-center space-x-2 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Supprimer cet article"
-                              >
-                                <Trash2 size={16} />
-                                <span className="text-sm font-medium">Supprimer</span>
-                              </button>
-                              
-                              <Link 
-                                to={`/products/${item.product_id}`}
-                                className="flex items-center space-x-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              >
-                                <span className="text-sm font-medium">Voir détails</span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </Link>
-                          </div>
-                        </div>
-
-                          {/* Bouton supprimer - Desktop */}
-                        <button
-                          onClick={() => {
-                            console.log('🔍 Item ID dans JSX (suppression):', item.id, 'Item complet:', item);
-                            handleRemoveItem(item.id);
-                          }}
-                            className="hidden sm:block p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors flex-shrink-0 hover:scale-110 transform"
-                          title="Supprimer cet article"
-                        >
-                            <Trash2 size={24} />
-                        </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null
+              <div className="divide-y divide-gray-100">
+                {cartItems.map(
+                  (item) =>
+                    item?.id && (
+                      <CartLineItem
+                        key={item.id}
+                        item={item}
+                        onUpdateQuantity={handleUpdateQuantity}
+                        onRemove={handleRemoveItem}
+                      />
+                    )
                 )}
               </div>
+              <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
             </div>
           </div>
 
-          {/* Sidebar de résumé - Style Amazon/Jumia */}
-          <div className="lg:col-span-1 order-first lg:order-last">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-24">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Résumé de la commande</h3>
-              </div>
-              
-              <div className="p-4 sm:p-6 space-y-4">
-                {/* Sous-total */}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Sous-total ({cartSummary.total_items} article{cartSummary.total_items > 1 ? 's' : ''})</span>
-                  <span className="font-medium">{formatPrice(cartSummary.total_price)}</span>
-                </div>
-                
-                {/* Frais de livraison */}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Frais de livraison</span>
-                  <span className="font-medium text-green-600">Gratuit</span>
-                </div>
-                
-                {/* Taxe */}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Taxes</span>
-                  <span className="font-medium">Incluses</span>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span className="text-blue-600">{formatPrice(cartSummary.total_price)}</span>
-                  </div>
-                </div>
-                
-                {/* Bouton de commande */}
-                <button
-                  onClick={handleCheckout}
-                  disabled={creatingOrder || cartItems.length === 0}
-                  className="w-full bg-blue-600 text-white py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-lg flex items-center justify-center space-x-2"
-                >
-                  {creatingOrder ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                      <span>Création...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag size={20} />
-                      <span>Passer la commande</span>
-                    </>
-                  )}
-                </button>
-                
-                {/* Bouton vider le panier */}
-                {cartItems.length > 0 && (
-                  <button
-                    onClick={handleClearCart}
-                    className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Trash2 size={16} />
-                    <span>Vider le panier</span>
-                  </button>
-                )}
-                
-                {/* Informations de sécurité */}
-                <div className="text-xs text-gray-500 text-center space-y-1">
-                  <p>🔒 Paiement sécurisé</p>
-                  <p>🚚 Livraison gratuite</p>
-                  <p>↩️ Retour facile</p>
-                </div>
-              </div>
+          <div className="hidden lg:block lg:col-span-1">
+            <OrderSummaryCard
+              totalItems={cartSummary.total_items}
+              totalPrice={cartSummary.total_price}
+              creatingOrder={creatingOrder}
+              onCheckout={handleCheckout}
+              onClearCart={handleClearCart}
+              showClearButton={cartItems.length > 0}
+              className="sticky top-24"
+            />
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <CartSuggestions cartSessionId={cartSessionId} />
+        </div>
+
+        <div className="mt-6 mb-4">
+          <div className="bg-white rounded-2xl border border-brand-green/15 overflow-hidden shadow-sm">
+            <div className="px-4 py-4 md:px-5 bg-gradient-to-r from-brand-green-light/40 to-white">
+              <h3 className="text-sm font-bold text-brand-green-dark flex items-center gap-2">
+                <MessageCircle size={16} />
+                Prochaine étape
+              </h3>
+              <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                {isAuthenticated
+                  ? 'Validez votre commande — nous vous contactons via WhatsApp pour organiser la livraison.'
+                  : 'Créez votre compte en quelques secondes pour finaliser. Nous vous recontactons ensuite par WhatsApp. Simple et sécurisé.'}
+              </p>
             </div>
+            <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
           </div>
         </div>
       </div>
 
-      {/* Section suggestions intelligentes */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <CartSuggestions cartSessionId={cartSessionId} />
-      </div>
-
-      {/* Informations supplémentaires */}
-      <div className="max-w-7xl mx-auto px-4 pb-8">
-        <div className="bg-blue-50 rounded-xl p-6">
-          <h4 className="font-semibold text-blue-900 mb-2">Étapes suivantes</h4>
-          <p className="text-sm text-blue-800">
-          {isAuthenticated 
-            ? 'Validez votre commande et nous vous contacterons via WhatsApp pour organiser la livraison.'
-            : 'Créez votre compte rapidement pour finaliser votre commande. Nous vous contacterons ensuite via WhatsApp pour organiser la livraison. Simple et sécurisé !'
-          }
-        </p>
+      {/* Barre fixe mobile — commande */}
+      <div className="lg:hidden fixed bottom-[4.5rem] left-0 right-0 z-40 px-4 pb-2 pt-2 bg-gradient-to-t from-brand-cream via-brand-cream to-transparent">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-3 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Total</p>
+            <p className="text-lg font-bold text-brand-green truncate">
+              {formatPriceDisplay(cartSummary.total_price)}
+            </p>
+            <p className="text-[10px] text-gray-400">
+              {cartSummary.total_items} article{cartSummary.total_items > 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCheckout}
+            disabled={creatingOrder}
+            className="flex-shrink-0 bg-brand-orange hover:bg-brand-orange-dark text-white px-5 py-3 rounded-xl font-bold text-sm transition-all disabled:bg-gray-300 flex items-center gap-2 shadow-md"
+          >
+            {creatingOrder ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            ) : (
+              <ShoppingCart size={16} />
+            )}
+            Commander
+          </button>
         </div>
       </div>
 
       {/* Modal WhatsApp */}
       {showWhatsAppModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle size={32} className="text-white" />
+              <div className="w-14 h-14 bg-brand-green rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <MessageCircle size={28} className="text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Commande validée !</h3>
-              <p className="text-gray-600">
-                Votre commande a été créée avec succès. Nous allons vous contacter via WhatsApp pour finaliser.
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Commande validée !</h3>
+              <p className="text-sm text-gray-500">
+                Votre commande a été créée. Nous vous contactons via WhatsApp pour finaliser.
               </p>
             </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <h4 className="font-semibold text-gray-900 mb-2">Récapitulatif :</h4>
-              <div className="text-sm text-gray-600">
-                {orderData && (
-                  <>
-                    <div className="flex justify-between mb-1">
-                      <span>Numéro de commande :</span>
-                      <span className="font-medium">{orderData.order_number}</span>
-                    </div>
-                    <div className="flex justify-between mb-1">
-                      <span>Articles :</span>
-                      <span>{orderData.summary?.total_items || cartSummary.total_items}</span>
-                    </div>
-                    <div className="flex justify-between font-medium">
-                      <span>Total :</span>
-                      <span>{formatPrice(orderData.total_amount || cartSummary.total_price)} FCFA</span>
-                    </div>
-                  </>
-                )}
-                {!orderData && (
-                  <>
-                    <div className="flex justify-between mb-1">
-                      <span>Articles :</span>
-                      <span>{cartSummary.total_items}</span>
-                    </div>
-                    <div className="flex justify-between font-medium">
-                      <span>Total :</span>
-                      <span>{formatPrice(cartSummary.total_price)} FCFA</span>
-                    </div>
-                  </>
-                )}
-              </div>
+            <div className="bg-brand-cream rounded-xl p-4 mb-6 text-sm">
+              <h4 className="font-semibold text-gray-900 mb-2">Récapitulatif</h4>
+              {orderData ? (
+                <>
+                  <div className="flex justify-between mb-1 text-gray-600">
+                    <span>N° commande</span>
+                    <span className="font-medium text-gray-900">{orderData.order_number}</span>
+                  </div>
+                  <div className="flex justify-between mb-1 text-gray-600">
+                    <span>Articles</span>
+                    <span>{orderData.summary?.total_items || cartSummary.total_items}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-gray-900">
+                    <span>Total</span>
+                    <span>{formatPriceDisplay(orderData.total_amount || cartSummary.total_price)}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between mb-1 text-gray-600">
+                    <span>Articles</span>
+                    <span>{cartSummary.total_items}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold text-gray-900">
+                    <span>Total</span>
+                    <span>{formatPriceDisplay(cartSummary.total_price)}</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <button
+                type="button"
                 onClick={closeWhatsAppModal}
-                className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                className="flex-1 py-3 rounded-xl font-medium text-sm bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
               >
                 Fermer
               </button>
               <button
+                type="button"
                 onClick={() => {
-                  // Créer le message WhatsApp avec les informations de la commande
-                  let message = `Bonjour ! J'ai une commande `;
+                  let message = 'Bonjour ! J\'ai une commande ';
                   if (orderData) {
-                    message += `(${orderData.order_number}) de ${orderData.summary?.total_items || cartSummary.total_items} article(s) pour un total de ${formatPrice(orderData.total_amount || cartSummary.total_price)} FCFA.`;
+                    message += `(${orderData.order_number}) de ${orderData.summary?.total_items || cartSummary.total_items} article(s) pour un total de ${formatPriceDisplay(orderData.total_amount || cartSummary.total_price)}.`;
                   } else {
-                    message += `de ${cartSummary.total_items} article(s) pour un total de ${formatPrice(cartSummary.total_price)} FCFA.`;
+                    message += `de ${cartSummary.total_items} article(s) pour un total de ${formatPriceDisplay(cartSummary.total_price)}.`;
                   }
-                  message += ` Pouvez-vous m'aider ?`;
-                  
-                  const whatsappUrl = generateWhatsAppLink(message);
-                  window.open(whatsappUrl, '_blank');
+                  message += ' Pouvez-vous m\'aider ?';
+                  window.open(generateWhatsAppLink(message), '_blank');
                   closeWhatsAppModal();
                 }}
-                className="flex-1 bg-green-500 text-white py-3 rounded-xl font-medium hover:bg-green-600 transition-colors"
+                className="flex-1 py-3 rounded-xl font-medium text-sm bg-brand-green text-white hover:bg-brand-green-dark transition-colors"
               >
-                Ouvrir WhatsApp
+                WhatsApp
               </button>
             </div>
           </div>

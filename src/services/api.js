@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../config/api';
+import { sanitizePhoneE164 } from '../utils/phone';
 
 // Cache désactivé temporairement
 const apiCache = new Map();
@@ -24,7 +25,7 @@ async function getCsrfCookie() {
 }
 
 // Classe pour gérer les erreurs API
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(message, status, errors = {}) {
     super(message);
     this.name = 'ApiError';
@@ -36,9 +37,11 @@ class ApiError extends Error {
 // Fonction utilitaire pour faire des requêtes HTTP avec cache
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  
-  // Cache désactivé - pas de vérification
-  console.log('🔄 Requête directe à l\'API (cache désactivé)');
+  const method = options.method || 'GET';
+
+  if (import.meta.env.DEV) {
+    console.log(`[API] ${method} ${url}`);
+  }
   
   // Configuration par défaut
   const defaultOptions = {
@@ -89,6 +92,10 @@ async function apiRequest(endpoint, options = {}) {
           window.location.href = '/login';
         }
       }
+
+      if (import.meta.env.DEV) {
+        console.warn(`[API] ${response.status} ${method} ${url}`, data);
+      }
       
       throw new ApiError(
         data.message || 'Erreur de requête',
@@ -97,8 +104,9 @@ async function apiRequest(endpoint, options = {}) {
       );
     }
 
-    // Cache désactivé - pas de sauvegarde
-    console.log('💾 Cache désactivé - réponse non sauvegardée');
+    if (import.meta.env.DEV) {
+      console.log(`[API] ${response.status} ${method} ${url}`);
+    }
 
     return data;
   } catch (error) {
@@ -119,32 +127,85 @@ async function apiRequest(endpoint, options = {}) {
 export const authService = {
   // Inscription d'un nouveau client
   async register(userData) {
-    const response = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-    
-    if (response.success && response.data.token) {
-      localStorage.setItem('auth_token', response.data.token);
-      localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+    try {
+      const response = await apiRequest('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+
+      if (response.success && response.data.token) {
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+          status: error.status,
+        };
+      }
+      return {
+        success: false,
+        message: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+        errors: {},
+        status: 0,
+      };
     }
-    
-    return response;
   },
 
-  // Connexion (client ou admin)
-  async login(email, password) {
-    const credentials = { email, password };
-    const response = await apiRequest('/auth/login', {
+  // Connexion (client ou admin) — identifiant = email OU numéro WhatsApp
+  async login(identifier, password) {
+    const isEmail = typeof identifier === 'string' && identifier.includes('@');
+    const credentials = isEmail
+      ? { email: identifier.trim(), password }
+      : { whatsapp_phone: sanitizePhoneE164(identifier) || identifier.replace(/\s/g, ''), password };
+
+    try {
+      const response = await apiRequest('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      });
+
+      if (response.success && response.data.token) {
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+          status: error.status,
+        };
+      }
+      return {
+        success: false,
+        message: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+        errors: {},
+        status: 0,
+      };
+    }
+  },
+
+  // Connexion via Google (JWT credential)
+  async googleLogin(credential) {
+    const response = await apiRequest('/auth/google', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ credential }),
     });
-    
-    if (response.success && response.data.token) {
+
+    if (response.success && response.data?.token) {
       localStorage.setItem('auth_token', response.data.token);
       localStorage.setItem('auth_user', JSON.stringify(response.data.user));
     }
-    
+
     return response;
   },
 
@@ -167,17 +228,45 @@ export const authService = {
 
   // Mettre à jour le profil
   async updateProfile(profileData) {
-    return await apiRequest('/auth/me', {
-      method: 'PUT',
-      body: JSON.stringify(profileData),
-    });
+    try {
+      const response = await apiRequest('/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify(profileData),
+      });
+
+      if (response.success && response.data?.user) {
+        localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+          status: error.status,
+        };
+      }
+      return {
+        success: false,
+        message: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+        errors: {},
+        status: 0,
+      };
+    }
   },
 
-  // Mot de passe oublié
-  async forgotPassword(emailOrPhone) {
+  // Mot de passe oublié — email ou WhatsApp
+  async forgotPassword(identifier) {
+    const isEmail = typeof identifier === 'string' && identifier.includes('@');
+    const payload = isEmail
+      ? { email: identifier.trim() }
+      : { whatsapp_phone: sanitizePhoneE164(identifier) || identifier.replace(/\s/g, '') };
+
     return await apiRequest('/auth/forgot-password', {
       method: 'POST',
-      body: JSON.stringify(emailOrPhone),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -305,10 +394,13 @@ export const productService = {
     
     if (filters.category_id) queryParams.append('category_id', filters.category_id);
     if (filters.subcategory_id) queryParams.append('subcategory_id', filters.subcategory_id);
+    if (filters.include_subcategories) queryParams.append('include_subcategories', '1');
     if (filters.search) queryParams.append('search', filters.search);
     if (filters.min_price) queryParams.append('min_price', filters.min_price);
     if (filters.max_price) queryParams.append('max_price', filters.max_price);
     if (filters.sort) queryParams.append('sort', filters.sort);
+    if (filters.sort_by) queryParams.append('sort_by', filters.sort_by);
+    if (filters.sort_order) queryParams.append('sort_order', filters.sort_order);
     if (filters.page) queryParams.append('page', filters.page);
     if (filters.per_page) queryParams.append('per_page', filters.per_page);
 

@@ -1,772 +1,783 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  User, 
-  ShoppingBag, 
-  Heart, 
-  Settings, 
-  LogOut, 
-  ArrowRight, 
-  Phone, 
-  Mail, 
-  MapPin,
-  Calendar,
-  CheckCircle,
+import {
+  User,
+  ShoppingBag,
+  Settings,
+  LogOut,
+  Phone,
+  Mail,
+  CheckCircle2,
   Clock,
   XCircle,
-  Edit,
+  Pencil,
   ChevronRight,
-  Star,
   Package,
-  CreditCard,
-  Gift,
   HelpCircle,
-  Bell,
   Shield,
   Truck,
   RefreshCw,
-  Plus,
-  Minus,
-  Eye,
-  EyeOff
+  MessageCircle,
+  AlertCircle,
+  X,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { orderService, authService } from '../../services/api';
 import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
+import { formatPhoneE164Display, sanitizePhoneE164, getPhoneValidationResult } from '../../utils/phone';
+import { parseAuthFormError } from '../../utils/authErrors';
+import PhoneInput from '../../components/forms/PhoneInput';
+import { AuthPasswordInput } from '../../components/auth/AuthLayout';
+
+const SESSION_CACHE_KEY = 'afrikraga_user_orders_cache';
+const SESSION_CACHE_TTL = 30 * 1000;
+
+const STATUS_CONFIG = {
+  en_attente: { label: 'En attente', icon: Clock, badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  acceptée: { label: 'Acceptée', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
+  prête: { label: 'Prête', icon: Package, badge: 'bg-brand-orange-light text-brand-orange-dark border-brand-orange/20' },
+  en_cours: { label: 'En cours de livraison', icon: Truck, badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+  disponible: { label: 'Livrée', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
+  annulée: { label: 'Annulée', icon: XCircle, badge: 'bg-red-50 text-red-700 border-red-200' },
+};
+
+const formatPrice = (price) => {
+  const value = Number(price);
+  if (!Number.isFinite(value)) return '0 FCFA';
+  return `${Math.round(value).toLocaleString('fr-FR')} FCFA`;
+};
+
+const formatDate = (value, withTime = false) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  });
+};
+
+const getInitials = (name) =>
+  (name || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || '?';
+
+const StatusBadge = ({ status }) => {
+  const config = STATUS_CONFIG[status] || STATUS_CONFIG.en_attente;
+  const Icon = config.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${config.badge}`}
+    >
+      <Icon size={12} />
+      {config.label}
+    </span>
+  );
+};
+
+const SectionCard = ({ title, description, children, action }) => (
+  <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6">
+    {(title || action) && (
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          {title && <h3 className="text-base font-bold text-gray-900">{title}</h3>}
+          {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+        </div>
+        {action}
+      </div>
+    )}
+    {children}
+  </section>
+);
 
 const UserProfile = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const { showSuccess, showError } = useNotification();
+  const { user, logout, updateUser, refreshUser } = useAuth();
+  const { showSuccess } = useNotification();
   const navigate = useNavigate();
+
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [error, setError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [updatingOrder, setUpdatingOrder] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // États pour la modification des informations personnelles
+
   const [editingField, setEditingField] = useState(null);
-  const [editForm, setEditForm] = useState({
-    name: '',
-    email: '',
-    whatsapp_phone: ''
+  const [editValue, setEditValue] = useState('');
+  const [fieldError, setFieldError] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    new_password_confirmation: '',
   });
-  const [updatingProfile, setUpdatingProfile] = useState(false);
-  
-  // Cache pour les commandes
-  const ordersCacheRef = useRef(null);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [savingPassword, setSavingPassword] = useState(false);
+
   const abortControllerRef = useRef(null);
-  
-  // Cache persistant de session
-  const SESSION_CACHE_KEY = 'bs_shop_user_orders_cache';
-  const SESSION_CACHE_TTL = 30 * 1000; // 30 secondes pour plus de réactivité
 
-  // Rediriger si non connecté
-  useEffect(() => {
-    const checkAuth = () => {
-      if (!authService.isAuthenticated()) {
-        navigate('/auth/login');
-        return false;
-      }
-      return true;
-    };
-
-    if (checkAuth()) {
-      loadUserOrders();
-    }
-  }, [navigate]);
-
-
-
-  const loadUserOrders = useCallback(async () => {
-    // Vérifier le cache de session d'abord
-    try {
-      const sessionCached = sessionStorage.getItem(SESSION_CACHE_KEY);
-      if (sessionCached) {
-        const { data, timestamp } = JSON.parse(sessionCached);
-        if (Date.now() - timestamp < SESSION_CACHE_TTL) {
-          setOrders(data);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch (error) {
-      console.warn('Erreur lors de la lecture du cache de session des commandes:', error);
-    }
-
-    // Vérifier le cache mémoire
-    if (ordersCacheRef.current && Date.now() - ordersCacheRef.current.timestamp < 30 * 1000) { // 30 secondes
-      setOrders(ordersCacheRef.current.data);
-      setLoading(false);
+  const loadOrders = useCallback(async ({ force = false } = {}) => {
+    if (!authService.isAuthenticated()) {
+      setOrders([]);
+      setLoadingOrders(false);
       return;
     }
 
-    // Annuler la requête précédente
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (!force) {
+      try {
+        const cached = sessionStorage.getItem(SESSION_CACHE_KEY);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < SESSION_CACHE_TTL) {
+            setOrders(data);
+            setLoadingOrders(false);
+            return;
+          }
+        }
+      } catch {
+        sessionStorage.removeItem(SESSION_CACHE_KEY);
+      }
     }
+
+    abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Vérifier l'authentification avant l'appel API
-      if (!authService.isAuthenticated()) {
-        setOrders([]);
-        return;
-      }
-      
+      setLoadingOrders(true);
+      setOrdersError(null);
+
       const response = await orderService.getUserOrders();
-      
+
       if (response.success) {
-        const ordersData = response.data?.orders || [];
-        setOrders(ordersData);
-        
-        // Mettre en cache de session
+        const data = response.data?.orders || [];
+        setOrders(data);
         try {
-          const sessionData = {
-            data: ordersData,
-            timestamp: Date.now()
-          };
-          sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sessionData));
-        } catch (error) {
-          console.warn('Erreur lors de la sauvegarde du cache de session des commandes:', error);
+          sessionStorage.setItem(
+            SESSION_CACHE_KEY,
+            JSON.stringify({ data, timestamp: Date.now() })
+          );
+        } catch {
+          // quota dépassé : le cache est optionnel
         }
-        
-        // Mettre en cache mémoire
-        ordersCacheRef.current = {
-          data: ordersData,
-          timestamp: Date.now()
-        };
       } else {
-        setError(response.message || 'Erreur lors de la récupération des commandes');
+        setOrdersError(response.message || 'Impossible de charger vos commandes');
         setOrders([]);
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
-        setError(error.message || 'Erreur de connexion');
+        setOrdersError('Connexion au serveur impossible. Vérifiez votre réseau.');
         setOrders([]);
       }
     } finally {
-      setLoading(false);
+      setLoadingOrders(false);
     }
-  }, [user?.id]);
+  }, []);
+
+  useEffect(() => {
+    if (!authService.isAuthenticated()) {
+      navigate('/auth/login', { replace: true });
+      return;
+    }
+    loadOrders();
+    refreshUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, loadOrders]);
+
+  const stats = useMemo(() => {
+    const countBy = (status) => orders.filter((order) => order.status === status).length;
+    const totalSpent = orders
+      .filter((order) => order.status !== 'annulée')
+      .reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+
+    return {
+      totalOrders: orders.length,
+      totalSpent,
+      en_attente: countBy('en_attente'),
+      acceptée: countBy('acceptée'),
+      prête: countBy('prête'),
+      en_cours: countBy('en_cours'),
+      disponible: countBy('disponible'),
+      annulée: countBy('annulée'),
+    };
+  }, [orders]);
+
+  const statusFilters = useMemo(() => {
+    const filters = [{ value: 'all', label: 'Toutes', count: orders.length }];
+    Object.entries(STATUS_CONFIG).forEach(([value, config]) => {
+      const count = stats[value] || 0;
+      if (count > 0) {
+        filters.push({ value, label: config.label, count });
+      }
+    });
+    return filters;
+  }, [orders.length, stats]);
+
+  const filteredOrders = useMemo(
+    () => (selectedStatus === 'all' ? orders : orders.filter((o) => o.status === selectedStatus)),
+    [orders, selectedStatus]
+  );
 
   const handleLogout = useCallback(async () => {
-    try {
-      await authService.logout();
-      showSuccess('Déconnexion réussie');
-      navigate('/');
-    } catch (error) {
-      showError('Erreur lors de la déconnexion');
-    }
-  }, [navigate, showSuccess, showError]);
+    sessionStorage.removeItem(SESSION_CACHE_KEY);
+    await logout();
+    showSuccess('À bientôt sur AfrikRaga !', 'Déconnexion');
+    navigate('/', { replace: true });
+  }, [logout, navigate, showSuccess]);
 
-  // Fonction pour démarrer l'édition d'un champ
-  const startEditing = useCallback((field) => {
+  const startEditing = (field) => {
     setEditingField(field);
-    setEditForm(prev => ({
-      ...prev,
-      [field]: user[field] || ''
-    }));
-  }, [user]);
+    setFieldError(null);
+    setEditValue(user?.[field] || '');
+  };
 
-  // Fonction pour annuler l'édition
-  const cancelEditing = useCallback(() => {
+  const cancelEditing = () => {
     setEditingField(null);
-    setEditForm({
-      name: '',
-      email: '',
-      whatsapp_phone: ''
-    });
-  }, []);
+    setEditValue('');
+    setFieldError(null);
+  };
 
-  // Fonction pour sauvegarder les modifications
-  const saveProfileUpdate = useCallback(async (field) => {
+  const saveField = async (field) => {
+    setFieldError(null);
+
+    if (field === 'name' && editValue.trim().length < 2) {
+      setFieldError('Le nom doit contenir au moins 2 caractères.');
+      return;
+    }
+
+    if (field === 'email' && editValue.trim() && !/\S+@\S+\.\S+/.test(editValue.trim())) {
+      setFieldError('Format d\'email incorrect (ex. nom@mail.com).');
+      return;
+    }
+
+    if (field === 'whatsapp_phone') {
+      const check = getPhoneValidationResult(editValue);
+      if (!check.valid) {
+        setFieldError(check.message || 'Numéro WhatsApp invalide.');
+        return;
+      }
+    }
+
+    const payload = {
+      [field]:
+        field === 'whatsapp_phone'
+          ? sanitizePhoneE164(editValue)
+          : editValue.trim(),
+    };
+
     try {
-      setUpdatingProfile(true);
-      
-      const updateData = {
-        [field]: editForm[field]
-      };
-      
-      const response = await authService.updateProfile(updateData);
-      
+      setSavingProfile(true);
+      const response = await authService.updateProfile(payload);
+
       if (response.success) {
-        showSuccess('Informations mises à jour avec succès');
+        updateUser(response.data.user);
         setEditingField(null);
-        // Recharger les données utilisateur
-        window.location.reload(); // Simple refresh pour mettre à jour les données
-      } else {
-        showError(response.message || 'Erreur lors de la mise à jour');
+        setEditValue('');
+        showSuccess('Vos informations ont été mises à jour.');
+        return;
       }
-    } catch (error) {
-      showError('Erreur lors de la mise à jour des informations');
+
+      const parsed = parseAuthFormError(response);
+      setFieldError(parsed.fieldErrors[field] || parsed.message);
+    } catch {
+      setFieldError('Connexion au serveur impossible. Réessayez.');
     } finally {
-      setUpdatingProfile(false);
+      setSavingProfile(false);
     }
-  }, [editForm, showSuccess, showError]);
+  };
 
-  // Fonction pour contacter le support WhatsApp
-  const contactSupport = useCallback((type = 'general') => {
-    let message = '';
-    
-    switch (type) {
-      case 'support':
-        message = `Bonjour, j'ai besoin d'aide avec mon compte BS Shop. Mon numéro de commande ou problème: `;
-        break;
-      case 'help':
-        message = `Bonjour, j'ai une question concernant BS Shop. Ma question: `;
-        break;
-      case 'security':
-        message = `Bonjour, j'ai un problème de sécurité avec mon compte BS Shop. Mon problème: `;
-        break;
-      default:
-        message = `Bonjour, j'ai besoin d'assistance pour BS Shop. `;
+  const submitPasswordChange = async (e) => {
+    e.preventDefault();
+    const errors = {};
+
+    if (!passwordForm.current_password) {
+      errors.current_password = 'Saisissez votre mot de passe actuel.';
     }
-    
-    const whatsappUrl = generateWhatsAppLink(message);
-    window.open(whatsappUrl, '_blank');
-  }, []);
+    if (!passwordForm.new_password) {
+      errors.new_password = 'Choisissez un nouveau mot de passe.';
+    } else if (passwordForm.new_password.length < 8) {
+      errors.new_password = 'Minimum 8 caractères.';
+    }
+    if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
+      errors.new_password_confirmation = 'Les deux mots de passe ne correspondent pas.';
+    }
 
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors);
+      return;
+    }
 
-
-  const handleStatusChange = useCallback(async (orderId, newStatus) => {
     try {
-      setUpdatingOrder(orderId);
-      
-      const response = await orderService.updateOrderStatus(orderId, { status: newStatus });
-      
+      setSavingPassword(true);
+      setPasswordErrors({});
+      const response = await authService.updateProfile(passwordForm);
+
       if (response.success) {
-        // Mettre à jour la commande dans la liste
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === orderId 
-              ? { ...order, status: newStatus, updated: true }
-              : order
-          )
-        );
-        
-        // Mettre à jour le cache
-        if (ordersCacheRef.current) {
-          ordersCacheRef.current.data = ordersCacheRef.current.data.map(order => 
-            order.id === orderId 
-              ? { ...order, status: newStatus }
-              : order
-          );
-        }
-        
-        showSuccess('Statut de la commande mis à jour');
-      } else {
-        showError(response.message || 'Erreur lors de la mise à jour');
+        showSuccess('Votre mot de passe a été modifié.');
+        setPasswordOpen(false);
+        setPasswordForm({ current_password: '', new_password: '', new_password_confirmation: '' });
+        return;
       }
-    } catch (error) {
-      showError('Erreur lors de la mise à jour du statut');
+
+      const parsed = parseAuthFormError(response);
+      setPasswordErrors(
+        Object.keys(parsed.fieldErrors).length > 0
+          ? parsed.fieldErrors
+          : { current_password: parsed.message }
+      );
+    } catch {
+      setPasswordErrors({ current_password: 'Connexion au serveur impossible. Réessayez.' });
     } finally {
-      setUpdatingOrder(null);
+      setSavingPassword(false);
     }
-  }, [showSuccess, showError]);
+  };
 
-  const getFilteredOrders = useCallback(() => {
-    if (selectedStatus === 'all') {
-      return orders;
-    }
-    return orders.filter(order => order.status === selectedStatus);
-  }, [orders, selectedStatus]);
-
-  const getStatusOptions = useCallback(() => {
-    return [
-      { value: 'all', label: 'Toutes', count: orders.length },
-      { value: 'en_attente', label: 'En attente', count: orders.filter(o => o.status === 'en_attente').length },
-      { value: 'acceptée', label: 'Acceptées', count: orders.filter(o => o.status === 'acceptée').length },
-      { value: 'prête', label: 'Prêtes', count: orders.filter(o => o.status === 'prête').length },
-      { value: 'en_cours', label: 'En cours', count: orders.filter(o => o.status === 'en_cours').length },
-      { value: 'disponible', label: 'Disponibles', count: orders.filter(o => o.status === 'disponible').length },
-      { value: 'annulée', label: 'Annulées', count: orders.filter(o => o.status === 'annulée').length }
-    ];
-  }, [orders]);
-
-  const getStatusBadge = useCallback((status) => {
-    const statusConfig = {
-      'en_attente': { color: 'bg-yellow-100 text-yellow-800', icon: Clock, text: 'En attente' },
-      'acceptée': { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, text: 'Acceptée' },
-      'prête': { color: 'bg-purple-100 text-purple-800', icon: Package, text: 'Prête' },
-      'en_cours': { color: 'bg-orange-100 text-orange-800', icon: Truck, text: 'En cours' },
-      'disponible': { color: 'bg-green-100 text-green-800', icon: CheckCircle, text: 'Disponible' },
-      'annulée': { color: 'bg-red-100 text-red-800', icon: XCircle, text: 'Annulée' }
+  const contactSupport = (type) => {
+    const messages = {
+      support: 'Bonjour AfrikRaga ! J\'ai besoin d\'aide concernant mon compte : ',
+      help: 'Bonjour AfrikRaga ! J\'ai une question : ',
+      security: 'Bonjour AfrikRaga ! J\'ai un souci de sécurité sur mon compte : ',
     };
-
-    const config = statusConfig[status] || statusConfig['en_attente'];
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon size={12} className="mr-1" />
-        {config.text}
-      </span>
-    );
-  }, []);
-
-  const formatPrice = useCallback((price) => {
-    if (price === null || price === undefined || price === '') return '0 FCFA';
-    const numPrice = Number(price);
-    if (isNaN(numPrice)) return '0 FCFA';
-    return `${Math.round(numPrice)} FCFA`;
-  }, []);
-
-  const formatDate = useCallback((dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }, []);
-
-  const getOrderStats = useCallback(() => {
-    const totalOrders = orders.length;
-    const totalSpent = orders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-    const pendingOrders = orders.filter(order => order.status === 'en_attente').length;
-    const acceptedOrders = orders.filter(order => order.status === 'acceptée').length;
-    const readyOrders = orders.filter(order => order.status === 'prête').length;
-    const inProgressOrders = orders.filter(order => order.status === 'en_cours').length;
-    const availableOrders = orders.filter(order => order.status === 'disponible').length;
-    const completedOrders = orders.filter(order => order.status === 'disponible').length;
-
-    return { 
-      totalOrders, 
-      totalSpent, 
-      pendingOrders, 
-      acceptedOrders,
-      readyOrders,
-      inProgressOrders,
-      availableOrders,
-      completedOrders 
-    };
-  }, [orders]);
+    window.open(generateWhatsAppLink(messages[type] || messages.help), '_blank', 'noopener');
+  };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement du profil...</p>
+          <div className="animate-spin rounded-full h-11 w-11 border-2 border-brand-green border-t-transparent mx-auto mb-4" />
+          <p className="text-sm text-gray-600">Chargement de votre compte…</p>
         </div>
       </div>
     );
   }
 
-  const stats = getOrderStats();
+  const memberSince = formatDate(user.created_at);
+
+  const tabs = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: User },
+    { id: 'orders', label: 'Mes commandes', icon: ShoppingBag, badge: stats.totalOrders },
+    { id: 'settings', label: 'Paramètres', icon: Settings },
+  ];
+
+  const editableFields = [
+    {
+      field: 'name',
+      label: 'Nom complet',
+      icon: User,
+      display: user.name,
+      placeholder: 'Ex. Amina Kaboré',
+    },
+    {
+      field: 'whatsapp_phone',
+      label: 'Numéro WhatsApp',
+      icon: Phone,
+      display: user.whatsapp_phone ? formatPhoneE164Display(user.whatsapp_phone) : null,
+      note: 'Identifiant de connexion et contact livraison',
+    },
+    {
+      field: 'email',
+      label: 'Adresse email',
+      icon: Mail,
+      display: user.email,
+      placeholder: 'votre@email.com',
+      note: 'Optionnel — permet aussi de se connecter',
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header moderne avec gradient */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white">
-        <div className="px-4 py-6">
+    <div className="min-h-screen bg-brand-cream pb-24">
+      <header className="bg-brand-green text-white">
+        <div className="max-w-5xl mx-auto px-4 pt-6 pb-8">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold">Mon Compte</h1>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Mon compte</h1>
+              <p className="text-white/70 text-xs md:text-sm mt-1">
+                Suivez vos commandes et gérez vos informations
+              </p>
+            </div>
             <button
+              type="button"
               onClick={handleLogout}
-              className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-semibold transition-colors"
             >
-              <LogOut size={20} />
+              <LogOut size={16} />
+              <span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
-          
-          {/* Profil utilisateur */}
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              <User size={24} />
+
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 md:w-18 md:h-18 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0">
+              {getInitials(user.name)}
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold">{user.name}</h2>
-              <p className="text-blue-100 text-sm">{user.email}</p>
-              <p className="text-blue-100 text-xs">Membre depuis {formatDate(user.created_at)}</p>
+            <div className="min-w-0">
+              <h2 className="text-lg md:text-xl font-bold truncate">{user.name}</h2>
+              <p className="text-white/85 text-sm font-medium truncate">
+                {user.whatsapp_phone ? formatPhoneE164Display(user.whatsapp_phone) : 'Numéro non renseigné'}
+              </p>
+              <p className="text-white/60 text-xs mt-0.5">
+                {memberSince ? `Membre depuis ${memberSince}` : 'Bienvenue chez AfrikRaga'}
+              </p>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Statistiques rapides */}
-      <div className="px-4 -mt-4 mb-6">
-        <div className="bg-white rounded-2xl shadow-lg p-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalOrders}</div>
-              <div className="text-xs text-gray-500">Commandes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{formatPrice(stats.totalSpent)}</div>
-              <div className="text-xs text-gray-500">Total dépensé</div>
+      <div className="max-w-5xl mx-auto px-4">
+        <div className="-mt-5 mb-5 grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+            <div className="text-2xl font-bold text-brand-green">{stats.totalOrders}</div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Commande{stats.totalOrders > 1 ? 's' : ''}
             </div>
           </div>
-          
-          {/* Statistiques détaillées des statuts */}
-          {stats.totalOrders > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                {stats.pendingOrders > 0 && (
-                  <div className="text-center">
-                    <div className="font-semibold text-yellow-600">{stats.pendingOrders}</div>
-                    <div className="text-gray-500">En attente</div>
-                  </div>
-                )}
-                {stats.acceptedOrders > 0 && (
-                  <div className="text-center">
-                    <div className="font-semibold text-blue-600">{stats.acceptedOrders}</div>
-                    <div className="text-gray-500">Acceptées</div>
-                  </div>
-                )}
-                {stats.readyOrders > 0 && (
-                  <div className="text-center">
-                    <div className="font-semibold text-purple-600">{stats.readyOrders}</div>
-                    <div className="text-gray-500">Prêtes</div>
-                  </div>
-                )}
-                {stats.inProgressOrders > 0 && (
-                  <div className="text-center">
-                    <div className="font-semibold text-orange-600">{stats.inProgressOrders}</div>
-                    <div className="text-gray-500">En cours</div>
-                  </div>
-                )}
-                {stats.availableOrders > 0 && (
-                  <div className="text-center">
-                    <div className="font-semibold text-green-600">{stats.availableOrders}</div>
-                    <div className="text-gray-500">Disponibles</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Navigation par onglets */}
-      <div className="px-4 mb-6">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div className="flex">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex-1 py-4 px-3 text-sm font-medium transition-all duration-200 ${
-                activeTab === 'overview'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <div className="flex flex-col items-center space-y-1">
-                <User size={16} />
-                <span>Vue d'ensemble</span>
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-4 px-3 text-sm font-medium transition-all duration-200 ${
-                activeTab === 'orders'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <div className="flex flex-col items-center space-y-1">
-                <ShoppingBag size={16} />
-                <span>Mes Commandes</span>
-                {stats.pendingOrders > 0 && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {stats.pendingOrders}
-                  </span>
-                )}
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex-1 py-4 px-3 text-sm font-medium transition-all duration-200 ${
-                activeTab === 'settings'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <div className="flex flex-col items-center space-y-1">
-                <Settings size={16} />
-                <span>Paramètres</span>
-              </div>
-            </button>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
+            <div className="text-2xl font-bold text-brand-orange">{formatPrice(stats.totalSpent)}</div>
+            <div className="text-xs text-gray-500 mt-0.5">Total dépensé</div>
           </div>
         </div>
-      </div>
 
-      {/* Contenu des onglets */}
-      <div className="px-4 pb-20">
+        <nav className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 mb-5 flex gap-1">
+          {tabs.map(({ id, label, icon: Icon, badge }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setActiveTab(id)}
+              aria-current={activeTab === id}
+              className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+                activeTab === id
+                  ? 'bg-brand-green text-white'
+                  : 'text-gray-600 hover:bg-brand-green-light'
+              }`}
+            >
+              <Icon size={16} />
+              <span className="text-center leading-tight">{label}</span>
+              {badge > 0 && (
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === id ? 'bg-white/25' : 'bg-brand-orange-light text-brand-orange-dark'
+                  }`}
+                >
+                  {badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
         {activeTab === 'overview' && (
-          <div className="space-y-4">
-            {/* Actions rapides */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+          <div className="space-y-5">
+            <SectionCard title="Actions rapides">
               <div className="grid grid-cols-2 gap-3">
                 <Link
                   to="/catalog"
-                  className="flex flex-col items-center p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-green-light hover:bg-brand-green/10 transition-colors"
                 >
-                  <ShoppingBag size={24} className="text-blue-600 mb-2" />
-                  <span className="text-sm font-medium text-blue-900">Continuer mes achats</span>
+                  <ShoppingBag size={22} className="text-brand-green" />
+                  <span className="text-xs sm:text-sm font-semibold text-brand-green-dark text-center">
+                    Continuer mes achats
+                  </span>
                 </Link>
                 <Link
                   to="/cart"
-                  className="flex flex-col items-center p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-orange-light hover:bg-brand-orange/10 transition-colors"
                 >
-                  <Package size={24} className="text-green-600 mb-2" />
-                  <span className="text-sm font-medium text-green-900">Voir mon panier</span>
+                  <Package size={22} className="text-brand-orange-dark" />
+                  <span className="text-xs sm:text-sm font-semibold text-brand-orange-dark text-center">
+                    Voir mon panier
+                  </span>
                 </Link>
               </div>
-            </div>
+            </SectionCard>
 
-            {/* Dernières commandes */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Dernières commandes</h3>
+            <SectionCard
+              title="Dernières commandes"
+              action={
+                orders.length > 0 ? (
                   <button
+                    type="button"
                     onClick={() => setActiveTab('orders')}
-                    className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                    className="text-xs font-bold text-brand-green hover:text-brand-green-dark whitespace-nowrap"
                   >
                     Voir tout ({orders.length})
                   </button>
-              </div>
-              
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-500 text-sm">Chargement...</p>
+                ) : null
+              }
+            >
+              {loadingOrders ? (
+                <div className="py-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-green border-t-transparent mx-auto mb-3" />
+                  <p className="text-xs text-gray-500">Chargement…</p>
+                </div>
+              ) : ordersError ? (
+                <div className="py-6 text-center">
+                  <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-4">{ordersError}</p>
+                  <button
+                    type="button"
+                    onClick={() => loadOrders({ force: true })}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-green text-white text-xs font-bold hover:bg-brand-green-dark transition-colors"
+                  >
+                    <RefreshCw size={14} />
+                    Réessayer
+                  </button>
                 </div>
               ) : orders.length === 0 ? (
-                <div className="text-center py-8">
-                  <ShoppingBag size={48} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm mb-4">Aucune commande récente</p>
+                <div className="py-6 text-center">
+                  <ShoppingBag size={40} className="text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-gray-800">Aucune commande pour l&apos;instant</p>
+                  <p className="text-xs text-gray-500 mt-1 mb-4">
+                    Découvrez nos produits authentiques du Maroc.
+                  </p>
                   <Link
                     to="/catalog"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-orange text-white text-xs font-bold hover:bg-brand-orange-dark transition-colors"
                   >
-                    Découvrir nos produits
+                    Découvrir le catalogue
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <ul className="space-y-2.5">
                   {orders.slice(0, 3).map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Package size={16} className="text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{order.order_number || `CMD-${order.id}`}</p>
-                          <p className="text-xs text-gray-500">{formatDate(order.created_at)}</p>
+                    <li
+                      key={order.id}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream border border-gray-100"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-brand-green-light flex items-center justify-center flex-shrink-0">
+                        <Package size={16} className="text-brand-green" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {order.order_number || `CMD-${order.id}`}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          {formatDate(order.created_at, true) || 'Date indisponible'}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold text-brand-green">
+                          {formatPrice(order.total_amount)}
+                        </p>
+                        <div className="mt-1">
+                          <StatusBadge status={order.status} />
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">{formatPrice(order.total_amount)}</p>
-                        {getStatusBadge(order.status)}
-                      </div>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </div>
+            </SectionCard>
 
-            {/* Support et aide */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Support & Aide</h3>
-              <div className="space-y-3">
-                <button 
+            <SectionCard title="Besoin d'aide ?" description="Notre équipe répond sur WhatsApp">
+              <div className="space-y-2.5">
+                <button
+                  type="button"
                   onClick={() => contactSupport('support')}
-                  className="w-full flex items-center justify-between p-3 bg-yellow-50 rounded-xl hover:bg-yellow-100 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-brand-green-light hover:bg-brand-green/10 transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
-                    <Phone size={20} className="text-yellow-600" />
-                    <span className="font-medium text-yellow-900">Contacter le support</span>
-                  </div>
-                  <ChevronRight size={16} className="text-yellow-600" />
+                  <span className="flex items-center gap-3">
+                    <MessageCircle size={18} className="text-brand-green" />
+                    <span className="text-sm font-semibold text-brand-green-dark">
+                      Contacter le support
+                    </span>
+                  </span>
+                  <ChevronRight size={16} className="text-brand-green" />
                 </button>
-                <button 
+                <button
+                  type="button"
                   onClick={() => contactSupport('help')}
-                  className="w-full flex items-center justify-between p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-brand-cream border border-gray-100 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
-                    <HelpCircle size={20} className="text-blue-600" />
-                    <span className="font-medium text-blue-900">Centre d'aide</span>
-                  </div>
-                  <ChevronRight size={16} className="text-blue-600" />
+                  <span className="flex items-center gap-3">
+                    <HelpCircle size={18} className="text-gray-500" />
+                    <span className="text-sm font-semibold text-gray-800">Poser une question</span>
+                  </span>
+                  <ChevronRight size={16} className="text-gray-400" />
                 </button>
-                <div className="mt-3 p-3 bg-green-50 rounded-xl">
-                  <div className="flex items-center space-x-2">
-                    <Phone size={16} className="text-green-600" />
-                    <span className="text-sm font-medium text-green-900">Support WhatsApp</span>
-                  </div>
-                  <p className="text-sm text-green-700 mt-1">{CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}</p>
-                </div>
+                <p className="text-[11px] text-gray-500 text-center pt-1">
+                  WhatsApp {CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}
+                </p>
               </div>
-            </div>
+            </SectionCard>
           </div>
         )}
 
         {activeTab === 'orders' && (
-          <div className="space-y-4">
-            {/* Filtres avancés */}
-            <div className="bg-white rounded-2xl shadow-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-900">Filtrer par statut</h3>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="text-blue-600 text-sm font-medium"
-                >
-                  {showFilters ? 'Masquer' : 'Voir tout'}
-                </button>
-              </div>
-              
-              {/* Filtres rapides */}
-              <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-                {getStatusOptions().map((option) => (
+          <div className="space-y-5">
+            {orders.length > 0 && (
+              <SectionCard
+                title="Filtrer mes commandes"
+                action={
                   <button
-                    key={option.value}
-                    onClick={() => setSelectedStatus(option.value)}
-                    className={`flex-shrink-0 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                      selectedStatus === option.value
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    type="button"
+                    onClick={() => loadOrders({ force: true })}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark"
                   >
-                    {option.label}
-                    {option.count > 0 && (
-                      <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs ${
-                        selectedStatus === option.value
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-300 text-gray-600'
-                      }`}>
-                        {option.count}
-                      </span>
-                    )}
+                    <RefreshCw size={13} />
+                    Actualiser
                   </button>
-                ))}
-              </div>
-              
-              {/* Filtres détaillés */}
-              {showFilters && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <div className="grid grid-cols-2 gap-3">
-                    {getStatusOptions().slice(1).map((option) => (
-                      <div key={option.value} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-700">{option.label}</span>
-                        <span className="text-sm font-semibold text-gray-900">{option.count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Liste des commandes */}
-            {loading ? (
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Chargement des commandes...</p>
-                </div>
-              </div>
-            ) : orders.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg p-8">
-                <div className="text-center">
-                  <ShoppingBag size={48} className="text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {error ? 'Erreur de chargement' : 'Aucune commande'}
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    {error ? error : 'Vous n\'avez pas encore passé de commande'}
-                  </p>
-                  
-                  {error && (
+                }
+              >
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {statusFilters.map((filter) => (
                     <button
-                      onClick={() => {
-                        setError(null);
-                        // Nettoyer le cache pour forcer le rechargement
-                        sessionStorage.removeItem(SESSION_CACHE_KEY);
-                        ordersCacheRef.current = null;
-                        loadUserOrders();
-                      }}
-                      className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors mb-4"
+                      key={filter.value}
+                      type="button"
+                      onClick={() => setSelectedStatus(filter.value)}
+                      className={`flex-shrink-0 inline-flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-colors ${
+                        selectedStatus === filter.value
+                          ? 'bg-brand-green text-white'
+                          : 'bg-brand-cream border border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
-                      <RefreshCw size={16} className="mr-2" />
-                      Réessayer
+                      {filter.label}
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          selectedStatus === filter.value
+                            ? 'bg-white/25'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {filter.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </SectionCard>
+            )}
+
+            {loadingOrders ? (
+              <SectionCard>
+                <div className="py-10 text-center">
+                  <div className="animate-spin rounded-full h-9 w-9 border-2 border-brand-green border-t-transparent mx-auto mb-3" />
+                  <p className="text-sm text-gray-600">Chargement de vos commandes…</p>
+                </div>
+              </SectionCard>
+            ) : ordersError ? (
+              <SectionCard>
+                <div className="py-8 text-center">
+                  <AlertCircle size={40} className="text-red-400 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-gray-900 mb-1">Chargement impossible</h3>
+                  <p className="text-sm text-gray-600 mb-5">{ordersError}</p>
+                  <button
+                    type="button"
+                    onClick={() => loadOrders({ force: true })}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-green text-white text-sm font-bold hover:bg-brand-green-dark transition-colors"
+                  >
+                    <RefreshCw size={15} />
+                    Réessayer
+                  </button>
+                </div>
+              </SectionCard>
+            ) : filteredOrders.length === 0 ? (
+              <SectionCard>
+                <div className="py-8 text-center">
+                  <ShoppingBag size={44} className="text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-base font-bold text-gray-900 mb-1">
+                    {orders.length === 0 ? 'Aucune commande' : 'Aucune commande pour ce filtre'}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-5">
+                    {orders.length === 0
+                      ? 'Vos futures commandes apparaîtront ici avec leur suivi.'
+                      : 'Essayez un autre statut pour retrouver vos commandes.'}
+                  </p>
+                  {orders.length === 0 ? (
+                    <Link
+                      to="/catalog"
+                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-brand-orange text-white text-sm font-bold hover:bg-brand-orange-dark transition-colors"
+                    >
+                      <ShoppingBag size={16} />
+                      Découvrir nos produits
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStatus('all')}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-green text-white text-sm font-bold hover:bg-brand-green-dark transition-colors"
+                    >
+                      Voir toutes mes commandes
                     </button>
                   )}
-                  
-                  <Link
-                    to="/catalog"
-                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    <ShoppingBag size={16} className="mr-2" />
-                    Découvrir nos produits
-                  </Link>
                 </div>
-              </div>
+              </SectionCard>
             ) : (
               <div className="space-y-4">
-                {getFilteredOrders().map((order) => (
-                  <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    {/* En-tête de la commande */}
-                    <div className="p-4 border-b border-gray-100">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">
-                          {order.order_number || `CMD-${order.id}`}
-                        </h3>
-                        {getStatusBadge(order.status)}
+                {filteredOrders.map((order) => (
+                  <article
+                    key={order.id}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+                  >
+                    <div className="p-4 md:p-5 border-b border-gray-100">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-gray-900">
+                            {order.order_number || `CMD-${order.id}`}
+                          </h3>
+                          <p className="text-[11px] text-gray-500 mt-0.5">
+                            {formatDate(order.created_at, true) || 'Date indisponible'}
+                          </p>
+                        </div>
+                        <StatusBadge status={order.status} />
                       </div>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>{formatDate(order.created_at)}</span>
-                        <span className="font-semibold text-gray-900">{formatPrice(order.total_amount)}</span>
-                      </div>
+                      <p className="text-lg font-bold text-brand-green">
+                        {formatPrice(order.total_amount)}
+                      </p>
                     </div>
 
-                    {/* Articles de la commande */}
-                    {order.items && order.items.length > 0 && (
-                      <div className="p-4">
-                        <div className="space-y-3">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Package size={16} className="text-gray-500" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
-                                  {item.product_name || 'Produit non spécifié'}
-                                </p>
-                                {item.variant_name && (
-                                  <p className="text-xs text-gray-500">{item.variant_name}</p>
-                                )}
-                                <p className="text-xs text-gray-500">
-                                  Quantité: {item.quantity || 1} • {formatPrice(item.unit_price)}/unité
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm font-semibold text-gray-900">{formatPrice(item.total_price)}</p>
-                              </div>
+                    {order.items?.length > 0 && (
+                      <ul className="divide-y divide-gray-50">
+                        {order.items.map((item) => (
+                          <li key={item.id} className="flex items-center gap-3 p-4">
+                            <div className="w-11 h-11 rounded-xl bg-brand-cream border border-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Package size={16} className="text-gray-400" />
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">
+                                {item.product_name || 'Produit'}
+                              </p>
+                              {item.variant_name && (
+                                <p className="text-[11px] text-gray-500">{item.variant_name}</p>
+                              )}
+                              <p className="text-[11px] text-gray-500 mt-0.5">
+                                {item.quantity || 1} × {formatPrice(item.unit_price)}
+                              </p>
+                            </div>
+                            <p className="text-sm font-bold text-gray-900 flex-shrink-0">
+                              {formatPrice(item.total_price)}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
                     )}
 
-                    {/* Actions de changement de statut */}
-                    <div className="p-4 bg-gray-50 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-500">
-                          {order.items ? `${order.items.length} article${order.items.length > 1 ? 's' : ''}` : '0 article'}
-                        </div>
-                        
-                      </div>
+                    <div className="px-4 py-3 bg-brand-cream border-t border-gray-100 flex items-center justify-between gap-3">
+                      <p className="text-[11px] text-gray-500">
+                        {order.items_summary?.total_items ?? order.items?.length ?? 0} article
+                        {(order.items_summary?.total_items ?? order.items?.length ?? 0) > 1 ? 's' : ''}
+                      </p>
+                      <a
+                        href={generateWhatsAppLink(
+                          `Bonjour AfrikRaga ! Je souhaite des informations sur ma commande ${
+                            order.order_number || `CMD-${order.id}`
+                          }.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark"
+                      >
+                        <MessageCircle size={13} />
+                        Suivre sur WhatsApp
+                      </a>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
@@ -774,191 +785,243 @@ const UserProfile = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="space-y-4">
-            {/* Informations personnelles */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
-              <div className="space-y-4">
-                {/* Nom complet */}
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <User size={20} className="text-gray-500" />
-                      <span className="text-sm text-gray-500">Nom complet</span>
-                    </div>
-                    {editingField !== 'name' && (
-                      <button 
-                        onClick={() => startEditing('name')}
-                        className="p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                  </div>
-                  
-                  {editingField === 'name' ? (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Votre nom complet"
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => saveProfileUpdate('name')}
-                          disabled={updatingProfile}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {updatingProfile ? 'Sauvegarde...' : 'Sauvegarder'}
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-400"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="font-medium text-gray-900">{user.name}</p>
-                  )}
-                </div>
-                
-                {/* Email */}
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <Mail size={20} className="text-gray-500" />
-                      <span className="text-sm text-gray-500">Email</span>
-                    </div>
-                    {editingField !== 'email' && (
-                      <button 
-                        onClick={() => startEditing('email')}
-                        className="p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                  </div>
-                  
-                  {editingField === 'email' ? (
-                    <div className="space-y-3">
-                      <input
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="votre@email.com"
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => saveProfileUpdate('email')}
-                          disabled={updatingProfile}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {updatingProfile ? 'Sauvegarde...' : 'Sauvegarder'}
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-400"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="font-medium text-gray-900">{user.email || 'Non renseigné'}</p>
-                  )}
-                </div>
-                
-                {/* WhatsApp */}
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
-                      <Phone size={20} className="text-gray-500" />
-                      <span className="text-sm text-gray-500">WhatsApp</span>
-                    </div>
-                    {editingField !== 'whatsapp_phone' && (
-                      <button 
-                        onClick={() => startEditing('whatsapp_phone')}
-                        className="p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <Edit size={16} />
-                      </button>
-                    )}
-                  </div>
-                  
-                  {editingField === 'whatsapp_phone' ? (
-                    <div className="space-y-3">
-                      <input
-                        type="tel"
-                        value={editForm.whatsapp_phone}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, whatsapp_phone: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder={CONTACT_CONFIG.PHONE_PLACEHOLDER}
-                      />
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => saveProfileUpdate('whatsapp_phone')}
-                          disabled={updatingProfile}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {updatingProfile ? 'Sauvegarde...' : 'Sauvegarder'}
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-400"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="font-medium text-gray-900">{user.whatsapp_phone || 'Non renseigné'}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sécurité */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Sécurité</h3>
+          <div className="space-y-5">
+            <SectionCard
+              title="Informations personnelles"
+              description="Votre numéro WhatsApp sert d'identifiant de connexion"
+            >
               <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-3 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Shield size={20} className="text-blue-600" />
-                    <span className="font-medium text-blue-900">Changer le mot de passe</span>
-                  </div>
-                  <ChevronRight size={16} className="text-blue-600" />
-                </button>
-                <button 
-                  onClick={() => contactSupport('security')}
-                  className="w-full flex items-center justify-between p-3 bg-green-50 rounded-xl hover:bg-green-100 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Phone size={20} className="text-green-600" />
-                    <span className="font-medium text-green-900">Support sécurité</span>
-                  </div>
-                  <ChevronRight size={16} className="text-green-600" />
-                </button>
-              </div>
-            </div>
+                {editableFields.map(({ field, label, icon: Icon, display, placeholder, note }) => {
+                  const isEditing = editingField === field;
 
-            {/* Compte */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Compte</h3>
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-3 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <LogOut size={20} className="text-red-600" />
-                    <span className="font-medium text-red-900">Se déconnecter</span>
-                  </div>
-                  <ChevronRight size={16} className="text-red-600" />
-                </button>
+                  return (
+                    <div
+                      key={field}
+                      className={`rounded-xl border p-3.5 transition-colors ${
+                        isEditing ? 'border-brand-green/30 bg-brand-green-light/40' : 'border-gray-100 bg-brand-cream'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <span className="flex items-center gap-2.5 text-xs font-semibold text-gray-500">
+                          <Icon size={16} className="text-gray-400" />
+                          {label}
+                        </span>
+                        {!isEditing && (
+                          <button
+                            type="button"
+                            onClick={() => startEditing(field)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark"
+                          >
+                            <Pencil size={13} />
+                            Modifier
+                          </button>
+                        )}
+                      </div>
+
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          {field === 'whatsapp_phone' ? (
+                            <PhoneInput
+                              id="profile_whatsapp"
+                              label=""
+                              value={editValue}
+                              onChange={(e164) => {
+                                setEditValue(e164);
+                                setFieldError(null);
+                              }}
+                              error={fieldError}
+                              hint="Ce numéro reçoit les confirmations de commande"
+                            />
+                          ) : (
+                            <div className="space-y-1.5">
+                              <input
+                                type={field === 'email' ? 'email' : 'text'}
+                                value={editValue}
+                                onChange={(e) => {
+                                  setEditValue(e.target.value);
+                                  setFieldError(null);
+                                }}
+                                placeholder={placeholder}
+                                aria-label={label}
+                                aria-invalid={Boolean(fieldError)}
+                                className={`w-full px-3.5 py-3 bg-white border-2 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-green/25 transition-all ${
+                                  fieldError
+                                    ? 'border-red-300 focus:border-red-400'
+                                    : 'border-gray-200 focus:border-brand-green'
+                                }`}
+                              />
+                              {fieldError && (
+                                <p className="text-xs text-red-600 flex items-center gap-1.5">
+                                  <AlertCircle size={13} className="flex-shrink-0" />
+                                  {fieldError}
+                                </p>
+                              )}
+                              {field === 'email' && !fieldError && (
+                                <p className="text-[11px] text-gray-500">
+                                  Laissez vide pour retirer votre email.
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => saveField(field)}
+                              disabled={savingProfile}
+                              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-orange text-white text-xs font-bold hover:bg-brand-orange-dark disabled:bg-gray-300 transition-colors"
+                            >
+                              <Check size={14} />
+                              {savingProfile ? 'Enregistrement…' : 'Enregistrer'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={cancelEditing}
+                              disabled={savingProfile}
+                              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
+                            >
+                              <X size={14} />
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p
+                            className={`text-sm font-semibold ${
+                              display ? 'text-gray-900' : 'text-gray-400 italic'
+                            }`}
+                          >
+                            {display || 'Non renseigné'}
+                          </p>
+                          {note && <p className="text-[11px] text-gray-500 mt-1">{note}</p>}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            </SectionCard>
+
+            <SectionCard title="Sécurité">
+              {passwordOpen ? (
+                <form onSubmit={submitPasswordChange} className="space-y-4">
+                  <AuthPasswordInput
+                    id="current_password"
+                    label="Mot de passe actuel"
+                    show={passwordVisible}
+                    onToggle={() => setPasswordVisible(!passwordVisible)}
+                    value={passwordForm.current_password}
+                    onChange={(e) => {
+                      setPasswordForm((prev) => ({ ...prev, current_password: e.target.value }));
+                      setPasswordErrors((prev) => ({ ...prev, current_password: '' }));
+                    }}
+                    error={passwordErrors.current_password}
+                    autoComplete="current-password"
+                    placeholder="Votre mot de passe actuel"
+                  />
+                  <AuthPasswordInput
+                    id="new_password"
+                    label="Nouveau mot de passe"
+                    show={passwordVisible}
+                    onToggle={() => setPasswordVisible(!passwordVisible)}
+                    value={passwordForm.new_password}
+                    onChange={(e) => {
+                      setPasswordForm((prev) => ({ ...prev, new_password: e.target.value }));
+                      setPasswordErrors((prev) => ({ ...prev, new_password: '' }));
+                    }}
+                    error={passwordErrors.new_password}
+                    autoComplete="new-password"
+                    placeholder="Minimum 8 caractères"
+                  />
+                  <AuthPasswordInput
+                    id="new_password_confirmation"
+                    label="Confirmer le nouveau mot de passe"
+                    show={passwordVisible}
+                    onToggle={() => setPasswordVisible(!passwordVisible)}
+                    value={passwordForm.new_password_confirmation}
+                    onChange={(e) => {
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        new_password_confirmation: e.target.value,
+                      }));
+                      setPasswordErrors((prev) => ({ ...prev, new_password_confirmation: '' }));
+                    }}
+                    error={passwordErrors.new_password_confirmation}
+                    autoComplete="new-password"
+                    placeholder="Retapez le nouveau mot de passe"
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={savingPassword}
+                      className="flex-1 py-3 rounded-xl bg-brand-orange text-white text-sm font-bold hover:bg-brand-orange-dark disabled:bg-gray-300 transition-colors"
+                    >
+                      {savingPassword ? 'Modification…' : 'Modifier le mot de passe'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPasswordOpen(false);
+                        setPasswordErrors({});
+                        setPasswordForm({
+                          current_password: '',
+                          new_password: '',
+                          new_password_confirmation: '',
+                        });
+                      }}
+                      className="px-4 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-50 transition-colors"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setPasswordOpen(true)}
+                    className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-brand-green-light hover:bg-brand-green/10 transition-colors"
+                  >
+                    <span className="flex items-center gap-3">
+                      <Shield size={18} className="text-brand-green" />
+                      <span className="text-sm font-semibold text-brand-green-dark">
+                        Changer mon mot de passe
+                      </span>
+                    </span>
+                    <ChevronRight size={16} className="text-brand-green" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => contactSupport('security')}
+                    className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-brand-cream border border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <span className="flex items-center gap-3">
+                      <MessageCircle size={18} className="text-gray-500" />
+                      <span className="text-sm font-semibold text-gray-800">
+                        Signaler un problème de sécurité
+                      </span>
+                    </span>
+                    <ChevronRight size={16} className="text-gray-400" />
+                  </button>
+                </div>
+              )}
+            </SectionCard>
+
+            <SectionCard title="Session">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl bg-red-50 hover:bg-red-100 transition-colors"
+              >
+                <span className="flex items-center gap-3">
+                  <LogOut size={18} className="text-red-600" />
+                  <span className="text-sm font-semibold text-red-900">Se déconnecter</span>
+                </span>
+                <ChevronRight size={16} className="text-red-500" />
+              </button>
+            </SectionCard>
           </div>
         )}
       </div>

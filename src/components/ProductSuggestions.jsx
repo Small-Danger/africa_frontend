@@ -1,263 +1,206 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, TrendingUp, Clock, Plus, ShoppingCart } from 'lucide-react';
-import { suggestionService, cartService } from '../services/api';
-import { useCart } from '../contexts/CartContext';
+import { Sparkles, TrendingUp, Clock, ChevronRight } from 'lucide-react';
+import { suggestionService } from '../services/api';
+import ProductCard from './ProductCard';
 
-const ProductSuggestions = ({ productId, cartSessionId }) => {
+const SECTIONS = [
+  {
+    key: 'similar_products',
+    title: 'Vous aimerez aussi',
+    subtitle: 'Produits de la même catégorie',
+    icon: Sparkles,
+    maxItems: 8,
+  },
+  {
+    key: 'popular_in_category',
+    title: 'Les plus populaires',
+    subtitle: 'Favoris de nos clients',
+    icon: TrendingUp,
+    maxItems: 4,
+  },
+  {
+    key: 'recent_products',
+    title: 'Nouveautés',
+    subtitle: 'Derniers arrivages AfrikRaga',
+    icon: Clock,
+    maxItems: 4,
+  },
+];
+
+/** Construit l'URL catalogue à partir d'une catégorie API */
+const resolveCategoryCatalogPath = (category) => {
+  if (!category?.slug) return '/catalog';
+  if (category.parent?.slug) {
+    return `/catalog/${category.parent.slug}/${category.slug}`;
+  }
+  return `/catalog/${category.slug}`;
+};
+
+const normalizeForCard = (product) => {
+  const variantCount = product?.variant ? 1 : 0;
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    image_main: product.image_main,
+    base_price: product.base_price ?? product.price,
+    min_price: product.price ?? product.base_price,
+    has_variants: Boolean(product.variant),
+    variants_count: variantCount,
+    category: product.category,
+  };
+};
+
+const SuggestionSection = ({ title, subtitle, icon: Icon, products, catalogLink = '/catalog' }) => {
+  if (!products.length) return null;
+
+  return (
+    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-4 py-4 md:px-5 md:py-5 border-b border-gray-100 bg-gradient-to-r from-brand-green-light/30 to-white">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-green flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Icon size={20} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base md:text-lg font-bold text-gray-900">{title}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+              <p className="text-[11px] text-brand-green font-semibold mt-1">
+                {products.length} produit{products.length > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+          <Link
+            to={catalogLink}
+            className="flex-shrink-0 inline-flex items-center gap-0.5 text-xs font-semibold text-brand-green hover:text-brand-green-dark mt-1"
+          >
+            Voir tout
+            <ChevronRight size={14} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile : scroll horizontal */}
+      <div className="md:hidden p-4 -mx-1">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory px-1">
+          {products.map((product) => (
+            <div key={product.id} className="snap-start w-[9.25rem] flex-shrink-0">
+              <ProductCard product={normalizeForCard(product)} />
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-gray-400 text-center mt-1">Glissez pour voir plus →</p>
+      </div>
+
+      {/* Desktop : grille */}
+      <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4 p-5">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={normalizeForCard(product)} />
+        ))}
+      </div>
+
+      <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
+    </section>
+  );
+};
+
+const LoadingSkeleton = () => (
+  <div className="space-y-6">
+    {[1, 2].map((block) => (
+      <div key={block} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+        <div className="flex gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-brand-green-light" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded w-1/3" />
+            <div className="h-3 bg-gray-100 rounded w-1/2" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="aspect-square bg-gray-100 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const ProductSuggestions = ({ productId, categoryCatalogPath = '/catalog' }) => {
   const [suggestions, setSuggestions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [addingToCart, setAddingToCart] = useState({});
-  const { addItem } = useCart();
+
+  const getSectionCatalogLink = (sectionKey, products) => {
+    if (sectionKey === 'recent_products') return '/catalog';
+    if (categoryCatalogPath && categoryCatalogPath !== '/catalog') return categoryCatalogPath;
+    return resolveCategoryCatalogPath(products[0]?.category);
+  };
 
   useEffect(() => {
-    if (productId) {
-      loadSuggestions();
-    }
+    if (!productId) return;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await suggestionService.getSimilarProducts(productId);
+        if (response.success) {
+          setSuggestions(response.data);
+        } else {
+          setError('Impossible de charger les recommandations');
+        }
+      } catch {
+        setError('Impossible de charger les recommandations');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [productId]);
 
-  const loadSuggestions = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const filteredSections = useMemo(() => {
+    if (!suggestions) return [];
+    const seen = new Set(Number(productId) ? [Number(productId)] : []);
 
-      const response = await suggestionService.getSimilarProducts(productId);
-      
-      if (response.success) {
-        setSuggestions(response.data);
-      } else {
-        setError('Erreur lors du chargement des suggestions');
-      }
-    } catch (err) {
-      console.error('Erreur lors du chargement des suggestions:', err);
-      setError('Erreur lors du chargement des suggestions');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return SECTIONS.map((section) => {
+      const products = (suggestions[section.key] ?? [])
+        .filter((p) => {
+          if (seen.has(p.id)) return false;
+          seen.add(p.id);
+          return true;
+        })
+        .slice(0, section.maxItems);
 
-  const handleAddToCart = async (product) => {
-    const productId = product.id;
-    setAddingToCart(prev => ({ ...prev, [productId]: true }));
+      return { ...section, products, catalogLink: getSectionCatalogLink(section.key, products) };
+    }).filter((s) => s.products.length > 0);
+  }, [suggestions, productId, categoryCatalogPath]);
 
-    try {
-      // Préparer l'item pour le contexte
-      const itemToAdd = {
-        id: product.variant ? `${product.id}_${product.variant.id}` : product.id,
-        product_id: product.id,
-        variant_id: product.variant?.id,
-        name: product.name,
-        price: product.price,
-        unit_price: product.price,
-        image: product.image_main,
-        quantity: 1,
-        product: product,
-        variant: product.variant
-      };
-
-      // Ajout instantané dans le contexte
-      addItem(itemToAdd);
-
-      // Synchronisation avec l'API en arrière-plan
-      const headers = {};
-      if (cartSessionId) {
-        headers['X-Session-ID'] = cartSessionId;
-      }
-
-      const cartData = {
-        product_id: product.id,
-        variant_id: product.variant?.id,
-        quantity: 1
-      };
-
-      await cartService.addToCart(cartData, headers);
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout au panier:', err);
-    } finally {
-      setAddingToCart(prev => ({ ...prev, [productId]: false }));
-    }
-  };
-
-  const formatPrice = (price) => {
-    if (price === null || price === undefined || price === '') return '0 FCFA';
-    const numPrice = Number(price);
-    if (isNaN(numPrice)) return '0 FCFA';
-    return `${Math.round(numPrice)} FCFA`;
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg animate-pulse"></div>
-            <h2 className="text-xl font-bold text-gray-900">Articles similaires</h2>
-          </div>
-          <p className="text-sm text-gray-600 mt-1">Découvrez des produits qui pourraient vous intéresser</p>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="animate-pulse">
-                <div className="w-full h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl mb-3"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !suggestions) {
-    return null;
-  }
-
-  const suggestionTypes = [
-    {
-      key: 'similar_products',
-      title: 'Articles similaires',
-      icon: Star,
-      description: 'Dans la même catégorie',
-      maxItems: 6
-    },
-    {
-      key: 'popular_in_category',
-      title: 'Populaires dans cette catégorie',
-      icon: TrendingUp,
-      description: 'Les plus vendus',
-      maxItems: 4
-    },
-    {
-      key: 'recent_products',
-      title: 'Nouveautés',
-      icon: Clock,
-      description: 'Derniers ajouts',
-      maxItems: 4
-    }
-  ];
+  if (loading) return <LoadingSkeleton />;
+  if (error || filteredSections.length === 0) return null;
 
   return (
-    <div className="space-y-8">
-      {suggestionTypes.map(({ key, title, icon: Icon, description, maxItems }) => {
-        const products = (suggestions[key] || []).slice(0, maxItems);
-        
-        if (products.length === 0) return null;
+    <div className="space-y-6">
+      <div className="text-center md:text-left">
+        <span className="inline-flex items-center gap-1.5 bg-brand-orange-light text-brand-orange-dark text-[10px] font-bold uppercase tracking-wide px-3 py-1 rounded-full">
+          🇲🇦 Sélection AfrikRaga
+        </span>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mt-3">Continuez votre découverte</h2>
+        <p className="text-sm text-gray-500 mt-1">D&apos;autres trésors du Maroc qui pourraient vous plaire</p>
+      </div>
 
-        return (
-          <div key={key} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            {/* Header moderne style Amazon/Shein */}
-            <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Icon size={18} className="text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-                    <p className="text-sm text-gray-600">{description}</p>
-                  </div>
-                </div>
-                <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-500">
-                  <span>{products.length} produit{products.length > 1 ? 's' : ''}</span>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Grid de produits modernisé */}
-            <div className="p-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                {products.map((product) => (
-                  <Link
-                    key={product.id}
-                    to={`/products/${product.id}`}
-                    className="group block relative bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-1 transform-gpu"
-                  >
-                    {/* Image container avec effet moderne */}
-                    <div className="relative h-32 bg-gray-50 overflow-hidden">
-                      <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
-                        <img
-                          src={product.image_main || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop'}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 rounded-lg"
-                        />
-                      </div>
-                      
-                      {/* Overlay au survol */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
-                    
-                    {/* Contenu du produit */}
-                    <div className="p-3">
-                      <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors leading-tight">
-                        {product.name}
-                      </h3>
-                      
-                      {/* Prix principal */}
-                      <div className="mb-3">
-                        <span className="text-lg font-bold text-blue-600">
-                          {formatPrice(product.price)}
-                        </span>
-                      </div>
-                      
-                      {/* Variant info */}
-                      {product.variant && (
-                        <div className="mb-3">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            {product.variant.name}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Bouton d'ajout au panier modernisé */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleAddToCart(product);
-                        }}
-                        disabled={addingToCart[product.id] || !product.is_available}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-3 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
-                      >
-                        {addingToCart[product.id] ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                            <span>Ajout...</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart size={16} />
-                            <span>Ajouter</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                    
-                    {/* Effet de brillance au survol */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  </Link>
-                ))}
-              </div>
-              
-              {/* Footer avec lien "Voir plus" */}
-              <div className="mt-6 text-center">
-                <Link 
-                  to="/catalog" 
-                  className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium text-sm transition-colors"
-                >
-                  <span>Voir plus de suggestions</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+      {filteredSections.map(({ key, title, subtitle, icon, products, catalogLink }) => (
+        <SuggestionSection
+          key={key}
+          title={title}
+          subtitle={subtitle}
+          icon={icon}
+          products={products}
+          catalogLink={catalogLink}
+        />
+      ))}
     </div>
   );
 };

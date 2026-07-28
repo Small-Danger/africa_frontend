@@ -59,7 +59,6 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(email, password);
       
       if (response.success) {
-        // Mettre à jour l'état
         setIsAuthenticated(true);
         setUser(response.data.user);
       }
@@ -69,6 +68,24 @@ export const AuthProvider = ({ children }) => {
       return { 
         success: false, 
         error: error.message || 'Erreur de connexion' 
+      };
+    }
+  };
+
+  const googleLogin = async (credential) => {
+    try {
+      const response = await authService.googleLogin(credential);
+
+      if (response.success) {
+        setIsAuthenticated(true);
+        setUser(response.data.user);
+      }
+
+      return response;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Erreur de connexion Google',
       };
     }
   };
@@ -86,6 +103,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /** Met à jour l'utilisateur en mémoire et dans le stockage local */
+  const updateUser = (nextUser) => {
+    if (!nextUser) return;
+    setUser(nextUser);
+    setIsAuthenticated(true);
+    localStorage.setItem('auth_user', JSON.stringify(nextUser));
+  };
+
+  /** Recharge le profil depuis l'API (utile après une modification) */
+  const refreshUser = async () => {
+    try {
+      const response = await authService.getProfile();
+      if (response.success) {
+        updateUser(response.data.user);
+        return response.data.user;
+      }
+    } catch (error) {
+      console.warn('Impossible de rafraîchir le profil:', error);
+    }
+    return null;
+  };
+
   // Fonction utilitaire pour vérifier le rôle
   const isAdmin = () => {
     return user && user.role === 'admin';
@@ -100,7 +139,10 @@ export const AuthProvider = ({ children }) => {
     user,
     isLoading,
     login,
+    googleLogin,
     logout,
+    updateUser,
+    refreshUser,
     isAdmin,
     isClient
   };

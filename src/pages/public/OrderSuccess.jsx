@@ -84,9 +84,9 @@ const OrderSuccess = () => {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
@@ -94,12 +94,12 @@ const OrderSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 pb-20">
+    <div className="min-h-screen bg-brand-cream pb-24 md:pb-8">
       {/* Header - Optimisé mobile */}
       <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100 px-3 sm:px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-lg sm:text-xl font-bold text-gray-900">Commande en attente</h1>
-          <Link to="/" className="text-blue-600 hover:text-blue-700 transition-colors">
+          <Link to="/" className="text-brand-green hover:text-brand-green-dark transition-colors">
             <Home size={18} className="sm:w-5 sm:h-5" />
           </Link>
         </div>
@@ -110,7 +110,7 @@ const OrderSuccess = () => {
         {/* Animation de succès - Optimisée mobile */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="relative inline-block">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-pulse">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-brand-orange rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-pulse">
               <Clock size={32} className="sm:w-12 sm:h-12 text-white" />
             </div>
             <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
@@ -129,8 +129,8 @@ const OrderSuccess = () => {
         {/* Carte de confirmation - Optimisée mobile */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="text-center mb-4 sm:mb-6">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-              <Package size={24} className="sm:w-8 sm:h-8 text-blue-600" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-brand-green-light rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Package size={24} className="sm:w-8 sm:h-8 text-brand-green" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Détails de la commande</h3>
           </div>
@@ -166,12 +166,12 @@ const OrderSuccess = () => {
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-3 sm:p-4 bg-orange-50 rounded-lg sm:rounded-xl border border-orange-200">
+            <div className="flex items-center justify-between p-3 sm:p-4 bg-brand-orange-light rounded-lg sm:rounded-xl border border-brand-orange/30">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <CreditCard size={16} className="sm:w-5 sm:h-5 text-orange-600" />
-                <span className="text-orange-800 font-medium text-sm sm:text-base">À payer</span>
+                <CreditCard size={16} className="sm:w-5 sm:h-5 text-brand-orange" />
+                <span className="text-brand-orange-dark font-medium text-sm sm:text-base">À payer</span>
               </div>
-              <span className="text-xl sm:text-2xl font-bold text-orange-900">{formatPrice(order.total_amount)} FCFA</span>
+              <span className="text-xl sm:text-2xl font-bold text-brand-green-dark">{formatPrice(order.total_amount)} FCFA</span>
             </div>
           </div>
         </div>
@@ -182,16 +182,16 @@ const OrderSuccess = () => {
           
           <div className="space-y-3 sm:space-y-4">
             {/* Option 1: Orange Money via WhatsApp */}
-            <div className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-green-50 rounded-lg sm:rounded-xl border border-green-200">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <MessageCircle size={16} className="sm:w-5 sm:h-5 text-green-600" />
+            <div className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-brand-green-light rounded-lg sm:rounded-xl border border-brand-green/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-green/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <MessageCircle size={16} className="sm:w-5 sm:h-5 text-brand-green" />
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Paiement Orange Money</h4>
                 <p className="text-gray-600 text-xs sm:text-sm mb-2">Payez rapidement via WhatsApp avec Orange Money</p>
                 <button
                   onClick={handleWhatsAppPayment}
-                  className="bg-green-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors"
+                  className="bg-brand-green text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-brand-green-dark transition-colors"
                 >
                   Payer maintenant
                 </button>
@@ -199,16 +199,16 @@ const OrderSuccess = () => {
             </div>
 
             {/* Option 2: Paiement en agence */}
-            <div className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                <MapPin size={16} className="sm:w-5 sm:h-5 text-blue-600" />
+            <div className="flex items-start space-x-3 sm:space-x-4 p-3 sm:p-4 bg-brand-orange-light rounded-lg sm:rounded-xl border border-brand-orange/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-brand-orange/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                <MapPin size={16} className="sm:w-5 sm:h-5 text-brand-orange" />
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">Paiement en agence</h4>
                 <p className="text-gray-600 text-xs sm:text-sm mb-2">Rendez-vous dans notre agence pour payer</p>
                 <button
                   onClick={handleAgencyPayment}
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-600 transition-colors flex items-center space-x-1"
+                  className="bg-brand-orange text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-brand-orange-dark transition-colors flex items-center space-x-1"
                 >
                   <MapPin size={12} className="sm:w-4 sm:h-4" />
                   <span>Voir l'agence</span>
@@ -223,7 +223,7 @@ const OrderSuccess = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Link
               to="/catalog"
-              className="bg-blue-600 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+              className="bg-brand-orange text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold hover:bg-brand-orange-dark transition-colors flex items-center justify-center space-x-2"
             >
               <ShoppingBag size={18} className="sm:w-5 sm:h-5" />
               <span className="text-sm sm:text-base">Continuer mes achats</span>
@@ -241,14 +241,14 @@ const OrderSuccess = () => {
 
         {/* Message de bienvenue pour nouveaux utilisateurs - Optimisé mobile */}
         {isNewUser && (
-          <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white text-center">
-            <h3 className="text-lg sm:text-xl font-bold mb-2">🎉 Bienvenue chez BS Shop !</h3>
-            <p className="text-blue-100 mb-4 text-sm sm:text-base">
+          <div className="mt-6 sm:mt-8 bg-gradient-to-r from-brand-green to-brand-green-dark rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white text-center">
+            <h3 className="text-lg sm:text-xl font-bold mb-2">🎉 Bienvenue chez AfrikRaga !</h3>
+            <p className="text-white/80 mb-4 text-sm sm:text-base">
               Votre compte a été créé avec succès. Finalisez votre paiement pour valider votre première commande.
             </p>
             <Link
               to="/profile"
-              className="inline-flex items-center bg-white text-blue-600 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-gray-100 transition-colors text-sm sm:text-base"
+              className="inline-flex items-center bg-white text-brand-green px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-brand-green-light transition-colors text-sm sm:text-base"
             >
               <span>Accéder à mon profil</span>
               <ArrowRight size={14} className="sm:w-4 sm:h-4 ml-2" />

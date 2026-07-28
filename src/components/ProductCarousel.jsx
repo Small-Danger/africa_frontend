@@ -83,12 +83,12 @@ const ProductCarousel = ({
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
         >
           {Array.from({ length: totalSlides }).map((_, slideIndex) => (
-            <div key={slideIndex} className="w-full flex-shrink-0 flex gap-3 px-0.5">
+            <div key={slideIndex} className="w-full flex-shrink-0 flex items-stretch gap-3 px-0.5">
               {products
                 .slice(slideIndex * itemsPerSlide, slideIndex * itemsPerSlide + itemsPerSlide)
                 .map((product) => (
-                  <div key={product.id} className="w-1/2 flex-shrink-0">
-                    <ProductCard product={product} showActions />
+                  <div key={product.id} className="w-1/2 flex-shrink-0 flex">
+                    <ProductCard product={product} showActions className="flex-1" />
                   </div>
                 ))}
             </div>

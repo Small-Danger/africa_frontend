@@ -41,7 +41,7 @@ function App() {
             <Routes>
               {/* Routes publiques avec nouveau design */}
               <Route path="/" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernHome />
@@ -51,7 +51,7 @@ function App() {
               } />
               
               <Route path="/catalog" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernCatalog />
@@ -61,7 +61,7 @@ function App() {
               } />
               
               <Route path="/catalog/:categorySlug" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernCatalog />
@@ -71,7 +71,7 @@ function App() {
               } />
               
               <Route path="/catalog/:categorySlug/:subcategorySlug" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernCatalog />
@@ -82,7 +82,7 @@ function App() {
               
               {/* Route pour les produits par ID */}
               <Route path="/products/:id" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernProductDetail />
@@ -93,7 +93,7 @@ function App() {
               
               {/* Route pour les produits par slug */}
               <Route path="/product/:slug" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernProductDetail />
@@ -103,7 +103,7 @@ function App() {
               } />
               
               <Route path="/cart" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <ModernCart />
@@ -113,7 +113,7 @@ function App() {
               } />
 
               <Route path="/search" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <SearchResults />
@@ -123,7 +123,7 @@ function App() {
               } />
 
               <Route path="/profile" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <UserProfile />
@@ -133,7 +133,7 @@ function App() {
               } />
 
               <Route path="/order-success" element={
-                <div className="min-h-screen bg-gray-50">
+                <div className="min-h-screen bg-brand-cream">
                   <ModernHeader />
                   <main>
                     <OrderSuccess />
