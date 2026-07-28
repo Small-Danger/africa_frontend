@@ -21,15 +21,18 @@ import {
   AlertCircle,
   X,
   Check,
+  Heart,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { orderService, authService } from '../../services/api';
+import { orderService, authService, productService } from '../../services/api';
 import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 import { formatPhoneE164Display, sanitizePhoneE164, getPhoneValidationResult } from '../../utils/phone';
 import { parseAuthFormError } from '../../utils/authErrors';
 import PhoneInput from '../../components/forms/PhoneInput';
 import { AuthPasswordInput } from '../../components/auth/AuthLayout';
+import useFavorites from '../../hooks/useFavorites';
+import ProductCard from '../../components/ProductCard';
 
 const SESSION_CACHE_KEY = 'afrikraga_user_orders_cache';
 const SESSION_CACHE_TTL = 30 * 1000;
@@ -69,6 +72,21 @@ const getInitials = (name) =>
     .map((part) => part[0]?.toUpperCase() || '')
     .join('') || '?';
 
+/** Adapte un produit détail API pour ProductCard */
+const normalizeProductForCard = (product) => {
+  const variants = product?.variants ?? [];
+  const prices = variants.map((v) => Number(v.price)).filter((p) => !Number.isNaN(p));
+  const minFromVariants = prices.length ? Math.min(...prices) : null;
+
+  return {
+    ...product,
+    min_price: product.min_price ?? minFromVariants ?? product.base_price,
+    min_price_label: product.min_price_label ?? variants.sort((a, b) => Number(a.price) - Number(b.price))[0]?.name,
+    variants_count: product.variants_count ?? variants.length,
+    has_variants: product.has_variants ?? variants.length > 1,
+  };
+};
+
 const StatusBadge = ({ status }) => {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.en_attente;
   const Icon = config.icon;
@@ -100,11 +118,15 @@ const SectionCard = ({ title, description, children, action }) => (
 const UserProfile = () => {
   const { user, logout, updateUser, refreshUser } = useAuth();
   const { showSuccess } = useNotification();
+  const { favorites } = useFavorites();
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState(null);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [favoritesError, setFavoritesError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
@@ -182,6 +204,34 @@ const UserProfile = () => {
     }
   }, []);
 
+  const loadFavorites = useCallback(async () => {
+    if (!favorites.length) {
+      setFavoriteProducts([]);
+      setLoadingFavorites(false);
+      return;
+    }
+
+    setLoadingFavorites(true);
+    setFavoritesError(null);
+
+    try {
+      const results = await Promise.allSettled(
+        favorites.map((id) => productService.getProduct(id))
+      );
+
+      const products = results
+        .filter((result) => result.status === 'fulfilled' && result.value?.success && result.value.data)
+        .map((result) => normalizeProductForCard(result.value.data));
+
+      setFavoriteProducts(products);
+    } catch {
+      setFavoritesError('Impossible de charger vos favoris.');
+      setFavoriteProducts([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }, [favorites]);
+
   useEffect(() => {
     if (!authService.isAuthenticated()) {
       navigate('/auth/login', { replace: true });
@@ -191,6 +241,12 @@ const UserProfile = () => {
     refreshUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, loadOrders]);
+
+  useEffect(() => {
+    if (activeTab === 'favorites' || activeTab === 'overview') {
+      loadFavorites();
+    }
+  }, [activeTab, loadFavorites]);
 
   const stats = useMemo(() => {
     const countBy = (status) => orders.filter((order) => order.status === status).length;
@@ -364,7 +420,8 @@ const UserProfile = () => {
 
   const tabs = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: User },
-    { id: 'orders', label: 'Mes commandes', icon: ShoppingBag, badge: stats.totalOrders },
+    { id: 'favorites', label: 'Favoris', icon: Heart, badge: favorites.length },
+    { id: 'orders', label: 'Commandes', icon: ShoppingBag, badge: stats.totalOrders },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 
@@ -445,14 +502,14 @@ const UserProfile = () => {
           </div>
         </div>
 
-        <nav className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 mb-5 flex gap-1">
+        <nav className="bg-white rounded-2xl border border-gray-100 shadow-sm p-1.5 mb-5 flex gap-1 overflow-x-auto scrollbar-hide">
           {tabs.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
               type="button"
               onClick={() => setActiveTab(id)}
               aria-current={activeTab === id}
-              className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
+              className={`flex-shrink-0 flex-1 min-w-[4.5rem] flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${
                 activeTab === id
                   ? 'bg-brand-green text-white'
                   : 'text-gray-600 hover:bg-brand-green-light'
@@ -486,9 +543,24 @@ const UserProfile = () => {
                     Continuer mes achats
                   </span>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('favorites')}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-red-50 hover:bg-red-100/80 transition-colors relative"
+                >
+                  <Heart size={22} className="text-red-500" />
+                  <span className="text-xs sm:text-sm font-semibold text-red-700 text-center">
+                    Mes favoris
+                  </span>
+                  {favorites.length > 0 && (
+                    <span className="absolute top-2 right-2 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {favorites.length}
+                    </span>
+                  )}
+                </button>
                 <Link
                   to="/cart"
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-orange-light hover:bg-brand-orange/10 transition-colors"
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-orange-light hover:bg-brand-orange/10 transition-colors col-span-2 sm:col-span-1"
                 >
                   <Package size={22} className="text-brand-orange-dark" />
                   <span className="text-xs sm:text-sm font-semibold text-brand-orange-dark text-center">
@@ -497,6 +569,28 @@ const UserProfile = () => {
                 </Link>
               </div>
             </SectionCard>
+
+            {favoriteProducts.length > 0 && (
+              <SectionCard
+                title="Mes favoris"
+                description="Produits enregistrés sur cet appareil"
+                action={
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('favorites')}
+                    className="text-xs font-bold text-brand-green hover:text-brand-green-dark whitespace-nowrap"
+                  >
+                    Voir tout ({favoriteProducts.length})
+                  </button>
+                }
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  {favoriteProducts.slice(0, 2).map((product) => (
+                    <ProductCard key={product.id} product={product} showActions />
+                  ))}
+                </div>
+              </SectionCard>
+            )}
 
             <SectionCard
               title="Dernières commandes"
@@ -606,6 +700,67 @@ const UserProfile = () => {
                   WhatsApp {CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}
                 </p>
               </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {activeTab === 'favorites' && (
+          <div className="space-y-5">
+            <SectionCard
+              title="Mes produits favoris"
+              description="Enregistrés sur cet appareil — ajoutez-en depuis le catalogue avec le cœur"
+              action={
+                favoriteProducts.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={loadFavorites}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark"
+                  >
+                    <RefreshCw size={13} />
+                    Actualiser
+                  </button>
+                ) : null
+              }
+            >
+              {loadingFavorites ? (
+                <div className="py-10 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-green border-t-transparent mx-auto mb-3" />
+                  <p className="text-xs text-gray-500">Chargement de vos favoris…</p>
+                </div>
+              ) : favoritesError ? (
+                <div className="py-6 text-center">
+                  <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-4">{favoritesError}</p>
+                  <button
+                    type="button"
+                    onClick={loadFavorites}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-green text-white text-xs font-bold"
+                  >
+                    <RefreshCw size={14} />
+                    Réessayer
+                  </button>
+                </div>
+              ) : favoriteProducts.length === 0 ? (
+                <div className="py-8 text-center">
+                  <Heart size={40} className="text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-gray-800">Aucun favori pour l&apos;instant</p>
+                  <p className="text-xs text-gray-500 mt-1 mb-5 max-w-xs mx-auto">
+                    Appuyez sur le cœur sur un produit pour le retrouver ici plus tard.
+                  </p>
+                  <Link
+                    to="/catalog"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-orange text-white text-xs font-bold hover:bg-brand-orange-dark transition-colors"
+                  >
+                    Explorer le catalogue
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                  {favoriteProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} showActions />
+                  ))}
+                </div>
+              )}
             </SectionCard>
           </div>
         )}

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Package, Heart } from 'lucide-react';
 import useFavorites from '../hooks/useFavorites';
+import ProductPriceBadge from './ProductPriceBadge';
+import { getProductPriceInfo } from '../utils/productPrice';
 
 const ProductCard = ({ product, showActions = true, className = '' }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -11,13 +13,6 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
     } catch {
       return defaultValue;
     }
-  };
-
-  const formatPrice = (price) => {
-    if (price === null || price === undefined || price === '') return '0 FCFA';
-    const numPrice = Number(price);
-    if (Number.isNaN(numPrice)) return '0 FCFA';
-    return `${Math.round(numPrice).toLocaleString('fr-FR')} FCFA`;
   };
 
   const getProductImage = () => {
@@ -34,34 +29,6 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
     }
   };
 
-  const getMinPrice = () => {
-    if (product?.min_price != null && !Number.isNaN(Number(product.min_price))) {
-      return Number(product.min_price);
-    }
-    try {
-      if (product?.variants?.length > 0) {
-        const prices = product.variants
-          .map((v) => Number(v?.price))
-          .filter((p) => !Number.isNaN(p));
-        if (prices.length) return Math.min(...prices);
-      }
-      const base = Number(product?.base_price ?? product?.price ?? 0);
-      return Number.isNaN(base) ? 0 : base;
-    } catch {
-      return 0;
-    }
-  };
-
-  const getOptionsLabel = () => {
-    const count = Number(product?.variants_count ?? product?.variants?.length ?? 0);
-    const hasVariants = Boolean(product?.has_variants) || count > 1;
-
-    if (hasVariants && count > 1) return `${count} options`;
-    if (hasVariants && count === 1) return '1 option';
-    if (hasVariants) return 'Plusieurs options';
-    return 'En stock';
-  };
-
   if (!product?.id) {
     return (
       <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
@@ -71,12 +38,9 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
   }
 
   const productImage = getProductImage();
-  const minPrice = getMinPrice();
+  const { availabilityLabel } = getProductPriceInfo(product);
   const productName = safeGet(product, 'name', 'Nom du produit');
   const productDescription = safeGet(product, 'description', '');
-  const variantsCount = Number(product?.variants_count ?? product?.variants?.length ?? 0);
-  const hasVariants = Boolean(product?.has_variants) || variantsCount > 1;
-  const optionsLabel = getOptionsLabel();
   const isFav = isFavorite(product.id);
   const categoryName =
     product?.category?.parent?.name ||
@@ -144,14 +108,7 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
           )}
 
           <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2 pointer-events-none">
-            <div className="bg-brand-green text-white rounded-xl px-2.5 py-1.5 shadow-md">
-              {hasVariants && (
-                <span className="block text-[9px] font-medium opacity-90 leading-none mb-0.5">
-                  À partir de
-                </span>
-              )}
-              <span className="text-xs sm:text-sm font-bold leading-none">{formatPrice(minPrice)}</span>
-            </div>
+            <ProductPriceBadge product={product} />
             {showActions && (
               <span className="flex-shrink-0 w-8 h-8 bg-white/95 rounded-full shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-300">
                 <ArrowRight size={16} className="text-brand-green" />
@@ -174,7 +131,7 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
           <div className="flex items-center justify-between gap-2 mt-auto pt-3">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" aria-hidden />
-              <span className="text-[11px] font-medium text-gray-600 truncate">{optionsLabel}</span>
+              <span className="text-[11px] font-medium text-gray-600 truncate">{availabilityLabel}</span>
             </div>
 
             {showActions && (

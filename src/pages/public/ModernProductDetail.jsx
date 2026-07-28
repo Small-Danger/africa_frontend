@@ -16,14 +16,10 @@ import { productService, cartService } from '../../services/api';
 import { useCart } from '../../contexts/CartContext';
 import useFavorites from '../../hooks/useFavorites';
 import ProductSuggestions from '../../components/ProductSuggestions';
+import ProductPriceBadge from '../../components/ProductPriceBadge';
 import { ShimmerTextVariants } from '../../components/ShimmerText';
 import { generateWhatsAppLink } from '../../config/contact';
-
-const formatPrice = (price) => {
-  const num = Number(price);
-  if (Number.isNaN(num)) return '0 FCFA';
-  return `${Math.round(num).toLocaleString('fr-FR')} FCFA`;
-};
+import { formatPrice } from '../../utils/productPrice';
 
 const getProductImages = (product) => {
   if (!product) return [];
@@ -150,7 +146,10 @@ const ModernProductDetail = () => {
           const data = response.data;
           setProduct(data);
           const variants = (data.variants ?? []).filter((v) => v?.id && v.is_active !== false);
-          if (variants.length) setSelectedVariant(variants[0]);
+          if (variants.length) {
+            const cheapest = [...variants].sort((a, b) => Number(a.price) - Number(b.price))[0];
+            setSelectedVariant(cheapest);
+          }
         } else {
           setError('Produit non trouvé');
         }
@@ -238,8 +237,9 @@ const ModernProductDetail = () => {
     (v) => v?.id && v.name && v.is_active !== false
   );
   const hasVariants = validVariants.length > 0;
+  const hasMultipleVariants = validVariants.length > 1;
   const needsVariant = hasVariants && !selectedVariant;
-  const unitPrice = selectedVariant?.price ?? product?.base_price ?? 0;
+  const unitPrice = selectedVariant?.price ?? product?.min_price ?? product?.base_price ?? 0;
   const totalPrice = unitPrice * quantity;
   const productImages = getProductImages(product);
   const breadcrumb = getBreadcrumb(product);
@@ -397,13 +397,19 @@ const ModernProductDetail = () => {
 
               <h1 className="hidden md:block text-2xl font-bold text-gray-900 leading-snug mb-3">{product.name}</h1>
 
-              <div className="inline-flex flex-col bg-brand-green text-white rounded-xl px-4 py-2.5 mb-4 shadow-sm">
-                {hasVariants && !selectedVariant && (
-                  <span className="text-[10px] font-medium opacity-90">À partir de</span>
-                )}
-                <span className="text-2xl md:text-3xl font-bold leading-none">{formatPrice(unitPrice)}</span>
+              <div className="mb-4">
+                <ProductPriceBadge
+                  product={product}
+                  variant="inline"
+                  price={unitPrice}
+                  showFromPrefix={hasMultipleVariants && !selectedVariant}
+                  selectedOptionLabel={selectedVariant?.name ?? null}
+                />
                 {quantity > 1 && (
-                  <span className="text-xs opacity-90 mt-1">Total : {formatPrice(totalPrice)}</span>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Total pour {quantity} unité{quantity > 1 ? 's' : ''} :{' '}
+                    <span className="font-semibold text-brand-green">{formatPrice(totalPrice)}</span>
+                  </p>
                 )}
               </div>
 
@@ -446,7 +452,11 @@ const ModernProductDetail = () => {
               )}
 
               <div className="mb-5">
-                <h2 className="text-sm font-semibold text-gray-900 mb-2">Quantité</h2>
+                <h2 className="text-sm font-semibold text-gray-900 mb-1">Quantité</h2>
+                <p className="text-xs text-gray-500 mb-2">
+                  Nombre d&apos;unités à commander
+                  {selectedVariant?.name ? ` (${selectedVariant.name})` : hasVariants ? ' — choisissez d\'abord un format' : ''}
+                </p>
                 <div className="inline-flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
                   <button
                     type="button"

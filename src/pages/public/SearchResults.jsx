@@ -1,24 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Search, Package, Tag, Filter, Grid, List, ArrowRight } from 'lucide-react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { Search, Package, Tag, Filter, Grid, List, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { productService, categoryService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const query = searchParams.get('q') || '';
 
+  const [inputValue, setInputValue] = useState(query);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('relevance');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState({
     minPrice: '',
     maxPrice: '',
     category: '',
   });
+
+  useEffect(() => {
+    setInputValue(query);
+  }, [query]);
 
   const normalizeText = useCallback((text) => {
     if (!text) return '';
@@ -33,6 +40,8 @@ const SearchResults = () => {
   const loadSearchResults = useCallback(async () => {
     if (!query.trim()) {
       setLoading(false);
+      setProducts([]);
+      setCategories([]);
       return;
     }
 
@@ -44,7 +53,7 @@ const SearchResults = () => {
       const productsResponse = await productService.getProducts({
         search: query,
         per_page: 50,
-        sort: sortBy === 'price_asc' ? 'base_price' : sortBy === 'price_desc' ? 'base_price' : 'created_at',
+        sort_by: sortBy === 'price_asc' || sortBy === 'price_desc' ? 'price' : 'name',
         sort_order: sortBy === 'price_asc' ? 'asc' : 'desc',
       });
 
@@ -55,15 +64,15 @@ const SearchResults = () => {
       const categoriesResponse = await categoryService.getCategories();
       if (categoriesResponse.success) {
         const allCategories = categoriesResponse.data.categories || [];
-        const matchingCategories = allCategories.filter((category) => {
-          const normalizedName = normalizeText(category.name);
-          const normalizedDescription = normalizeText(category.description || '');
-          return normalizedName.includes(normalizedQuery) || normalizedDescription.includes(normalizedQuery);
-        });
-        setCategories(matchingCategories);
+        setCategories(
+          allCategories.filter((category) => {
+            const normalizedName = normalizeText(category.name);
+            const normalizedDescription = normalizeText(category.description || '');
+            return normalizedName.includes(normalizedQuery) || normalizedDescription.includes(normalizedQuery);
+          })
+        );
       }
-    } catch (err) {
-      console.error('Erreur lors de la recherche:', err);
+    } catch {
       setError('Erreur lors de la recherche. Veuillez réessayer.');
     } finally {
       setLoading(false);
@@ -74,99 +83,107 @@ const SearchResults = () => {
     loadSearchResults();
   }, [loadSearchResults]);
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = inputValue.trim();
+    if (trimmed) navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+  };
+
   const filteredProducts = products.filter((product) => {
-    if (filters.minPrice && Number(product.base_price) < Number(filters.minPrice)) return false;
-    if (filters.maxPrice && Number(product.base_price) > Number(filters.maxPrice)) return false;
+    const price = Number(product.min_price ?? product.base_price);
+    if (filters.minPrice && price < Number(filters.minPrice)) return false;
+    if (filters.maxPrice && price > Number(filters.maxPrice)) return false;
     if (filters.category && product.category_id !== Number(filters.category)) return false;
     return true;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center pb-24">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4" />
-          <p className="text-gray-600">Recherche en cours...</p>
-        </div>
-      </div>
-    );
-  }
+  const hasActiveFilters = Boolean(filters.minPrice || filters.maxPrice || filters.category);
 
   return (
     <div className="min-h-screen bg-brand-cream pb-24 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* En-tête */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 bg-brand-green-light rounded-full px-4 py-1.5 mb-3">
-            <Search size={14} className="text-brand-green" />
-            <span className="text-sm font-semibold text-brand-green">Recherche</span>
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-            {query ? `Résultats pour « ${query} »` : 'Rechercher un produit'}
+      {/* Barre de recherche dédiée — toujours accessible sur la page résultats */}
+      <div className="sticky top-14 md:top-16 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-green" />
+              <input
+                type="search"
+                enterKeyHint="search"
+                placeholder="Modifier votre recherche…"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-brand-cream border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green text-base"
+              />
+            </div>
+            <button
+              type="submit"
+              className="flex-shrink-0 px-4 py-3 rounded-xl bg-brand-green text-white text-sm font-semibold hover:bg-brand-green-dark transition-colors"
+            >
+              OK
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-5">
+        <div className="mb-5">
+          <h1 className="text-lg md:text-xl font-bold text-gray-900">
+            {query ? (
+              <>
+                Résultats pour <span className="text-brand-green">« {query} »</span>
+              </>
+            ) : (
+              'Rechercher un produit'
+            )}
           </h1>
-          <p className="text-sm text-gray-600">
-            {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}
-            {categories.length > 0 && ` · ${categories.length} catégorie${categories.length > 1 ? 's' : ''}`}
-          </p>
+          {!loading && query && (
+            <p className="text-sm text-gray-600 mt-1">
+              {filteredProducts.length} produit{filteredProducts.length > 1 ? 's' : ''}
+              {categories.length > 0 && ` · ${categories.length} catégorie${categories.length > 1 ? 's' : ''}`}
+            </p>
+          )}
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-6 text-sm">{error}</div>
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-5 text-sm">{error}</div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filtres */}
-          <aside className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
-              <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Filter size={16} className="text-brand-green" />
-                Filtres
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Prix min (FCFA)</label>
-                  <input
-                    type="number"
-                    value={filters.minPrice}
-                    onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Prix max (FCFA)</label>
-                  <input
-                    type="number"
-                    value={filters.maxPrice}
-                    onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFilters({ minPrice: '', maxPrice: '', category: '' })}
-                  className="w-full text-sm text-brand-green hover:text-brand-green-dark font-medium"
-                >
-                  Réinitialiser
-                </button>
-              </div>
-            </div>
-          </aside>
+        {!query.trim() && !loading && (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <Search size={48} className="text-gray-300 mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Tapez un mot-clé ci-dessus</h2>
+            <p className="text-sm text-gray-500 mb-6">Ex. argan, thé, savon noir, tajine…</p>
+            <Link
+              to="/catalog"
+              className="inline-flex items-center px-6 py-3 bg-brand-orange text-white rounded-xl font-medium"
+            >
+              Parcourir le catalogue
+            </Link>
+          </div>
+        )}
 
-          {/* Résultats */}
-          <div className="lg:col-span-3">
-            {/* Catégories trouvées */}
+        {loading && (
+          <div className="py-16 text-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand-green border-t-transparent mx-auto mb-3" />
+            <p className="text-sm text-gray-600">Recherche en cours…</p>
+          </div>
+        )}
+
+        {!loading && query.trim() && (
+          <>
             {categories.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="mb-5">
+                <h2 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                   <Tag size={16} className="text-brand-orange" />
                   Catégories
                 </h2>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {categories.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/catalog/${cat.slug}`}
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-brand-green/40 hover:text-brand-green transition-colors"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-brand-green/40"
                     >
                       {cat.name}
                       <ArrowRight size={14} />
@@ -176,40 +193,94 @@ const SearchResults = () => {
               </div>
             )}
 
-            {/* Barre outils */}
-            <div className="flex items-center justify-between mb-4 gap-3">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30 bg-white"
+                className="flex-1 min-w-[140px] px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/30"
               >
                 <option value="relevance">Pertinence</option>
                 <option value="price_asc">Prix croissant</option>
                 <option value="price_desc">Prix décroissant</option>
               </select>
-              <div className="flex bg-white border border-gray-200 rounded-lg p-1">
+
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((v) => !v)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  filtersOpen || hasActiveFilters
+                    ? 'border-brand-green bg-brand-green-light text-brand-green-dark'
+                    : 'border-gray-200 bg-white text-gray-700'
+                }`}
+              >
+                <Filter size={16} />
+                Filtres
+                {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-brand-orange" />}
+                <ChevronDown size={14} className={`transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <div className="hidden sm:flex bg-white border border-gray-200 rounded-xl p-1">
                 <button
                   type="button"
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-brand-green-light text-brand-green' : 'text-gray-400'}`}
+                  className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-brand-green-light text-brand-green' : 'text-gray-400'}`}
+                  aria-label="Grille"
                 >
                   <Grid size={16} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-brand-green-light text-brand-green' : 'text-gray-400'}`}
+                  className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-brand-green-light text-brand-green' : 'text-gray-400'}`}
+                  aria-label="Liste"
                 >
                   <List size={16} />
                 </button>
               </div>
             </div>
 
-            {/* Produits */}
+            {filtersOpen && (
+              <div className="mb-5 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900">Filtrer par prix</h3>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={() => setFilters({ minPrice: '', maxPrice: '', category: '' })}
+                      className="text-xs font-semibold text-brand-green flex items-center gap-1"
+                    >
+                      <X size={14} />
+                      Effacer
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Min (FCFA)</label>
+                    <input
+                      type="number"
+                      value={filters.minPrice}
+                      onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Max (FCFA)</label>
+                    <input
+                      type="number"
+                      value={filters.maxPrice}
+                      onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
+                      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {filteredProducts.length > 0 ? (
-              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4' : 'space-y-3'}>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4' : 'space-y-3'}>
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} showActions className={viewMode === 'list' ? 'max-w-none' : ''} />
+                  <ProductCard key={product.id} product={product} showActions />
                 ))}
               </div>
             ) : (
@@ -219,14 +290,14 @@ const SearchResults = () => {
                 <p className="text-gray-600 text-sm mb-6">Essayez un autre mot-clé ou parcourez le catalogue.</p>
                 <Link
                   to="/catalog"
-                  className="inline-flex items-center px-6 py-3 bg-brand-orange text-white rounded-xl font-medium hover:bg-brand-orange-dark transition-colors"
+                  className="inline-flex items-center px-6 py-3 bg-brand-orange text-white rounded-xl font-medium"
                 >
                   Voir le catalogue
                 </Link>
               </div>
             )}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

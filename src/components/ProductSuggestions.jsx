@@ -38,7 +38,7 @@ const resolveCategoryCatalogPath = (category) => {
 };
 
 const normalizeForCard = (product) => {
-  const variantCount = product?.variant ? 1 : 0;
+  const variantCount = Number(product?.variants_count ?? (product?.variant ? 1 : 0));
   return {
     id: product.id,
     name: product.name,
@@ -46,9 +46,11 @@ const normalizeForCard = (product) => {
     description: product.description,
     image_main: product.image_main,
     base_price: product.base_price ?? product.price,
-    min_price: product.price ?? product.base_price,
-    has_variants: Boolean(product.variant),
+    min_price: product.min_price ?? product.price ?? product.base_price,
+    min_price_label: product.min_price_label ?? product.variant?.name ?? null,
+    has_variants: Boolean(product.has_variants) || variantCount > 1,
     variants_count: variantCount,
+    variant: product.variant ?? null,
     category: product.category,
   };
 };
