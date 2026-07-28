@@ -652,6 +652,33 @@ export const notificationService = {
 };
 
 // Service de gestion des clients (Admin)
+// Service du personnel caisse (admin)
+export const cashierService = {
+  async getAll() {
+    return await apiRequest('/admin/cashiers');
+  },
+
+  async create(data) {
+    return await apiRequest('/admin/cashiers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id, data) {
+    return await apiRequest(`/admin/cashiers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async toggleStatus(id) {
+    return await apiRequest(`/admin/cashiers/${id}/toggle-status`, {
+      method: 'POST',
+    });
+  },
+};
+
 export const clientService = {
   // Lister tous les clients
   async getClients(filters = {}) {
@@ -719,6 +746,7 @@ export default {
   orders: orderService,
   notifications: notificationService,
   clients: clientService,
+  cashiers: cashierService,
   suggestions: suggestionService,
   test: testService,
 };

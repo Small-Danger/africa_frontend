@@ -20,6 +20,7 @@ import Categories from './pages/admin/Categories'
 import Orders from './pages/admin/Orders'
 import Customers from './pages/admin/Customers'
 import Banners from './pages/admin/Banners'
+import Cashiers from './pages/admin/Cashiers'
 import PosProtectedRoute from './components/auth/PosProtectedRoute'
 import PosLayout from './pages/pos/PosLayout'
 import PosCashSessionGate from './pages/pos/PosCashSessionGate'
@@ -193,6 +194,11 @@ function App() {
               <Route path="/admin/banners" element={
                 <ProtectedRoute>
                   <AdminLayout><Banners /></AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/cashiers" element={
+                <ProtectedRoute>
+                  <AdminLayout><Cashiers /></AdminLayout>
                 </ProtectedRoute>
               } />
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ShoppingBagIcon, 
   UsersIcon, 
@@ -12,7 +13,9 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  XCircleIcon
+  XCircleIcon,
+  ComputerDesktopIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import { orderService, productService, clientService } from '../../services/api';
 
@@ -671,6 +674,37 @@ const Dashboard = () => {
           />
         ))}
       </div>
+
+        {/* Accès rapide caisse */}
+        <div className="mb-6 sm:mb-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <ComputerDesktopIcon className="h-6 w-6 text-emerald-400" />
+                <h3 className="text-lg font-semibold">Caisse boutique (POS)</h3>
+              </div>
+              <p className="text-slate-300 text-sm max-w-xl">
+                Créez les comptes caissiers autorisés à vendre en magasin, puis ouvrez la caisse pour démarrer une session.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/admin/cashiers"
+                className="inline-flex items-center px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Gérer le personnel caisse
+              </Link>
+              <Link
+                to="/pos"
+                className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-xl hover:bg-emerald-600 transition-colors"
+              >
+                <ComputerDesktopIcon className="h-4 w-4 mr-2" />
+                Ouvrir la caisse
+              </Link>
+            </div>
+          </div>
+        </div>
 
         {/* Graphiques et statistiques - Optimisé mobile */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">

@@ -7,6 +7,7 @@ import {
   UsersIcon, 
   ShoppingCartIcon,
   PhotoIcon,
+  ComputerDesktopIcon,
   Bars3Icon,
   XMarkIcon,
   BellIcon,
@@ -57,6 +58,12 @@ const AdminLayout = ({ children }) => {
       href: '/admin/banners', 
       icon: PhotoIcon,
       current: location.pathname.startsWith('/admin/banners')
+    },
+    { 
+      name: 'Personnel caisse', 
+      href: '/admin/cashiers', 
+      icon: ComputerDesktopIcon,
+      current: location.pathname.startsWith('/admin/cashiers')
     },
   ];
 
