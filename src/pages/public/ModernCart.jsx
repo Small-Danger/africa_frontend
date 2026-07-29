@@ -303,7 +303,7 @@ const ModernCart = () => {
     );
   }
   
-  const { items: contextItems, removeItem, updateQuantity, clearCart, replaceItems, getTotalItems, getTotalPrice } = cartContext;
+  const { items: contextItems, removeItem, updateQuantity, updateItem, clearCart, replaceItems, getTotalItems, getTotalPrice } = cartContext;
   
   // Utiliser directement le contexte (pas d'état local)
   const cartItems = contextItems || [];
@@ -319,6 +319,7 @@ const ModernCart = () => {
 
   const [cartSessionId, setCartSessionId] = useState(localStorage.getItem('cart_session_id'));
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [checkoutAlert, setCheckoutAlert] = useState(null);
   const [orderData, setOrderData] = useState(null);
   
   // Cache pour éviter les requêtes redondantes
@@ -540,62 +541,157 @@ const ModernCart = () => {
       });
   };
 
-  const handleCheckout = async () => {
-    // Vérifier si l'utilisateur est déjà connecté
-    if (isAuthenticated && user) {
-      console.log('👤 Utilisateur déjà connecté, création directe de la commande');
-      
-      try {
-        setCreatingOrder(true);
-        
-        const orderData = {
-          session_id: cartSessionId,
-          notes: `Commande créée par ${user.name} - ${cartSummary.total_items} article(s)`
-        };
-        
-        console.log('📦 Données de commande:', orderData);
-        const orderResult = await orderService.createOrder(orderData);
-        console.log('📦 Résultat création commande:', orderResult);
-        
-        if (orderResult.success) {
-          console.log('✅ Commande créée avec succès, redirection vers la page de succès');
-          
-          // Vider le panier après commande réussie
-          clearCart();
-          
-          // Rediriger vers la page de confirmation de commande avec les données
-          navigate('/order-success', {
-            state: {
-              order: orderResult.data.order,
-              isNewUser: false,
-              user: user
-            }
-          });
-        } else {
-          console.error('❌ Erreur lors de la création de la commande:', orderResult.message);
-          setError(orderResult.message || 'Erreur lors de la création de la commande');
-        }
-      } catch (orderError) {
-        console.error('❌ Erreur lors de la création de la commande:', orderError);
-        setError('Erreur lors de la création de la commande: ' + (orderError.message || 'Erreur inconnue'));
-      } finally {
-        setCreatingOrder(false);
+  const isLocalOnlyCartItem = (item) =>
+    typeof item.id === 'string' && String(item.id).includes('_');
+
+  const buildCartPayload = (item) =>
+    item.variant_id
+      ? { product_id: item.product_id, variant_id: item.variant_id, quantity: item.quantity }
+      : { product_id: item.product_id, quantity: item.quantity };
+
+  const applyAddToCartResponse = (item, response, sessionRef) => {
+    if (!response?.success) {
+      throw new Error(response?.message || 'Impossible de synchroniser le panier');
+    }
+
+    if (response.data?.session_id) {
+      sessionRef.current = response.data.session_id;
+      setCartSessionId(response.data.session_id);
+      localStorage.setItem('cart_session_id', response.data.session_id);
+    }
+
+    if (response.data?.cart_item && isLocalOnlyCartItem(item)) {
+      const apiItem = response.data.cart_item;
+      updateItem(item.id, {
+        id: apiItem.id,
+        product_id: apiItem.product?.id ?? item.product_id,
+        variant_id: apiItem.variant?.id ?? item.variant_id,
+        name: apiItem.product?.name ?? item.name,
+        price: apiItem.unit_price ?? item.price,
+        unit_price: apiItem.unit_price ?? item.price,
+        image: apiItem.product?.image_main ?? item.image,
+        quantity: apiItem.quantity ?? item.quantity,
+        product: apiItem.product ?? item.product,
+        variant: apiItem.variant ?? item.variant,
+      });
+    }
+  };
+
+  const syncCartToApi = useCallback(async () => {
+    const sessionRef = { current: cartSessionId || localStorage.getItem('cart_session_id') };
+    const headers = {};
+    if (sessionRef.current) {
+      headers['X-Session-ID'] = sessionRef.current;
+    }
+
+    const items = contextItems || [];
+    const localOnlyItems = items.filter(isLocalOnlyCartItem);
+
+    for (const item of localOnlyItems) {
+      const response = await cartService.addToCart(buildCartPayload(item), headers);
+      applyAddToCartResponse(item, response, sessionRef);
+      if (sessionRef.current) {
+        headers['X-Session-ID'] = sessionRef.current;
       }
-    } else {
-      console.log('👤 Utilisateur non connecté, redirection vers inscription rapide');
-      
-      // Rediriger vers la page d'inscription rapide avec les données du panier
-      const checkoutData = {
-        session_id: cartSessionId,
-        cart_summary: cartSummary,
-        cart_items: cartItems
-      };
-      
-      // Stocker temporairement les données du panier
-      sessionStorage.setItem('checkout_data', JSON.stringify(checkoutData));
-      
-      // Rediriger vers l'inscription rapide
-      navigate('/auth/quick-register');
+    }
+
+    if (!sessionRef.current && items.length > 0) {
+      for (const item of items) {
+        if (isLocalOnlyCartItem(item)) continue;
+        const response = await cartService.addToCart(buildCartPayload(item), headers);
+        applyAddToCartResponse(item, response, sessionRef);
+        if (sessionRef.current) {
+          headers['X-Session-ID'] = sessionRef.current;
+          break;
+        }
+      }
+    }
+
+    if (sessionRef.current) {
+      const cartRes = await cartService.getCart({ 'X-Session-ID': sessionRef.current });
+      const apiItems = cartRes?.data?.items ?? [];
+      if (apiItems.length === 0 && items.length > 0) {
+        for (const item of items) {
+          const response = await cartService.addToCart(buildCartPayload(item), headers);
+          applyAddToCartResponse(item, response, sessionRef);
+        }
+      }
+    }
+
+    return sessionRef.current;
+  }, [cartSessionId, contextItems, updateItem]);
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      setCheckoutAlert({ type: 'error', message: 'Votre panier est vide.' });
+      return;
+    }
+
+    try {
+      setCreatingOrder(true);
+      setCheckoutAlert(null);
+
+      const sessionId = await syncCartToApi();
+
+      if (!sessionId) {
+        setCheckoutAlert({
+          type: 'error',
+          message: 'Impossible de préparer votre panier. Vérifiez votre connexion et réessayez.',
+        });
+        return;
+      }
+
+      if (!isAuthenticated || !user) {
+        sessionStorage.setItem(
+          'checkout_data',
+          JSON.stringify({
+            session_id: sessionId,
+            cart_summary: cartSummary,
+            cart_items: cartItems,
+          })
+        );
+        navigate('/auth/quick-register');
+        return;
+      }
+
+      const orderResult = await orderService.createOrder({
+        session_id: sessionId,
+        notes: `Commande créée par ${user.name} - ${cartSummary.total_items} article(s)`,
+      });
+
+      if (orderResult.success) {
+        clearCart();
+        localStorage.removeItem('cart_session_id');
+        navigate('/order-success', {
+          state: {
+            order: orderResult.data.order,
+            isNewUser: false,
+            user,
+          },
+        });
+        return;
+      }
+
+      if (orderResult.status === 401) {
+        setCheckoutAlert({
+          type: 'error',
+          message: 'Votre session a expiré. Reconnectez-vous pour finaliser la commande.',
+        });
+        return;
+      }
+
+      setCheckoutAlert({
+        type: 'error',
+        message: orderResult.message || 'Erreur lors de la création de la commande',
+      });
+    } catch (err) {
+      console.error('Erreur lors du checkout:', err);
+      setCheckoutAlert({
+        type: 'error',
+        message: err.message || 'Une erreur est survenue. Réessayez.',
+      });
+    } finally {
+      setCreatingOrder(false);
     }
   };
 
@@ -683,6 +779,43 @@ const ModernCart = () => {
           totalItems={cartSummary.total_items}
           totalPrice={cartSummary.total_price}
         />
+
+        {checkoutAlert && (
+          <div
+            className={`mb-4 rounded-2xl p-4 flex items-start justify-between gap-3 shadow-sm border ${
+              checkoutAlert.type === 'error'
+                ? 'bg-red-50 border-red-200'
+                : 'bg-white border-brand-green/20'
+            }`}
+            role="alert"
+          >
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600">
+                ⚠️
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900">Commande impossible</p>
+                <p className="text-xs text-gray-600 mt-0.5">{checkoutAlert.message}</p>
+                {checkoutAlert.type === 'error' && checkoutAlert.message.includes('session') && (
+                  <Link
+                    to="/auth/login"
+                    className="inline-block mt-2 text-xs font-semibold text-brand-green hover:underline"
+                  >
+                    Se reconnecter
+                  </Link>
+                )}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCheckoutAlert(null)}
+              className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Fermer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {welcomeMessage && (
           <div className="mb-4 bg-white border border-brand-green/20 rounded-2xl p-4 flex items-start justify-between gap-3 shadow-sm">
@@ -772,7 +905,8 @@ const ModernCart = () => {
       </div>
 
       {/* Barre fixe mobile — commande */}
-      <div className="lg:hidden fixed bottom-[4.5rem] left-0 right-0 z-40 px-4 pb-2 pt-2 bg-gradient-to-t from-brand-cream via-brand-cream to-transparent">
+      <div className="lg:hidden fixed bottom-[4.5rem] left-0 right-0 z-[60] px-4 pb-2 pt-2 bg-gradient-to-t from-brand-cream via-brand-cream to-transparent pointer-events-none">
+        <div className="pointer-events-auto">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-3 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Total</p>
@@ -796,6 +930,7 @@ const ModernCart = () => {
             )}
             Commander
           </button>
+        </div>
         </div>
       </div>
 

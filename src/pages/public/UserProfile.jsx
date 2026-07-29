@@ -22,6 +22,8 @@ import {
   X,
   Check,
   Heart,
+  Sparkles,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -36,6 +38,9 @@ import ProductCard from '../../components/ProductCard';
 
 const SESSION_CACHE_KEY = 'afrikraga_user_orders_cache';
 const SESSION_CACHE_TTL = 30 * 1000;
+
+const PLACEHOLDER_IMAGE =
+  'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop';
 
 const STATUS_CONFIG = {
   en_attente: { label: 'En attente', icon: Clock, badge: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -100,10 +105,10 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const SectionCard = ({ title, description, children, action }) => (
-  <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6">
+const SectionCard = ({ title, description, children, action, className = '' }) => (
+  <section className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
     {(title || action) && (
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-start justify-between gap-3 px-5 md:px-6 pt-5 md:pt-6 pb-4 border-b border-gray-50">
         <div>
           {title && <h3 className="text-base font-bold text-gray-900">{title}</h3>}
           {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
@@ -111,9 +116,208 @@ const SectionCard = ({ title, description, children, action }) => (
         {action}
       </div>
     )}
-    {children}
+    <div className={title || action ? 'p-5 md:p-6' : 'p-5 md:p-6'}>{children}</div>
   </section>
 );
+
+/** Miniature produit avec repli sur icône */
+const ProductThumb = ({ src, alt, size = 'md', className = '' }) => {
+  const [failed, setFailed] = useState(false);
+  const sizes = {
+    sm: 'w-10 h-10 rounded-xl',
+    md: 'w-11 h-11 rounded-xl',
+    lg: 'w-14 h-14 rounded-xl',
+    xl: 'w-16 h-16 rounded-2xl',
+  };
+
+  const showImage = src && !failed;
+
+  return (
+    <div
+      className={`${sizes[size] || sizes.md} flex-shrink-0 overflow-hidden bg-brand-cream border border-gray-100 flex items-center justify-center ${className}`}
+    >
+      {showImage ? (
+        <img
+          src={src}
+          alt={alt || 'Produit'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <Package size={size === 'sm' ? 14 : size === 'lg' || size === 'xl' ? 20 : 16} className="text-gray-300" />
+      )}
+    </div>
+  );
+};
+
+/** Aperçu empilé pour le récapitulatif commande (overview) */
+const OrderPreviewStack = ({ items = [] }) => {
+  const withImages = items.filter(Boolean);
+  const first = withImages[0];
+  const extra = withImages.length - 1;
+
+  if (!first) {
+    return <ProductThumb size="lg" alt="Commande" />;
+  }
+
+  return (
+    <div className="relative w-14 h-14 flex-shrink-0">
+      <ProductThumb
+        src={first.product_image}
+        alt={first.product_name}
+        size="lg"
+        className="absolute inset-0 shadow-sm ring-2 ring-white"
+      />
+      {withImages[1] && (
+        <div className="absolute -bottom-0.5 -right-0.5 w-7 h-7 rounded-lg overflow-hidden border-2 border-white shadow-sm bg-brand-cream">
+          <img
+            src={withImages[1].product_image || PLACEHOLDER_IMAGE}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      {extra > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[1.15rem] h-[1.15rem] px-0.5 rounded-full bg-brand-orange text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+          +{extra}
+        </span>
+      )}
+    </div>
+  );
+};
+
+/** Ligne article dans une commande */
+const OrderItemRow = ({ item }) => {
+  const productLink = item.product_id ? `/products/${item.product_id}` : null;
+  const nameEl = (
+    <p className="text-sm font-semibold text-gray-900 truncate">
+      {item.product_name || 'Produit'}
+    </p>
+  );
+
+  return (
+    <li className="flex items-center gap-3 p-4 hover:bg-brand-cream/40 transition-colors">
+      {productLink ? (
+        <Link to={productLink} className="flex-shrink-0">
+          <ProductThumb src={item.product_image} alt={item.product_name} size="md" />
+        </Link>
+      ) : (
+        <ProductThumb src={item.product_image} alt={item.product_name} size="md" />
+      )}
+      <div className="flex-1 min-w-0">
+        {productLink ? (
+          <Link to={productLink} className="hover:text-brand-green transition-colors">
+            {nameEl}
+          </Link>
+        ) : (
+          nameEl
+        )}
+        {item.variant_name && (
+          <p className="text-[11px] text-brand-green font-medium mt-0.5">{item.variant_name}</p>
+        )}
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          {item.quantity || 1} × {formatPrice(item.unit_price ?? item.price)}
+        </p>
+      </div>
+      <p className="text-sm font-bold text-gray-900 flex-shrink-0">
+        {formatPrice(item.total_price)}
+      </p>
+    </li>
+  );
+};
+
+/** Carte commande compacte (overview) */
+const OrderCompactRow = ({ order, onClickOrders }) => (
+  <li>
+    <button
+      type="button"
+      onClick={onClickOrders}
+      className="w-full flex items-center gap-3 p-3 rounded-xl bg-brand-cream/80 border border-gray-100 hover:border-brand-green/25 hover:bg-brand-green-light/30 transition-all text-left group"
+    >
+      <OrderPreviewStack items={order.items} />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-gray-900 truncate group-hover:text-brand-green-dark transition-colors">
+          {order.order_number || `CMD-${order.id}`}
+        </p>
+        <p className="text-[11px] text-gray-500 mt-0.5">
+          {formatDate(order.created_at, true) || 'Date indisponible'}
+          {(order.items_summary?.total_items ?? order.items?.length) > 0 && (
+            <span className="text-gray-400">
+              {' '}
+              · {order.items_summary?.total_items ?? order.items?.length} art.
+            </span>
+          )}
+        </p>
+      </div>
+      <div className="text-right flex-shrink-0 space-y-1">
+        <p className="text-sm font-bold text-brand-green">{formatPrice(order.total_amount)}</p>
+        <StatusBadge status={order.status} />
+      </div>
+    </button>
+  </li>
+);
+
+/** Carte commande complète (onglet commandes) */
+const OrderCard = ({ order }) => {
+  const itemCount = order.items_summary?.total_items ?? order.items?.length ?? 0;
+
+  return (
+    <article className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="p-4 md:p-5 border-b border-gray-100 bg-gradient-to-r from-brand-green-light/20 to-white">
+        <div className="flex items-start gap-3">
+          <OrderPreviewStack items={order.items} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-bold text-gray-900 truncate">
+                  {order.order_number || `CMD-${order.id}`}
+                </h3>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  {formatDate(order.created_at, true) || 'Date indisponible'}
+                </p>
+              </div>
+              <StatusBadge status={order.status} />
+            </div>
+            <p className="text-lg font-bold text-brand-green mt-2">{formatPrice(order.total_amount)}</p>
+          </div>
+        </div>
+      </div>
+
+      {order.items?.length > 0 && (
+        <ul className="divide-y divide-gray-50">
+          {order.items.map((item) => (
+            <OrderItemRow key={item.id ?? `${item.product_id}-${item.variant_name}`} item={item} />
+          ))}
+        </ul>
+      )}
+
+      <div className="px-4 py-3 bg-brand-cream/60 border-t border-gray-100 flex items-center justify-between gap-3">
+        <p className="text-[11px] text-gray-500">
+          {itemCount} article{itemCount > 1 ? 's' : ''}
+        </p>
+        <a
+          href={generateWhatsAppLink(
+            `Bonjour AfrikRaga ! Je souhaite des informations sur ma commande ${
+              order.order_number || `CMD-${order.id}`
+            }.`
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark transition-colors"
+        >
+          <MessageCircle size={13} />
+          Suivre sur WhatsApp
+        </a>
+      </div>
+      <div className="h-0.5 bg-gradient-to-r from-brand-green via-brand-orange to-brand-green" aria-hidden />
+    </article>
+  );
+};
 
 const UserProfile = () => {
   const { user, logout, updateUser, refreshUser } = useAuth();
@@ -452,19 +656,26 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-brand-cream pb-24">
-      <header className="bg-brand-green text-white">
-        <div className="max-w-5xl mx-auto px-4 pt-6 pb-8">
+      <header className="relative overflow-hidden bg-gradient-to-br from-brand-green-dark via-brand-green to-brand-green/95 text-white">
+        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-brand-orange/15 blur-3xl" aria-hidden />
+        <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/5 blur-2xl" aria-hidden />
+
+        <div className="relative max-w-5xl mx-auto px-4 pt-5 pb-10">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Mon compte</h1>
-              <p className="text-white/70 text-xs md:text-sm mt-1">
-                Suivez vos commandes et gérez vos informations
-              </p>
-            </div>
+            <Link
+              to="/"
+              className="inline-flex items-center rounded-xl bg-white/95 shadow-md border border-white/90 px-3 py-2 hover:shadow-lg transition-shadow"
+            >
+              <img
+                src="/logo-principale.png"
+                alt={CONTACT_CONFIG.COMPANY.name}
+                className="h-8 md:h-9 w-auto max-w-[7.5rem] object-contain"
+              />
+            </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-sm font-semibold transition-colors border border-white/10"
             >
               <LogOut size={16} />
               <span className="hidden sm:inline">Déconnexion</span>
@@ -472,33 +683,55 @@ const UserProfile = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 md:w-18 md:h-18 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-xl font-bold flex-shrink-0">
-              {getInitials(user.name)}
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 md:w-[4.5rem] md:h-[4.5rem] rounded-2xl bg-white/15 border-2 border-white/25 flex items-center justify-center text-xl font-bold shadow-inner">
+                {getInitials(user.name)}
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-orange flex items-center justify-center border-2 border-brand-green shadow-sm">
+                <Sparkles size={11} className="text-white" />
+              </span>
             </div>
-            <div className="min-w-0">
-              <h2 className="text-lg md:text-xl font-bold truncate">{user.name}</h2>
-              <p className="text-white/85 text-sm font-medium truncate">
+            <div className="min-w-0 flex-1">
+              <p className="text-brand-orange-light text-[10px] font-bold uppercase tracking-[0.15em] mb-0.5">
+                Mon espace client
+              </p>
+              <h1 className="text-xl md:text-2xl font-bold truncate">{user.name}</h1>
+              <p className="text-white/85 text-sm font-medium truncate mt-0.5">
                 {user.whatsapp_phone ? formatPhoneE164Display(user.whatsapp_phone) : 'Numéro non renseigné'}
               </p>
-              <p className="text-white/60 text-xs mt-0.5">
+              <p className="text-white/55 text-xs mt-0.5">
                 {memberSince ? `Membre depuis ${memberSince}` : 'Bienvenue chez AfrikRaga'}
               </p>
             </div>
           </div>
         </div>
+
+        <div className="h-5 bg-brand-cream rounded-t-[1.75rem] relative -mb-px" aria-hidden />
       </header>
 
-      <div className="max-w-5xl mx-auto px-4">
-        <div className="-mt-5 mb-5 grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-            <div className="text-2xl font-bold text-brand-green">{stats.totalOrders}</div>
-            <div className="text-xs text-gray-500 mt-0.5">
-              Commande{stats.totalOrders > 1 ? 's' : ''}
+      <div className="max-w-5xl mx-auto px-4 -mt-1">
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-green-light flex items-center justify-center flex-shrink-0">
+              <ShoppingBag size={18} className="text-brand-green" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-brand-green leading-none">{stats.totalOrders}</div>
+              <div className="text-[11px] text-gray-500 mt-1">
+                Commande{stats.totalOrders > 1 ? 's' : ''}
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-            <div className="text-2xl font-bold text-brand-orange">{formatPrice(stats.totalSpent)}</div>
-            <div className="text-xs text-gray-500 mt-0.5">Total dépensé</div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-brand-orange-light flex items-center justify-center flex-shrink-0">
+              <Wallet size={18} className="text-brand-orange" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-base md:text-lg font-bold text-brand-orange-dark leading-tight truncate">
+                {formatPrice(stats.totalSpent)}
+              </div>
+              <div className="text-[11px] text-gray-500 mt-1">Total dépensé</div>
+            </div>
           </div>
         </div>
 
@@ -536,9 +769,11 @@ const UserProfile = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Link
                   to="/catalog"
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-green-light hover:bg-brand-green/10 transition-colors"
+                  className="flex flex-col items-center gap-2.5 p-4 rounded-xl border border-brand-green/15 bg-gradient-to-br from-brand-green-light/80 to-white hover:shadow-md transition-all"
                 >
-                  <ShoppingBag size={22} className="text-brand-green" />
+                  <div className="w-10 h-10 rounded-xl bg-brand-green/10 flex items-center justify-center">
+                    <ShoppingBag size={20} className="text-brand-green" />
+                  </div>
                   <span className="text-xs sm:text-sm font-semibold text-brand-green-dark text-center">
                     Continuer mes achats
                   </span>
@@ -546,9 +781,11 @@ const UserProfile = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('favorites')}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-red-50 hover:bg-red-100/80 transition-colors relative"
+                  className="flex flex-col items-center gap-2.5 p-4 rounded-xl border border-red-100 bg-gradient-to-br from-red-50 to-white hover:shadow-md transition-all relative"
                 >
-                  <Heart size={22} className="text-red-500" />
+                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                    <Heart size={20} className="text-red-500" />
+                  </div>
                   <span className="text-xs sm:text-sm font-semibold text-red-700 text-center">
                     Mes favoris
                   </span>
@@ -560,9 +797,11 @@ const UserProfile = () => {
                 </button>
                 <Link
                   to="/cart"
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-brand-orange-light hover:bg-brand-orange/10 transition-colors col-span-2 sm:col-span-1"
+                  className="flex flex-col items-center gap-2.5 p-4 rounded-xl border border-brand-orange/20 bg-gradient-to-br from-brand-orange-light/80 to-white hover:shadow-md transition-all col-span-2 sm:col-span-1"
                 >
-                  <Package size={22} className="text-brand-orange-dark" />
+                  <div className="w-10 h-10 rounded-xl bg-brand-orange/10 flex items-center justify-center">
+                    <Package size={20} className="text-brand-orange-dark" />
+                  </div>
                   <span className="text-xs sm:text-sm font-semibold text-brand-orange-dark text-center">
                     Voir mon panier
                   </span>
@@ -641,30 +880,11 @@ const UserProfile = () => {
               ) : (
                 <ul className="space-y-2.5">
                   {orders.slice(0, 3).map((order) => (
-                    <li
+                    <OrderCompactRow
                       key={order.id}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-brand-cream border border-gray-100"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-brand-green-light flex items-center justify-center flex-shrink-0">
-                        <Package size={16} className="text-brand-green" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {order.order_number || `CMD-${order.id}`}
-                        </p>
-                        <p className="text-[11px] text-gray-500">
-                          {formatDate(order.created_at, true) || 'Date indisponible'}
-                        </p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-bold text-brand-green">
-                          {formatPrice(order.total_amount)}
-                        </p>
-                        <div className="mt-1">
-                          <StatusBadge status={order.status} />
-                        </div>
-                      </div>
-                    </li>
+                      order={order}
+                      onClickOrders={() => setActiveTab('orders')}
+                    />
                   ))}
                 </ul>
               )}
@@ -866,73 +1086,7 @@ const UserProfile = () => {
             ) : (
               <div className="space-y-4">
                 {filteredOrders.map((order) => (
-                  <article
-                    key={order.id}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-                  >
-                    <div className="p-4 md:p-5 border-b border-gray-100">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900">
-                            {order.order_number || `CMD-${order.id}`}
-                          </h3>
-                          <p className="text-[11px] text-gray-500 mt-0.5">
-                            {formatDate(order.created_at, true) || 'Date indisponible'}
-                          </p>
-                        </div>
-                        <StatusBadge status={order.status} />
-                      </div>
-                      <p className="text-lg font-bold text-brand-green">
-                        {formatPrice(order.total_amount)}
-                      </p>
-                    </div>
-
-                    {order.items?.length > 0 && (
-                      <ul className="divide-y divide-gray-50">
-                        {order.items.map((item) => (
-                          <li key={item.id} className="flex items-center gap-3 p-4">
-                            <div className="w-11 h-11 rounded-xl bg-brand-cream border border-gray-100 flex items-center justify-center flex-shrink-0">
-                              <Package size={16} className="text-gray-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 truncate">
-                                {item.product_name || 'Produit'}
-                              </p>
-                              {item.variant_name && (
-                                <p className="text-[11px] text-gray-500">{item.variant_name}</p>
-                              )}
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                {item.quantity || 1} × {formatPrice(item.unit_price)}
-                              </p>
-                            </div>
-                            <p className="text-sm font-bold text-gray-900 flex-shrink-0">
-                              {formatPrice(item.total_price)}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-
-                    <div className="px-4 py-3 bg-brand-cream border-t border-gray-100 flex items-center justify-between gap-3">
-                      <p className="text-[11px] text-gray-500">
-                        {order.items_summary?.total_items ?? order.items?.length ?? 0} article
-                        {(order.items_summary?.total_items ?? order.items?.length ?? 0) > 1 ? 's' : ''}
-                      </p>
-                      <a
-                        href={generateWhatsAppLink(
-                          `Bonjour AfrikRaga ! Je souhaite des informations sur ma commande ${
-                            order.order_number || `CMD-${order.id}`
-                          }.`
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:text-brand-green-dark"
-                      >
-                        <MessageCircle size={13} />
-                        Suivre sur WhatsApp
-                      </a>
-                    </div>
-                  </article>
+                  <OrderCard key={order.id} order={order} />
                 ))}
               </div>
             )}

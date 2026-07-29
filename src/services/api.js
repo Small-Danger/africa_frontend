@@ -85,7 +85,7 @@ async function apiRequest(endpoint, options = {}) {
       if (response.status === 401) {
         console.warn('🔒 Token expiré, déconnexion automatique');
         localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('auth_user');
         
         // Rediriger vers la page de connexion seulement si on n'y est pas déjà
         if (!window.location.pathname.includes('/login')) {
@@ -625,12 +625,54 @@ export const cartService = {
 
 // Service des commandes
 export const orderService = {
-  // Créer une commande
+  // Créer une commande (utilisateur connecté)
   async createOrder(orderData) {
-    return await apiRequest('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
+    try {
+      return await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+          status: error.status,
+        };
+      }
+      return {
+        success: false,
+        message: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+        errors: {},
+        status: 0,
+      };
+    }
+  },
+
+  // Créer une commande guest (utilisateur non connecté)
+  async createGuestOrder(orderData) {
+    try {
+      return await apiRequest('/orders/guest', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return {
+          success: false,
+          message: error.message,
+          errors: error.errors,
+          status: error.status,
+        };
+      }
+      return {
+        success: false,
+        message: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+        errors: {},
+        status: 0,
+      };
+    }
   },
 
   // Lister les commandes du client
@@ -672,22 +714,6 @@ export const orderService = {
   async getUserOrders() {
     return await apiRequest('/orders');
   },
-
-  // Créer une commande (utilisateur connecté)
-  async createOrder(orderData) {
-    return await apiRequest('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
-  },
-
-  // Créer une commande guest (utilisateur non connecté)
-  async createGuestOrder(orderData) {
-    return await apiRequest('/orders/guest', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
-  }
 };
 
 // Service des notifications
