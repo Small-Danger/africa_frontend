@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, Package, Tag, Filter, Grid, List, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { productService, categoryService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
+import { fieldsMatchAllTokens } from '../../utils/searchText';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -57,16 +58,6 @@ const SearchResults = () => {
     };
   }, [inputValue, navigate, searchParams]);
 
-  const normalizeText = useCallback((text) => {
-    if (!text) return '';
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s]/g, '')
-      .trim();
-  }, []);
-
   const loadSearchResults = useCallback(async () => {
     if (!query.trim()) {
       setLoading(false);
@@ -78,7 +69,6 @@ const SearchResults = () => {
     try {
       setLoading(true);
       setError(null);
-      const normalizedQuery = normalizeText(query);
 
       const productsResponse = await productService.getProducts({
         search: query,
@@ -88,18 +78,24 @@ const SearchResults = () => {
       });
 
       if (productsResponse.success) {
-        setProducts(productsResponse.data.products || []);
+        const apiProducts = productsResponse.data.products || [];
+        setProducts(
+          apiProducts.filter((product) =>
+            fieldsMatchAllTokens(
+              [product.name, product.description, product.category?.name],
+              query
+            )
+          )
+        );
       }
 
       const categoriesResponse = await categoryService.getCategories();
       if (categoriesResponse.success) {
         const allCategories = categoriesResponse.data.categories || [];
         setCategories(
-          allCategories.filter((category) => {
-            const normalizedName = normalizeText(category.name);
-            const normalizedDescription = normalizeText(category.description || '');
-            return normalizedName.includes(normalizedQuery) || normalizedDescription.includes(normalizedQuery);
-          })
+          allCategories.filter((category) =>
+            fieldsMatchAllTokens([category.name, category.description], query)
+          )
         );
       }
     } catch {
@@ -107,7 +103,7 @@ const SearchResults = () => {
     } finally {
       setLoading(false);
     }
-  }, [query, sortBy, normalizeText]);
+  }, [query, sortBy]);
 
   useEffect(() => {
     loadSearchResults();

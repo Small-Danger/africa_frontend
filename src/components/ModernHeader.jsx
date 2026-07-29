@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import SearchOverlay from './SearchOverlay';
 import SearchSuggestionRow from './SearchSuggestionRow';
+import { fieldsMatchAllTokens } from '../utils/searchText';
 
 const ModernHeader = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,16 +76,6 @@ const ModernHeader = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const normalizeText = useCallback((text) => {
-    if (!text) return '';
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s]/g, '')
-      .trim();
-  }, []);
-
   const performSearch = useCallback(
     async (query) => {
       if (!query || query.length < 2) {
@@ -94,31 +85,36 @@ const ModernHeader = () => {
 
       setIsSearching(true);
       try {
-        const normalizedQuery = normalizeText(query);
-        const productsResponse = await productService.getProducts({ search: query, per_page: 6 });
+        const productsResponse = await productService.getProducts({ search: query, per_page: 12 });
 
         let results = [];
         if (productsResponse.success && productsResponse.data.products) {
-          results = productsResponse.data.products.map((product) => ({
-            id: product.id,
-            name: product.name,
-            type: 'product',
-            price: product.min_price ?? product.base_price,
-            min_price: product.min_price ?? product.base_price,
-            min_price_label: product.min_price_label ?? null,
-            has_variants: product.has_variants,
-            variants_count: product.variants_count,
-            image: product.image_main,
-            category: product.category?.name || '',
-          }));
+          results = productsResponse.data.products
+            .filter((product) =>
+              fieldsMatchAllTokens(
+                [product.name, product.description, product.category?.name],
+                query
+              )
+            )
+            .slice(0, 6)
+            .map((product) => ({
+              id: product.id,
+              name: product.name,
+              type: 'product',
+              price: product.min_price ?? product.base_price,
+              min_price: product.min_price ?? product.base_price,
+              min_price_label: product.min_price_label ?? null,
+              has_variants: product.has_variants,
+              variants_count: product.variants_count,
+              image: product.image_main,
+              category: product.category?.name || '',
+            }));
         }
 
         const matchingCategories = categories
-          .filter((category) => {
-            const normalizedName = normalizeText(category.name);
-            const normalizedDescription = normalizeText(category.description || '');
-            return normalizedName.includes(normalizedQuery) || normalizedDescription.includes(normalizedQuery);
-          })
+          .filter((category) =>
+            fieldsMatchAllTokens([category.name, category.description], query)
+          )
           .slice(0, 3)
           .map((category) => ({
             id: category.id,
@@ -136,7 +132,7 @@ const ModernHeader = () => {
         setIsSearching(false);
       }
     },
-    [categories, normalizeText]
+    [categories]
   );
 
   const handleSearchChange = useCallback(
@@ -312,7 +308,7 @@ const ModernHeader = () => {
         onSearchChange={handleSearchChange}
         onSubmit={handleSearch}
         searchResults={searchResults}
-        showSuggestions={searchQuery.trim().length >= 2 && searchResults.length > 0}
+        showSuggestions={searchQuery.trim().length >= 2 && (searchResults.length > 0 || isSearching)}
         isSearching={isSearching}
         onSuggestionClick={handleSuggestionClick}
         onViewAllResults={() => goToSearchResults(searchQuery)}
