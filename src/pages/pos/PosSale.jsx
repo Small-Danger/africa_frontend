@@ -1,31 +1,30 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  MagnifyingGlassIcon,
-  ShoppingCartIcon,
-  UserIcon,
-  BanknotesIcon,
-  PlusIcon,
-  MinusIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  QrCodeIcon,
-  PhoneIcon,
-  SparklesIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from '@heroicons/react/24/outline';
+  Search,
+  ShoppingCart,
+  User,
+  Plus,
+  Minus,
+  Trash2,
+  CheckCircle2,
+  Barcode,
+  Phone,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Banknote,
+} from 'lucide-react';
 import { posService, PAYMENT_METHODS } from '../../services/posApi';
 import PosReceipt from './PosReceipt';
-
-const formatMoney = (n) =>
-  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n) + ' F CFA';
-
-const PAYMENT_STYLES = {
-  especes: { emoji: '💵', bg: 'bg-emerald-50 border-emerald-400 text-emerald-800' },
-  carte: { emoji: '💳', bg: 'bg-blue-50 border-blue-400 text-blue-800' },
-  orange_money: { emoji: '🟠', bg: 'bg-orange-50 border-orange-400 text-orange-800' },
-  wave: { emoji: '🌊', bg: 'bg-violet-50 border-violet-400 text-violet-800' },
-};
+import {
+  formatPosMoney,
+  PAYMENT_METHOD_CONFIG,
+  PosProductThumb,
+  PosPanel,
+  PosEmptyState,
+  PosAlert,
+  PosButton,
+} from '../../components/pos/posShared';
 
 const PosSale = () => {
   const searchRef = useRef(null);
@@ -107,7 +106,7 @@ const PosSale = () => {
       setClientSearching(false);
       setClientStatus(digits.length > 0 && digits.length < 4 ? 'too_short' : 'idle');
       setClientStatusMessage(
-        digits.length > 0 && digits.length < 4 ? 'Encore quelques chiffres...' : ''
+        digits.length > 0 && digits.length < 4 ? 'Encore quelques chiffres…' : ''
       );
       return;
     }
@@ -115,7 +114,7 @@ const PosSale = () => {
     let cancelled = false;
     setClientSearching(true);
     setClientStatus('searching');
-    setClientStatusMessage('Recherche du client...');
+    setClientStatusMessage('Recherche du client…');
 
     const t = setTimeout(async () => {
       try {
@@ -171,6 +170,8 @@ const PosSale = () => {
           unit_price: parseFloat(item.price) || 0,
           quantity: 1,
           stock_quantity: item.stock_quantity,
+          image: item.image,
+          category: item.category,
         },
       ];
     });
@@ -281,157 +282,154 @@ const PosSale = () => {
     }
   };
 
-  const clientStatusClass =
+  const clientStatusType =
     clientStatus === 'exact' || selectedClient
-      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-      : clientStatus === 'partial'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
+      ? 'success'
+      : clientStatus === 'error'
+        ? 'error'
         : clientStatus === 'not_found'
-          ? 'bg-amber-50 border-amber-200 text-amber-800'
-          : clientStatus === 'error'
-            ? 'bg-red-50 border-red-200 text-red-800'
-            : 'bg-slate-50 border-slate-200 text-slate-600';
+          ? 'warning'
+          : 'info';
 
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col xl:flex-row max-w-[1600px] mx-auto p-3 lg:p-4 gap-3 lg:gap-4">
-      <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-        <div className="p-4 lg:p-5 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <span className="text-sm font-bold text-emerald-700">1</span>
+    <div className="h-[calc(100vh-64px)] md:h-[calc(100vh-72px)] flex flex-col xl:flex-row max-w-[1600px] mx-auto p-3 lg:p-4 gap-3 lg:gap-4">
+      {/* Colonne gauche — recherche + panier */}
+      <div className="flex-1 flex flex-col min-h-0 gap-3">
+        <PosPanel step={1} title="Produits" subtitle="Scannez, cherchez ou appuyez sur Entrée">
+          <div className="p-4 lg:p-5 pt-0">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Barcode className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-300" />
+              <input
+                ref={searchRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Nom, code-barres ou SKU…"
+                autoComplete="off"
+                className="w-full pl-12 pr-12 py-3.5 text-base md:text-lg rounded-2xl border-2 border-gray-200 bg-brand-cream/50 focus:border-brand-green focus:ring-4 focus:ring-brand-green/10 outline-none transition-all placeholder:text-gray-400"
+              />
             </div>
-            <div>
-              <h2 className="font-bold text-slate-900">Ajouter des produits</h2>
-              <p className="text-xs text-slate-500">Scannez ou tapez le nom du produit</p>
-            </div>
+
+            {searching && (
+              <p className="text-xs text-brand-green mt-2 flex items-center gap-2 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-green animate-pulse" />
+                Recherche…
+              </p>
+            )}
+
+            {searchResults.length > 0 && (
+              <ul className="mt-3 rounded-2xl border border-gray-100 overflow-hidden shadow-md max-h-60 overflow-y-auto divide-y divide-gray-50">
+                {searchResults.map((item) => (
+                  <li key={`${item.product_id}-${item.product_variant_id}`}>
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-3 px-3 py-3 hover:bg-brand-green-light/50 active:bg-brand-green-light text-left transition-colors"
+                      onClick={() => addToCart(item)}
+                    >
+                      <PosProductThumb src={item.image} alt={item.display_name} size="lg" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm truncate">{item.display_name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {item.category && (
+                            <span className="text-[10px] text-gray-400 truncate">{item.category}</span>
+                          )}
+                          {item.stock_quantity != null && item.stock_quantity > 0 && (
+                            <span className="text-[10px] text-brand-green font-medium">
+                              Stock {item.stock_quantity}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="font-bold text-brand-green text-sm">{formatPosMoney(item.price)}</span>
+                        <span className="h-9 w-9 rounded-xl bg-brand-orange flex items-center justify-center shadow-sm">
+                          <Plus size={18} className="text-white" />
+                        </span>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+        </PosPanel>
 
-          <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400" />
-            <QrCodeIcon className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300" />
-            <input
-              ref={searchRef}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Nom, code-barres ou SKU..."
-              autoComplete="off"
-              className="w-full pl-12 pr-12 py-4 text-lg rounded-2xl border-2 border-slate-200 bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all placeholder:text-slate-400"
-            />
-          </div>
-
-          {searching && (
-            <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Recherche en cours...
-            </p>
-          )}
-
-          {searchResults.length > 0 && (
-            <ul className="mt-3 rounded-2xl border border-slate-200 overflow-hidden shadow-lg max-h-56 overflow-y-auto">
-              {searchResults.map((item) => (
-                <li key={`${item.product_id}-${item.product_variant_id}`}>
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-emerald-50 active:bg-emerald-100 border-b border-slate-100 last:border-0 text-left transition-colors"
-                    onClick={() => addToCart(item)}
-                  >
-                    <span className="font-semibold text-slate-900">{item.display_name}</span>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {item.stock_quantity != null && item.stock_quantity > 0 && (
-                        <span className="text-xs text-slate-400">Stock {item.stock_quantity}</span>
-                      )}
-                      <span className="font-bold text-emerald-700">{formatMoney(item.price)}</span>
-                      <span className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-                        <PlusIcon className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between px-4 lg:px-5 py-3 border-b border-slate-100 bg-white">
-            <div className="flex items-center gap-2">
-              <ShoppingCartIcon className="h-5 w-5 text-slate-600" />
-              <h3 className="font-bold text-slate-900">
-                Panier
-                {cartCount > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center h-6 min-w-[1.5rem] px-1.5 rounded-full bg-emerald-500 text-white text-xs font-bold">
-                    {cartCount}
-                  </span>
-                )}
-              </h3>
-            </div>
+        <PosPanel
+          className="flex-1 min-h-0"
+          title="Panier"
+          subtitle={
+            cartCount > 0
+              ? `${cartCount} article${cartCount > 1 ? 's' : ''} · ${cart.length} ligne${cart.length > 1 ? 's' : ''}`
+              : undefined
+          }
+          headerClassName="!py-3"
+        >
+          <div className="flex items-center justify-end px-4 -mt-2 mb-1">
             {cart.length > 0 && (
               <button
                 type="button"
                 onClick={clearCart}
-                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50"
+                className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded-lg hover:bg-red-50"
               >
-                <TrashIcon className="h-4 w-4" />
+                <Trash2 size={14} />
                 Vider
               </button>
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-5">
+          <div className="flex-1 overflow-y-auto px-4 pb-4 min-h-[180px] max-h-[40vh] xl:max-h-none xl:flex-1">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4">
-                <div className="h-20 w-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-4">
-                  <ShoppingCartIcon className="h-10 w-10 text-slate-300" />
-                </div>
-                <p className="text-lg font-semibold text-slate-700 mb-2">Panier vide</p>
-                <p className="text-sm text-slate-500 max-w-xs mb-6">
-                  Recherchez un produit ci-dessus ou scannez un code-barres pour commencer.
-                </p>
-                <div className="grid grid-cols-3 gap-3 w-full max-w-sm text-left">
+              <PosEmptyState
+                icon={ShoppingCart}
+                title="Panier vide"
+                description="Recherchez un produit ou scannez un code-barres pour commencer."
+              >
+                <div className="grid grid-cols-3 gap-2 w-full max-w-sm text-left">
                   {[
                     { n: '1', t: 'Chercher', d: 'Nom ou code' },
-                    { n: '2', t: 'Ajouter', d: 'Cliquer résultat' },
-                    { n: '3', t: 'Encaisser', d: 'Payer à droite →' },
+                    { n: '2', t: 'Ajouter', d: 'Clic ou Entrée' },
+                    { n: '3', t: 'Encaisser', d: 'Payer →' },
                   ].map((step) => (
-                    <div key={step.n} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                      <span className="text-xs font-bold text-emerald-600">{step.n}</span>
-                      <p className="text-xs font-semibold text-slate-800 mt-0.5">{step.t}</p>
-                      <p className="text-[10px] text-slate-500">{step.d}</p>
+                    <div key={step.n} className="bg-brand-cream rounded-xl p-2.5 border border-gray-100">
+                      <span className="text-[10px] font-bold text-brand-green">{step.n}</span>
+                      <p className="text-[11px] font-semibold text-gray-800 mt-0.5">{step.t}</p>
+                      <p className="text-[9px] text-gray-500">{step.d}</p>
                     </div>
                   ))}
                 </div>
-              </div>
+              </PosEmptyState>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2.5">
                 {cart.map((line, index) => (
                   <li
                     key={`${line.product_id}-${line.product_variant_id}-${index}`}
-                    className="flex items-center gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100"
+                    className="flex items-center gap-3 bg-brand-cream/70 rounded-2xl p-3 border border-gray-100"
                   >
+                    <PosProductThumb src={line.image} alt={line.display_name} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 truncate">{line.display_name}</p>
-                      <p className="text-sm text-slate-500 mt-0.5">{formatMoney(line.unit_price)} / unité</p>
+                      <p className="font-semibold text-gray-900 text-sm truncate">{line.display_name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{formatPosMoney(line.unit_price)} / u.</p>
                     </div>
-                    <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
+                    <div className="flex items-center gap-0.5 bg-white rounded-xl border border-gray-200 p-0.5 shadow-sm">
                       <button
                         type="button"
-                        className="h-10 w-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+                        className="h-9 w-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
                         onClick={() => updateQty(index, -1)}
                       >
-                        <MinusIcon className="h-5 w-5 text-slate-700" />
+                        <Minus size={16} className="text-gray-600" />
                       </button>
-                      <span className="w-10 text-center text-lg font-bold">{line.quantity}</span>
+                      <span className="w-8 text-center text-sm font-bold">{line.quantity}</span>
                       <button
                         type="button"
-                        className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center"
+                        className="h-9 w-9 rounded-lg bg-brand-green hover:bg-brand-green-dark flex items-center justify-center"
                         onClick={() => updateQty(index, 1)}
                       >
-                        <PlusIcon className="h-5 w-5 text-white" />
+                        <Plus size={16} className="text-white" />
                       </button>
                     </div>
-                    <p className="w-28 text-right text-lg font-bold text-slate-900 shrink-0">
-                      {formatMoney(line.unit_price * line.quantity)}
+                    <p className="w-24 text-right text-sm font-bold text-gray-900 shrink-0">
+                      {formatPosMoney(line.unit_price * line.quantity)}
                     </p>
                   </li>
                 ))}
@@ -440,179 +438,169 @@ const PosSale = () => {
           </div>
 
           {cart.length > 0 && (
-            <div className="px-4 lg:px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <span className="text-slate-300 text-sm">Sous-total panier</span>
-              <span className="text-2xl font-bold">{formatMoney(subtotal)}</span>
+            <div className="px-4 py-3 bg-brand-green-dark text-white flex items-center justify-between rounded-b-2xl mx-0">
+              <span className="text-white/70 text-sm">Sous-total</span>
+              <span className="text-xl font-bold">{formatPosMoney(subtotal)}</span>
             </div>
           )}
-        </div>
+        </PosPanel>
       </div>
 
-      <div className="w-full xl:w-[440px] flex flex-col min-h-0 gap-3 shrink-0">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 lg:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
-              <span className="text-sm font-bold text-blue-700">2</span>
+      {/* Colonne droite — client + paiement */}
+      <div className="w-full xl:w-[420px] flex flex-col min-h-0 gap-3 shrink-0">
+        <PosPanel step={2} title="Client" subtitle="Optionnel — fidélisation WhatsApp">
+          <div className="p-4 lg:p-5 pt-0 space-y-2">
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                value={clientPhone}
+                onChange={(e) => {
+                  setClientPhone(e.target.value);
+                  setSelectedClient(null);
+                  setError('');
+                }}
+                placeholder="Numéro WhatsApp (ex: 70 12 34 56)"
+                autoComplete="off"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-brand-green focus:ring-4 focus:ring-brand-green/10 outline-none text-sm bg-brand-cream/40"
+              />
             </div>
-            <div>
-              <h2 className="font-bold text-slate-900">Client</h2>
-              <p className="text-xs text-slate-500">Optionnel — pour fidéliser</p>
-            </div>
-          </div>
 
-          <div className="relative">
-            <PhoneIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <input
-              value={clientPhone}
-              onChange={(e) => {
-                setClientPhone(e.target.value);
-                setSelectedClient(null);
-                setError('');
-              }}
-              placeholder="Numéro WhatsApp (ex: 70 12 34 56)"
-              autoComplete="off"
-              className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/10 outline-none text-sm"
-            />
-          </div>
+            {(clientSearching || clientStatusMessage) && !selectedClient && (
+              <PosAlert type={clientSearching ? 'info' : clientStatusType}>
+                {clientSearching ? 'Recherche…' : clientStatusMessage}
+              </PosAlert>
+            )}
 
-          {(clientSearching || clientStatusMessage) && (
-            <div className={`mt-2 px-3 py-2 rounded-xl border text-sm flex items-center gap-2 ${clientStatusClass}`}>
-              {clientSearching && <span className="h-2 w-2 rounded-full bg-current animate-pulse shrink-0" />}
-              {!clientSearching && (selectedClient || clientStatus === 'exact') && (
-                <CheckCircleIcon className="h-4 w-4 shrink-0" />
-              )}
-              {clientSearching ? 'Recherche...' : clientStatusMessage}
-            </div>
-          )}
+            {clientResults.length > 0 && !selectedClient && (
+              <ul className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-50">
+                {clientResults.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2.5 hover:bg-brand-green-light/40 flex items-center gap-2"
+                      onClick={() => {
+                        setSelectedClient(c);
+                        setWalkInName(c.name);
+                        setClientPhone(c.display_phone || c.phone || c.whatsapp_phone || '');
+                        setClientResults([]);
+                        setClientStatus('exact');
+                        setClientStatusMessage(`Client : ${c.name}`);
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-brand-green-light flex items-center justify-center">
+                        <User size={14} className="text-brand-green" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
+                        <p className="text-[11px] text-gray-500">
+                          {c.display_phone || c.phone || c.whatsapp_phone}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {clientResults.length > 0 && !selectedClient && (
-            <ul className="mt-2 rounded-xl border border-slate-200 overflow-hidden">
-              {clientResults.map((c) => (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b last:border-b-0"
-                    onClick={() => {
-                      setSelectedClient(c);
-                      setWalkInName(c.name);
-                      setClientPhone(c.display_phone || c.phone || c.whatsapp_phone || '');
-                      setClientResults([]);
-                      setClientStatus('exact');
-                      setClientStatusMessage(`Client trouvé : ${c.name}`);
-                    }}
-                  >
-                    <p className="font-semibold text-slate-900">{c.name}</p>
-                    <p className="text-xs text-slate-500">{c.display_phone || c.phone || c.whatsapp_phone}</p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {selectedClient ? (
-            <div className="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserIcon className="h-5 w-5 text-emerald-600" />
-                <div>
-                  <p className="font-semibold text-emerald-900 text-sm">{selectedClient.name}</p>
-                  <p className="text-xs text-emerald-700">Client enregistré</p>
+            {selectedClient ? (
+              <div className="p-3 rounded-xl bg-brand-green-light/60 border border-brand-green/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-brand-green" />
+                  <div>
+                    <p className="font-semibold text-brand-green-dark text-sm">{selectedClient.name}</p>
+                    <p className="text-[11px] text-brand-green">Client enregistré</p>
+                  </div>
                 </div>
+                <button type="button" onClick={clearClient} className="text-xs text-gray-500 font-semibold underline">
+                  Changer
+                </button>
               </div>
-              <button type="button" onClick={clearClient} className="text-xs text-slate-500 underline">
-                Changer
-              </button>
-            </div>
-          ) : (
-            <input
-              value={walkInName}
-              onChange={(e) => setWalkInName(e.target.value)}
-              placeholder={
-                clientStatus === 'not_found' && clientPhone.trim()
-                  ? 'Nom du nouveau client *'
-                  : 'Nom du client (optionnel)'
-              }
-              className="mt-2 w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-400 outline-none text-sm"
-            />
-          )}
-        </div>
+            ) : (
+              <input
+                value={walkInName}
+                onChange={(e) => setWalkInName(e.target.value)}
+                placeholder={
+                  clientStatus === 'not_found' && clientPhone.trim()
+                    ? 'Nom du nouveau client *'
+                    : 'Nom du client (optionnel)'
+                }
+                className="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-brand-green outline-none text-sm bg-brand-cream/40"
+              />
+            )}
+          </div>
+        </PosPanel>
 
-        <div className="flex-1 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
-          <div className="p-4 lg:p-5 flex-1 overflow-y-auto">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                <span className="text-sm font-bold text-violet-700">3</span>
-              </div>
-              <div>
-                <h2 className="font-bold text-slate-900">Paiement</h2>
-                <p className="text-xs text-slate-500">Choisissez le mode et validez</p>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-4 text-white mb-4">
+        <PosPanel step={3} title="Paiement" subtitle="Choisissez le mode et validez" className="flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-5 pt-0 space-y-4">
+            <div className="bg-gradient-to-br from-brand-green-dark to-brand-green rounded-2xl p-4 text-white">
               {discount > 0 && (
                 <>
-                  <div className="flex justify-between text-sm text-slate-400 mb-1">
+                  <div className="flex justify-between text-sm text-white/60 mb-1">
                     <span>Sous-total</span>
-                    <span className="line-through">{formatMoney(subtotal)}</span>
+                    <span className="line-through">{formatPosMoney(subtotal)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-red-300 mb-2">
+                  <div className="flex justify-between text-sm text-red-200 mb-2">
                     <span>Remise</span>
-                    <span>−{formatMoney(discount)}</span>
+                    <span>−{formatPosMoney(discount)}</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between items-end">
-                <span className="text-slate-300 text-sm">Total à payer</span>
-                <span className="text-3xl font-black text-emerald-400">{formatMoney(totalDue)}</span>
+                <span className="text-white/70 text-sm">Total à payer</span>
+                <span className="text-2xl md:text-3xl font-black text-brand-orange-light">
+                  {formatPosMoney(totalDue)}
+                </span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => setShowDiscount(!showDiscount)}
-              className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 mb-3"
+              className="flex items-center gap-2 text-xs text-gray-500 hover:text-brand-green font-semibold"
             >
-              {showDiscount ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+              {showDiscount ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               Appliquer une remise
             </button>
             {showDiscount && (
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="number"
                   min="0"
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(e.target.value)}
                   placeholder="Montant FCFA"
-                  className="px-3 py-2.5 rounded-xl border-2 border-slate-200 text-sm outline-none focus:border-violet-400"
+                  className="px-3 py-2 rounded-xl border-2 border-gray-200 text-sm outline-none focus:border-brand-green bg-brand-cream/40"
                 />
                 <input
                   value={discountReason}
                   onChange={(e) => setDiscountReason(e.target.value)}
-                  placeholder="Motif (optionnel)"
-                  className="px-3 py-2.5 rounded-xl border-2 border-slate-200 text-sm outline-none focus:border-violet-400"
+                  placeholder="Motif"
+                  className="px-3 py-2 rounded-xl border-2 border-gray-200 text-sm outline-none focus:border-brand-green bg-brand-cream/40"
                 />
               </div>
             )}
 
             {payments.map((p, index) => (
-              <div key={index} className="mb-4">
+              <div key={index} className="space-y-2">
                 {payments.length > 1 && (
-                  <p className="text-xs font-medium text-slate-500 mb-2">Paiement {index + 1}</p>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">
+                    Paiement {index + 1}
+                  </p>
                 )}
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-1.5">
                   {PAYMENT_METHODS.map((m) => {
-                    const style = PAYMENT_STYLES[m.value] || PAYMENT_STYLES.especes;
+                    const cfg = PAYMENT_METHOD_CONFIG[m.value] || PAYMENT_METHOD_CONFIG.especes;
                     const active = p.method === m.value;
                     return (
                       <button
                         key={m.value}
                         type="button"
                         onClick={() => updatePayment(index, 'method', m.value)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${
-                          active ? style.bg : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border-2 text-xs font-semibold transition-all ${
+                          active ? cfg.active : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                         }`}
                       >
-                        <span>{style.emoji}</span>
+                        <span>{cfg.icon}</span>
                         {m.label}
                       </button>
                     );
@@ -620,25 +608,29 @@ const PosSale = () => {
                 </div>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <BanknotesIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                    <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                       type="number"
                       min="0"
                       value={p.amount}
                       onChange={(e) => updatePayment(index, 'amount', e.target.value)}
-                      placeholder="Montant reçu"
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-slate-200 text-lg font-bold outline-none focus:border-emerald-500"
+                      placeholder="Montant"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border-2 border-gray-200 text-base font-bold outline-none focus:border-brand-green bg-brand-cream/40"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => fillRemaining(index)}
-                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 whitespace-nowrap"
+                    className="px-2.5 py-2 rounded-xl bg-brand-green-light text-brand-green-dark text-[11px] font-bold hover:bg-brand-green/15 whitespace-nowrap"
                   >
                     Total exact
                   </button>
                   {payments.length > 1 && (
-                    <button type="button" onClick={() => removePaymentLine(index)} className="px-3 text-red-500">
+                    <button
+                      type="button"
+                      onClick={() => removePaymentLine(index)}
+                      className="px-2.5 text-red-500 font-bold"
+                    >
                       ×
                     </button>
                   )}
@@ -649,71 +641,56 @@ const PosSale = () => {
             <button
               type="button"
               onClick={addPaymentLine}
-              className="text-sm text-violet-600 font-medium flex items-center gap-1 mb-4"
+              className="text-xs text-brand-green font-bold flex items-center gap-1"
             >
-              <PlusIcon className="h-4 w-4" />
-              Diviser le paiement (2 modes)
+              <Plus size={14} />
+              Diviser le paiement
             </button>
 
             <div
-              className={`px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-semibold ${
+              className={`px-3 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold border ${
                 remaining === 0
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  ? 'bg-brand-green-light text-brand-green-dark border-brand-green/20'
                   : remaining > 0
-                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                    : 'bg-red-50 text-red-800 border border-red-200'
+                    ? 'bg-amber-50 text-amber-800 border-amber-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
               }`}
             >
               {remaining === 0 ? (
                 <>
-                  <CheckCircleIcon className="h-5 w-5" />
+                  <CheckCircle2 size={16} />
                   Montant correct — prêt à valider
                 </>
               ) : remaining > 0 ? (
-                <>Il manque {formatMoney(remaining)}</>
+                <>Il manque {formatPosMoney(remaining)}</>
               ) : (
-                <>Trop-perçu de {formatMoney(Math.abs(remaining))}</>
+                <>Trop-perçu de {formatPosMoney(Math.abs(remaining))}</>
               )}
             </div>
 
-            {error && (
-              <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-                {error}
-              </p>
-            )}
+            {error && <PosAlert type="error">{error}</PosAlert>}
           </div>
 
-          <div className="p-4 lg:p-5 bg-slate-50 border-t border-slate-100">
-            <button
-              type="button"
+          <div className="p-4 border-t border-gray-100 bg-brand-cream/50">
+            <PosButton
+              variant="primary"
+              size="xl"
               disabled={!canSubmit}
+              loading={submitting}
               onClick={handleSubmit}
-              className={`w-full py-4 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 transition-all ${
-                canSubmit
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
+              className="gap-3"
             >
-              {submitting ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Enregistrement...
-                </span>
-              ) : (
-                <>
-                  <SparklesIcon className="h-6 w-6" />
-                  Valider la vente
-                  {totalDue > 0 && (
-                    <span className="bg-white/20 px-3 py-0.5 rounded-full text-base">{formatMoney(totalDue)}</span>
-                  )}
-                </>
+              {!submitting && <Sparkles size={20} />}
+              Valider la vente
+              {totalDue > 0 && !submitting && (
+                <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-sm">{formatPosMoney(totalDue)}</span>
               )}
-            </button>
+            </PosButton>
             {cart.length === 0 && (
-              <p className="text-center text-xs text-slate-400 mt-2">Ajoutez des produits pour encaisser</p>
+              <p className="text-center text-[11px] text-gray-400 mt-2">Ajoutez des produits pour encaisser</p>
             )}
           </div>
-        </div>
+        </PosPanel>
       </div>
 
       {lastOrder && <PosReceipt order={lastOrder} onClose={() => setLastOrder(null)} />}

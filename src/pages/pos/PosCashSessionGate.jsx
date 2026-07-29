@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { BanknotesIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Banknote, Sparkles } from 'lucide-react';
 import { posService } from '../../services/posApi';
-import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import { CONTACT_CONFIG } from '../../config/contact';
+import { PosAlert, PosButton, PosLoadingScreen } from '../../components/pos/posShared';
 
 const PosCashSessionGate = ({ children }) => {
   const [session, setSession] = useState(undefined);
@@ -31,11 +33,7 @@ const PosCashSessionGate = ({ children }) => {
   };
 
   if (session === undefined && !error) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Ouverture de la caisse..." />
-      </div>
-    );
+    return <PosLoadingScreen message="Vérification de la caisse…" />;
   }
 
   if (session) {
@@ -43,20 +41,25 @@ const PosCashSessionGate = ({ children }) => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-68px)] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 lg:p-10 w-full max-w-md">
-        <div className="h-16 w-16 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-6">
-          <BanknotesIcon className="h-8 w-8 text-emerald-600" />
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 lg:p-10 w-full max-w-md">
+        <div className="flex justify-center mb-6">
+          <img
+            src="/logo-principale.png"
+            alt={CONTACT_CONFIG.COMPANY.name}
+            className="h-12 w-auto object-contain"
+          />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 text-center mb-2">Bonjour !</h1>
-        <p className="text-slate-600 text-center mb-8 text-sm leading-relaxed">
-          Comptez l&apos;argent dans votre tiroir-caisse et entrez le montant pour commencer la journée.
+        <div className="h-14 w-14 rounded-2xl bg-brand-green-light flex items-center justify-center mx-auto mb-5">
+          <Banknote className="h-7 w-7 text-brand-green" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">Ouverture de caisse</h1>
+        <p className="text-gray-500 text-center mb-8 text-sm leading-relaxed">
+          Comptez l&apos;argent dans le tiroir-caisse et saisissez le fond de caisse pour démarrer.
         </p>
         <form onSubmit={handleOpen} className="space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Fond de caisse (FCFA)
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Fond de caisse (FCFA)</label>
             <input
               type="number"
               min="0"
@@ -66,27 +69,20 @@ const PosCashSessionGate = ({ children }) => {
               placeholder="Ex: 50000"
               required
               autoFocus
-              className="w-full px-4 py-4 text-2xl font-bold text-center rounded-2xl border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none"
+              className="w-full px-4 py-4 text-2xl font-bold text-center rounded-2xl border-2 border-gray-200 focus:border-brand-green focus:ring-4 focus:ring-brand-green/10 outline-none bg-brand-cream/40"
             />
-            <p className="text-xs text-slate-400 mt-2 text-center">Mettez 0 si le tiroir est vide</p>
+            <p className="text-xs text-gray-400 mt-2 text-center">Mettez 0 si le tiroir est vide</p>
           </div>
-          {error && (
-            <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl px-3 py-2">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 disabled:opacity-60"
-          >
-            {loading ? (
-              <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <SparklesIcon className="h-6 w-6" />
-                Ouvrir la caisse
-              </>
-            )}
-          </button>
+          {error && <PosAlert type="error">{error}</PosAlert>}
+          <PosButton type="submit" variant="primary" size="lg" loading={loading} className="w-full">
+            {!loading && <Sparkles size={18} />}
+            Ouvrir la caisse
+          </PosButton>
+          <p className="text-center">
+            <Link to="/pos/close" className="text-xs text-gray-400 hover:text-brand-green font-medium">
+              Fermer une session précédente ?
+            </Link>
+          </p>
         </form>
       </div>
     </div>

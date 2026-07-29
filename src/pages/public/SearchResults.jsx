@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, Package, Tag, Filter, Grid, List, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { productService, categoryService } from '../../services/api';
@@ -23,9 +23,39 @@ const SearchResults = () => {
     category: '',
   });
 
+  const debounceRef = useRef(null);
+  const skipDebounceRef = useRef(false);
+
   useEffect(() => {
     setInputValue(query);
   }, [query]);
+
+  // Mise à jour automatique des résultats pendant la saisie (debounce)
+  useEffect(() => {
+    if (skipDebounceRef.current) {
+      skipDebounceRef.current = false;
+      return undefined;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      const trimmed = inputValue.trim();
+      const currentQuery = (searchParams.get('q') || '').trim();
+
+      if (trimmed === currentQuery) return;
+
+      if (trimmed) {
+        navigate(`/search?q=${encodeURIComponent(trimmed)}`, { replace: true });
+      } else if (currentQuery) {
+        navigate('/search', { replace: true });
+      }
+    }, 320);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [inputValue, navigate, searchParams]);
 
   const normalizeText = useCallback((text) => {
     if (!text) return '';
@@ -86,7 +116,13 @@ const SearchResults = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     const trimmed = inputValue.trim();
-    if (trimmed) navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    skipDebounceRef.current = true;
+    if (trimmed) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`, { replace: true });
+    } else {
+      navigate('/search', { replace: true });
+    }
   };
 
   const filteredProducts = products.filter((product) => {
@@ -104,24 +140,21 @@ const SearchResults = () => {
       {/* Barre de recherche dédiée — toujours accessible sur la page résultats */}
       <div className="sticky top-14 md:top-16 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
-            <div className="relative flex-1">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-green" />
-              <input
-                type="search"
-                enterKeyHint="search"
-                placeholder="Modifier votre recherche…"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-brand-cream border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green text-base"
-              />
-            </div>
-            <button
-              type="submit"
-              className="flex-shrink-0 px-4 py-3 rounded-xl bg-brand-green text-white text-sm font-semibold hover:bg-brand-green-dark transition-colors"
-            >
-              OK
-            </button>
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-green pointer-events-none" />
+            <input
+              type="search"
+              enterKeyHint="search"
+              placeholder="Modifier votre recherche…"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="w-full pl-10 pr-11 py-3 bg-brand-cream border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green text-base"
+            />
+            {loading && inputValue.trim().length >= 1 && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-green border-t-transparent" />
+              </div>
+            )}
           </form>
         </div>
       </div>
