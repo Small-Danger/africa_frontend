@@ -1,9 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, Package, Tag, Filter, Grid, List, ArrowRight, ChevronDown, X } from 'lucide-react';
 import { productService, categoryService } from '../../services/api';
 import ProductCard from '../../components/ProductCard';
-import { fieldsMatchAllTokens } from '../../utils/searchText';
+import {
+  fieldsMatchAllTokens,
+  sortBySearchRelevance,
+  productSearchFields,
+  categorySearchFields,
+} from '../../utils/searchText';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -70,33 +75,36 @@ const SearchResults = () => {
       setLoading(true);
       setError(null);
 
+      const sortParams =
+        sortBy === 'price_asc' || sortBy === 'price_desc'
+          ? { sort_by: 'price', sort_order: sortBy === 'price_asc' ? 'asc' : 'desc' }
+          : { sort_by: 'relevance', sort_order: 'desc' };
+
       const productsResponse = await productService.getProducts({
         search: query,
         per_page: 50,
-        sort_by: sortBy === 'price_asc' || sortBy === 'price_desc' ? 'price' : 'name',
-        sort_order: sortBy === 'price_asc' ? 'asc' : 'desc',
+        ...sortParams,
       });
 
       if (productsResponse.success) {
         const apiProducts = productsResponse.data.products || [];
+        const matched = apiProducts.filter((product) =>
+          fieldsMatchAllTokens(productSearchFields(product), query)
+        );
         setProducts(
-          apiProducts.filter((product) =>
-            fieldsMatchAllTokens(
-              [product.name, product.description, product.category?.name],
-              query
-            )
-          )
+          sortBy === 'relevance'
+            ? sortBySearchRelevance(matched, query, productSearchFields)
+            : matched
         );
       }
 
       const categoriesResponse = await categoryService.getCategories();
       if (categoriesResponse.success) {
         const allCategories = categoriesResponse.data.categories || [];
-        setCategories(
-          allCategories.filter((category) =>
-            fieldsMatchAllTokens([category.name, category.description], query)
-          )
+        const matchedCategories = allCategories.filter((category) =>
+          fieldsMatchAllTokens(categorySearchFields(category), query)
         );
+        setCategories(sortBySearchRelevance(matchedCategories, query, categorySearchFields));
       }
     } catch {
       setError('Erreur lors de la recherche. Veuillez réessayer.');
@@ -121,13 +129,31 @@ const SearchResults = () => {
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    const price = Number(product.min_price ?? product.base_price);
-    if (filters.minPrice && price < Number(filters.minPrice)) return false;
-    if (filters.maxPrice && price > Number(filters.maxPrice)) return false;
-    if (filters.category && product.category_id !== Number(filters.category)) return false;
-    return true;
-  });
+  const filteredProducts = useMemo(() => {
+    let list = products.filter((product) => {
+      const price = Number(product.min_price ?? product.base_price);
+      if (filters.minPrice && price < Number(filters.minPrice)) return false;
+      if (filters.maxPrice && price > Number(filters.maxPrice)) return false;
+      if (filters.category && product.category_id !== Number(filters.category)) return false;
+      return true;
+    });
+
+    if (sortBy === 'relevance') {
+      list = sortBySearchRelevance(list, query, productSearchFields);
+    } else if (sortBy === 'price_asc') {
+      list = [...list].sort(
+        (a, b) =>
+          Number(a.min_price ?? a.base_price) - Number(b.min_price ?? b.base_price)
+      );
+    } else if (sortBy === 'price_desc') {
+      list = [...list].sort(
+        (a, b) =>
+          Number(b.min_price ?? b.base_price) - Number(a.min_price ?? a.base_price)
+      );
+    }
+
+    return list;
+  }, [products, filters, sortBy, query]);
 
   const hasActiveFilters = Boolean(filters.minPrice || filters.maxPrice || filters.category);
 

@@ -6,7 +6,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import SearchOverlay from './SearchOverlay';
 import SearchSuggestionRow from './SearchSuggestionRow';
-import { fieldsMatchAllTokens } from '../utils/searchText';
+import {
+  fieldsMatchAllTokens,
+  sortBySearchRelevance,
+  productSearchFields,
+  categorySearchFields,
+} from '../utils/searchText';
 
 const ModernHeader = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,17 +90,21 @@ const ModernHeader = () => {
 
       setIsSearching(true);
       try {
-        const productsResponse = await productService.getProducts({ search: query, per_page: 12 });
+        const productsResponse = await productService.getProducts({
+          search: query,
+          per_page: 30,
+          sort_by: 'relevance',
+        });
 
         let results = [];
         if (productsResponse.success && productsResponse.data.products) {
-          results = productsResponse.data.products
-            .filter((product) =>
-              fieldsMatchAllTokens(
-                [product.name, product.description, product.category?.name],
-                query
-              )
-            )
+          results = sortBySearchRelevance(
+            productsResponse.data.products.filter((product) =>
+              fieldsMatchAllTokens(productSearchFields(product), query)
+            ),
+            query,
+            productSearchFields
+          )
             .slice(0, 6)
             .map((product) => ({
               id: product.id,
@@ -111,10 +120,13 @@ const ModernHeader = () => {
             }));
         }
 
-        const matchingCategories = categories
-          .filter((category) =>
-            fieldsMatchAllTokens([category.name, category.description], query)
-          )
+        const matchingCategories = sortBySearchRelevance(
+          categories.filter((category) =>
+            fieldsMatchAllTokens(categorySearchFields(category), query)
+          ),
+          query,
+          categorySearchFields
+        )
           .slice(0, 3)
           .map((category) => ({
             id: category.id,
