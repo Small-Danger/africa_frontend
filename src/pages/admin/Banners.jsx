@@ -29,6 +29,11 @@ import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import NotificationToast from '../../components/ui/NotificationToast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import {
+  AdminPageHeader,
+  AdminLoadingScreen,
+  AdminButton,
+} from '../../components/admin/adminShared';
 
 const Banners = () => {
   // États principaux
@@ -471,28 +476,18 @@ const Banners = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestion des Bannières</h1>
-              <p className="mt-2 text-gray-600">Gérez les bannières publicitaires de votre site</p>
-            </div>
-            <Button
-              variant="primary"
-              onClick={() => openBannerModal()}
-              className="flex items-center space-x-2"
-            >
-              <PlusIcon className="h-5 w-5" />
-              <span>Nouvelle bannière</span>
-            </Button>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Gérez les bannières publicitaires de votre site"
+        action={
+          <AdminButton variant="primary" icon={PlusIcon} onClick={() => openBannerModal()}>
+            Nouvelle bannière
+          </AdminButton>
+        }
+      />
 
-        {/* Filtres et recherche */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8">
+      {/* Filtres et recherche */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
               <div className="flex items-center space-x-4">
@@ -526,7 +521,7 @@ const Banners = () => {
                 placeholder="Rechercher par titre ou URL..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                className="pl-12 h-12 text-lg border-2 border-gray-200 focus:border-brand-green focus:ring-brand-green/30 rounded-xl"
               />
             </div>
 
@@ -819,7 +814,6 @@ const Banners = () => {
             onClose={() => setNotification(null)}
           />
         )}
-      </div>
     </div>
   );
 };

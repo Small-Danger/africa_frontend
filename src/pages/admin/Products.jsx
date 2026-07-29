@@ -26,6 +26,12 @@ import BatchProductForm from '../../components/forms/BatchProductForm';
 import ImageManager from '../../components/admin/ImageManager';
 import VariantManager from '../../components/admin/VariantManager';
 import { productService, categoryService } from '../../services/api';
+import {
+  AdminPageHeader,
+  AdminStatCard,
+  AdminLoadingScreen,
+  AdminButton,
+} from '../../components/admin/adminShared';
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -366,135 +372,46 @@ const Products = () => {
   const filteredAndSortedProducts = products;
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="space-y-8 p-6">
-          {/* Header skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded-lg w-64 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-48"></div>
-            </div>
-            <div className="mt-4 sm:mt-0 animate-pulse">
-              <div className="h-12 bg-gray-200 rounded-lg w-40"></div>
-            </div>
-          </div>
-
-          {/* Stats cards skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-24 bg-white rounded-xl border border-gray-200 p-4">
-                  <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Table skeleton */}
-          <div className="animate-pulse">
-            <div className="h-96 bg-white rounded-xl border border-gray-200"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminLoadingScreen label="Chargement des produits…" />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="space-y-8 p-6">
-        {/* En-tête */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des produits</h1>
-            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Gérez votre catalogue de produits</p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => fetchData(true)}
-              disabled={loading}
-              className="flex items-center gap-2"
-            >
-              <ArrowPathIcon className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Gérez votre catalogue de produits AfrikRaga"
+        action={
+          <>
+            <AdminButton variant="outline" icon={ArrowPathIcon} loading={loading} onClick={() => fetchData(true)}>
               Actualiser
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setShowBatchModal(true)}
-              className="shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
+            </AdminButton>
+            <AdminButton variant="outline" icon={PlusIcon} onClick={() => setShowBatchModal(true)}>
               <span className="hidden sm:inline">Créer plusieurs produits</span>
               <span className="sm:hidden">En masse</span>
-            </Button>
-            <Button 
-              onClick={() => setShowProductModal(true)}
-              className="shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <PlusIcon className="w-5 h-5 mr-2" />
+            </AdminButton>
+            <AdminButton variant="primary" icon={PlusIcon} onClick={() => setShowProductModal(true)}>
               <span className="hidden sm:inline">Nouveau produit</span>
               <span className="sm:hidden">Nouveau</span>
-            </Button>
-          </div>
-        </div>
+            </AdminButton>
+          </>
+        }
+      />
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <CubeIcon className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-blue-700">Total produits</p>
-                  <p className="text-2xl font-bold text-blue-900">{pagination.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <PhotoIcon className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-green-700">Produits actifs</p>
-                  <p className="text-2xl font-bold text-green-900">
-                    {products.filter(p => p.is_active !== false).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <EyeSlashIcon className="h-8 w-8 text-red-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-red-700">Produits inactifs</p>
-                  <p className="text-2xl font-bold text-red-900">
-                    {products.filter(p => p.is_active === false).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center">
-                <CubeIcon className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-purple-700">Catégories</p>
-                  <p className="text-2xl font-bold text-purple-900">{categories.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AdminStatCard label="Total produits" value={String(pagination.total)} icon={CubeIcon} accent="green" />
+        <AdminStatCard
+          label="Produits actifs"
+          value={String(products.filter((p) => p.is_active !== false).length)}
+          icon={PhotoIcon}
+          accent="emerald"
+        />
+        <AdminStatCard
+          label="Produits inactifs"
+          value={String(products.filter((p) => p.is_active === false).length)}
+          icon={EyeSlashIcon}
+          accent="orange"
+        />
+        <AdminStatCard label="Catégories" value={String(categories.length)} icon={CubeIcon} accent="violet" />
+      </div>
 
         {/* Barre de recherche et filtres */}
         <Card className="shadow-sm">
@@ -511,7 +428,7 @@ const Products = () => {
                       placeholder="Rechercher un produit..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green"
                     />
                   </div>
                 </div>
@@ -523,7 +440,7 @@ const Products = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center gap-2 ${showFilters ? 'bg-blue-50 text-blue-600' : ''}`}
+                    className={`flex items-center gap-2 ${showFilters ? 'bg-brand-green-light text-brand-green' : ''}`}
                   >
                     <FunnelIcon className="h-4 w-4" />
                     <span className="hidden sm:inline">Filtres</span>
@@ -1029,7 +946,6 @@ const Products = () => {
           notifications={notifications}
           onRemove={removeNotification}
         />
-      </div>
     </div>
   );
 };

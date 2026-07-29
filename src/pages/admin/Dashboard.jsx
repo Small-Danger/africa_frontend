@@ -1,23 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ShoppingBagIcon, 
-  UsersIcon, 
-  ShoppingCartIcon, 
-  CurrencyEuroIcon,
-  ChartBarIcon,
-  EyeIcon,
-  StarIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
-  ComputerDesktopIcon,
-  PlusIcon
-} from '@heroicons/react/24/outline';
+import {
+  ShoppingBag,
+  Users,
+  ShoppingCart,
+  Banknote,
+  Monitor,
+  Plus,
+  Package,
+  FolderTree,
+  Image,
+  RefreshCw,
+  TrendingUp,
+  AlertTriangle,
+} from 'lucide-react';
 import { orderService, productService, clientService } from '../../services/api';
+import {
+  AdminPageHeader,
+  AdminStatCard,
+  AdminPanel,
+  AdminEmptyState,
+  AdminAlert,
+  AdminButton,
+  AdminStatusBadge,
+  AdminListRow,
+  AdminQuickAction,
+  AdminLoadingScreen,
+} from '../../components/admin/adminShared';
 
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
@@ -192,48 +201,32 @@ const Dashboard = () => {
           {
             name: 'Total Produits',
             value: totalProducts.toString(),
-            changeType: 'neutral',
-            icon: ShoppingBagIcon,
-            color: 'bg-blue-500',
+            icon: ShoppingBag,
+            accent: 'green',
             description: 'Produits actifs en catalogue',
-            rawData: productsRes
           },
           {
             name: 'Clients Actifs',
             value: totalClients.toString(),
-            changeType: 'neutral',
-            icon: UsersIcon,
-            color: 'bg-green-500',
+            icon: Users,
+            accent: 'emerald',
             description: 'Clients enregistrés',
-            rawData: clientsRes
           },
           {
             name: 'Commandes',
             value: totalOrders.toString(),
-            changeType: 'neutral',
-            icon: ShoppingCartIcon,
-            color: 'bg-purple-500',
+            icon: ShoppingCart,
+            accent: 'orange',
             description: 'Total des commandes',
-            rawData: ordersRes
           },
           {
             name: 'Chiffre d\'Affaires',
-            value: `${Math.round(totalRevenue)} FCFA`,
-            changeType: 'neutral',
-            icon: CurrencyEuroIcon,
-            color: 'bg-yellow-500',
+            value: `${Math.round(totalRevenue).toLocaleString('fr-FR')} FCFA`,
+            icon: Banknote,
+            accent: 'violet',
             description: 'CA total',
-            rawData: ordersRes
-          }
+          },
         ];
-
-        // Vérifier que toutes les icônes sont valides
-        formattedStats.forEach((stat, index) => {
-          if (!stat.icon || typeof stat.icon !== 'function') {
-            console.warn(`⚠️ Icône invalide pour la stat ${stat.name}, utilisation de ShoppingBagIcon par défaut`);
-            formattedStats[index].icon = ShoppingBagIcon;
-          }
-        });
 
         setStats(formattedStats);
         
@@ -409,35 +402,31 @@ const Dashboard = () => {
           {
             name: 'Total Produits',
             value: '0',
-            changeType: 'neutral',
-            icon: ShoppingBagIcon,
-            color: 'bg-blue-500',
-            description: 'Produits actifs en catalogue'
+            icon: ShoppingBag,
+            accent: 'green',
+            description: 'Produits actifs en catalogue',
           },
           {
             name: 'Clients Actifs',
             value: '0',
-            changeType: 'neutral',
-            icon: UsersIcon,
-            color: 'bg-green-500',
-            description: 'Clients enregistrés'
+            icon: Users,
+            accent: 'emerald',
+            description: 'Clients enregistrés',
           },
           {
             name: 'Commandes',
             value: '0',
-            changeType: 'neutral',
-            icon: ShoppingCartIcon,
-            color: 'bg-purple-500',
-            description: 'Total des commandes'
+            icon: ShoppingCart,
+            accent: 'orange',
+            description: 'Total des commandes',
           },
           {
             name: 'Chiffre d\'Affaires',
             value: '0 FCFA',
-            changeType: 'neutral',
-            icon: CurrencyEuroIcon,
-            color: 'bg-yellow-500',
-            description: 'CA total'
-          }
+            icon: Banknote,
+            accent: 'violet',
+            description: 'CA total',
+          },
         ]);
       } finally {
         setLoading(false);
@@ -480,440 +469,186 @@ const Dashboard = () => {
     return Math.round(numAmount);
   };
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      'en_attente': { type: 'warning', icon: ClockIcon, label: 'En attente' },
-      'validée': { type: 'success', icon: CheckCircleIcon, label: 'Validée' },
-      'annulée': { type: 'destructive', icon: XCircleIcon, label: 'Annulée' },
-      'pending': { type: 'warning', icon: ClockIcon, label: 'En attente' },
-      'confirmed': { type: 'success', icon: CheckCircleIcon, label: 'Confirmée' },
-      'cancelled': { type: 'destructive', icon: XCircleIcon, label: 'Annulée' },
-      'processing': { type: 'info', icon: ExclamationTriangleIcon, label: 'En cours' },
-      'shipped': { type: 'info', icon: ExclamationTriangleIcon, label: 'Expédiée' },
-      'delivered': { type: 'success', icon: CheckCircleIcon, label: 'Livrée' }
-    };
-    
-    const variant = variants[status] || { type: 'secondary', icon: ClockIcon, label: status };
-    const colors = {
-      warning: 'bg-amber-50 text-amber-700 border-amber-200',
-      success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      destructive: 'bg-red-50 text-red-700 border-red-200',
-      info: 'bg-blue-50 text-blue-700 border-blue-200',
-      secondary: 'bg-gray-50 text-gray-700 border-gray-200'
-    };
-    
-    const Icon = variant.icon;
-    
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border ${colors[variant.type]}`}>
-        <Icon className="w-3 h-3" />
-        {variant.label}
-      </span>
-    );
-  };
-
-  const StatsCard = ({ name, value, change, changeType, icon, color, description, loading, trend }) => {
-    if (loading) {
-      return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 animate-pulse">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-4 bg-gray-200 rounded-lg w-3/4"></div>
-            <div className="h-10 w-10 bg-gray-200 rounded-xl"></div>
-          </div>
-          <div className="h-8 bg-gray-200 rounded-lg w-1/2 mb-2"></div>
-          <div className="h-3 bg-gray-200 rounded-lg w-2/3"></div>
-        </div>
-      );
-    }
-
-    const getTrendIcon = () => {
-      if (changeType === 'positive') return <ArrowTrendingUpIcon className="w-4 h-4" />;
-      if (changeType === 'negative') return <ArrowTrendingDownIcon className="w-4 h-4" />;
-      return null;
-    };
-
-    const getTrendColor = () => {
-      if (changeType === 'positive') return 'text-emerald-600 bg-emerald-50';
-      if (changeType === 'negative') return 'text-red-600 bg-red-50';
-      return 'text-gray-600 bg-gray-50';
-    };
-
-    // Vérifier que l'icône est valide et est une fonction/component
-    let IconComponent = ShoppingBagIcon; // Icône par défaut
-    
-    if (icon) {
-      if (typeof icon === 'function') {
-        IconComponent = icon;
-      } else if (icon && icon.$$typeof) {
-        IconComponent = icon;
-      } else {
-        console.warn('⚠️ Icône invalide reçue dans StatsCard:', icon);
-      }
-    }
-
-    return (
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-all duration-200 group">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 truncate">{name}</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{value}</p>
-            <p className="text-xs sm:text-sm text-gray-500 truncate">{description}</p>
-          </div>
-          <div className={`${color} p-2 sm:p-3 rounded-lg sm:rounded-xl group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
-            {React.createElement(IconComponent, { className: "h-5 w-5 sm:h-6 sm:w-6 text-white" })}
-          </div>
-        </div>
-        
-        {change && (
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium ${getTrendColor()}`}>
-            {getTrendIcon()}
-            <span>{change}</span>
-        </div>
-        )}
-      </div>
-    );
-  };
-
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center py-12">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Erreur de chargement</h2>
-            <div className="text-red-600 text-lg font-medium mb-4">
-            {error}
+      <AdminAlert
+        type="error"
+        title="Erreur de chargement"
+        action={
+          <div className="flex flex-wrap gap-2">
+            <AdminButton variant="secondary" onClick={() => window.location.reload()}>
+              Réessayer
+            </AdminButton>
+            {error.includes('Session expirée') && (
+              <AdminButton
+                variant="danger"
+                onClick={() => {
+                  localStorage.removeItem('auth_token');
+                  localStorage.removeItem('auth_user');
+                  window.location.href = '/auth/login';
+                }}
+              >
+                Se reconnecter
+              </AdminButton>
+            )}
           </div>
-            <div className="flex justify-center gap-4">
-          <button 
-            onClick={() => window.location.reload()} 
-                className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
-          >
-            Réessayer
-          </button>
-              {error.includes('Session expirée') && (
-                <button 
-                  onClick={() => {
-                    localStorage.removeItem('auth_token');
-                    localStorage.removeItem('auth_user');
-                    window.location.href = '/auth/login';
-                  }}
-                  className="bg-red-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-700 transition-colors"
-                >
-                  Se reconnecter
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+        }
+      >
+        {error}
+      </AdminAlert>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête moderne */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Tableau de bord</h1>
-              <p className="text-gray-600">
-            Vue d'ensemble de votre boutique en ligne
-          </p>
-              {lastUpdated && (
-                <p className="text-sm text-gray-500 mt-1">
-                  Dernière mise à jour : {lastUpdated.toLocaleTimeString('fr-FR')}
-                </p>
-              )}
-        </div>
-            <div className="flex items-center gap-3">
-              <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
-            <ChartBarIcon className="h-4 w-4 mr-2" />
-                Rapport complet
-          </button>
-            </div>
-          </div>
-        </div>
-        {/* Alertes et notifications */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-red-800 font-medium mb-1">Erreur de chargement</h3>
-                <p className="text-red-700 text-sm mb-3">{error}</p>
-          <button 
-                  onClick={handleRefresh}
-                  className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-          >
-                  Réessayer
-          </button>
-        </div>
-            </div>
-          </div>
-        )}
+    <>
+      <AdminPageHeader
+        description="Vue d'ensemble de votre boutique AfrikRaga"
+        meta={
+          lastUpdated
+            ? `Dernière mise à jour : ${lastUpdated.toLocaleTimeString('fr-FR')}${refreshing ? ' · actualisation…' : ''}`
+            : undefined
+        }
+        action={
+          <>
+            <AdminButton variant="outline" icon={RefreshCw} loading={refreshing} onClick={() => window.location.reload()}>
+              Actualiser
+            </AdminButton>
+            <Link to="/admin/orders">
+              <AdminButton variant="secondary" icon={TrendingUp}>
+                Voir les commandes
+              </AdminButton>
+            </Link>
+          </>
+        }
+      />
 
-        {/* Métriques principales - Optimisé mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {stats.map((stat) => (
-          <StatsCard
+          <AdminStatCard
             key={stat.name}
-            name={stat.name}
+            label={stat.name}
             value={stat.value}
-            change={stat.change}
-            changeType={stat.changeType}
+            hint={stat.description}
             icon={stat.icon}
-            color={stat.color}
-            description={stat.description}
+            accent={stat.accent}
             loading={loading}
           />
         ))}
       </div>
 
-        {/* Accès rapide caisse */}
-        <div className="mb-6 sm:mb-8 bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <ComputerDesktopIcon className="h-6 w-6 text-emerald-400" />
-                <h3 className="text-lg font-semibold">Caisse boutique (POS)</h3>
-              </div>
-              <p className="text-slate-300 text-sm max-w-xl">
-                Créez les comptes caissiers autorisés à vendre en magasin, puis ouvrez la caisse pour démarrer une session.
-              </p>
+      {/* Accès rapides */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <AdminQuickAction to="/admin/products" icon={Package} title="Produits" description="Gérer le catalogue" accent="green" />
+        <AdminQuickAction to="/admin/orders" icon={ShoppingCart} title="Commandes" description="Suivi des ventes" accent="orange" />
+        <AdminQuickAction to="/admin/categories" icon={FolderTree} title="Catégories" description="Organiser la boutique" accent="blue" />
+        <AdminQuickAction to="/admin/banners" icon={Image} title="Bannières" description="Page d'accueil" accent="violet" />
+      </div>
+
+      {/* Bandeau POS */}
+      <div className="mb-6 rounded-2xl bg-gradient-to-r from-brand-green-dark via-brand-green to-brand-green-dark p-5 sm:p-6 text-white shadow-lg border border-white/10">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Monitor size={22} className="text-brand-orange" />
+              <h3 className="text-lg font-bold">Caisse boutique (POS)</h3>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/admin/cashiers"
-                className="inline-flex items-center px-4 py-2 bg-white text-slate-900 text-sm font-medium rounded-xl hover:bg-slate-100 transition-colors"
-              >
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Gérer le personnel caisse
-              </Link>
-              <Link
-                to="/pos"
-                className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-xl hover:bg-emerald-600 transition-colors"
-              >
-                <ComputerDesktopIcon className="h-4 w-4 mr-2" />
+            <p className="text-white/75 text-sm max-w-xl">
+              Gérez le personnel caisse et ouvrez une session de vente en magasin.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/admin/cashiers">
+              <AdminButton variant="outline" icon={Plus} className="!bg-white !text-brand-green-dark !border-white/30">
+                Personnel caisse
+              </AdminButton>
+            </Link>
+            <Link to="/pos">
+              <AdminButton variant="primary" icon={Monitor}>
                 Ouvrir la caisse
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Graphiques et statistiques - Optimisé mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-        {/* Commandes récentes */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Commandes récentes</h3>
-                <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  Voir tout
-                </button>
-              </div>
-          </div>
-            <div className="p-4 sm:p-6">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                      <div className="h-16 bg-gray-100 rounded-xl"></div>
-                  </div>
-                ))}
-              </div>
-            ) : recentOrders.length > 0 ? (
-                <div className="space-y-3">
-                {recentOrders.map((order) => (
-                    <div key={order.id} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                      {/* Version mobile : layout vertical */}
-                      <div className="flex flex-col sm:hidden space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <ShoppingCartIcon className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900 truncate max-w-[120px]">{order.customer}</p>
-                              <p className="text-xs text-gray-500">{order.id}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-gray-900">{order.amount}</p>
-                            <p className="text-xs text-gray-500">{order.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-500">{order.product}</p>
-                          {getStatusBadge(order.status)}
-                        </div>
-                      </div>
-                      
-                      {/* Version desktop : layout horizontal */}
-                      <div className="hidden sm:flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                            <ShoppingCartIcon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{order.customer}</p>
-                        <p className="text-xs text-gray-500">{order.product}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{order.amount}</p>
-                          <div className="flex items-center justify-end gap-2 mt-1">
-                        {getStatusBadge(order.status)}
-                        <span className="text-xs text-gray-500">{order.date}</span>
-                          </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-                <div className="text-center py-12">
-                  <ShoppingCartIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">Aucune commande récente</p>
-                  <p className="text-sm text-gray-400 mt-1">Les nouvelles commandes apparaîtront ici</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Produits populaires */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Produits populaires</h3>
-                <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  Voir tout
-                </button>
-              </div>
-          </div>
-            <div className="p-4 sm:p-6">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                      <div className="h-16 bg-gray-100 rounded-xl"></div>
-                  </div>
-                ))}
-              </div>
-            ) : topProducts.length > 0 ? (
-                <div className="space-y-3">
-                {topProducts.map((product, index) => (
-                    <div key={product.name} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
-                      {/* Version mobile : layout vertical */}
-                      <div className="flex flex-col sm:hidden space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                              <span className="text-xs font-bold text-white">{index + 1}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                              <p className="text-xs text-gray-500">{product.sales} unités vendues</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-gray-900">{product.revenue}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Version desktop : layout horizontal */}
-                      <div className="hidden sm:flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <span className="text-sm font-bold text-white">{index + 1}</span>
-                      </div>
-                                                <div>
-                            <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                            <p className="text-xs text-gray-500">{product.sales} unités vendues</p>
-                          </div>
-                    </div>
-                    <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">{product.revenue}</p>
-                        </div>
-                      </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-                <div className="text-center py-12">
-                  <StarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 font-medium">Aucun produit populaire</p>
-                  <p className="text-sm text-gray-400 mt-1">Les produits les plus vendus apparaîtront ici</p>
-              </div>
-            )}
+              </AdminButton>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Activité récente */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-5 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Activité récente</h3>
-        </div>
-        <div className="p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <AdminPanel
+          title="Commandes récentes"
+          subtitle="Les 5 dernières commandes"
+          action={
+            <Link to="/admin/orders" className="text-xs font-semibold text-brand-green hover:text-brand-green-dark">
+              Voir tout →
+            </Link>
+          }
+        >
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                    <div className="h-32 bg-gray-100 rounded-xl"></div>
+            <AdminLoadingScreen label="Chargement des commandes…" />
+          ) : recentOrders.length > 0 ? (
+            <div className="space-y-2">
+              {recentOrders.map((order) => (
+                <AdminListRow
+                  key={order.id}
+                  icon={ShoppingCart}
+                  title={order.customer}
+                  subtitle={`${order.id} · ${order.product}`}
+                  trailing={order.amount}
+                  badge={
+                    <div className="flex items-center gap-2">
+                      <AdminStatusBadge status={order.status} />
+                      <span className="text-[10px] text-gray-400">{order.date}</span>
+                    </div>
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <AdminEmptyState
+              icon={ShoppingCart}
+              title="Aucune commande récente"
+              description="Les nouvelles commandes apparaîtront ici"
+            />
+          )}
+        </AdminPanel>
+
+        <AdminPanel
+          title="Produits populaires"
+          subtitle="Les plus commandés"
+          action={
+            <Link to="/admin/products" className="text-xs font-semibold text-brand-green hover:text-brand-green-dark">
+              Voir tout →
+            </Link>
+          }
+        >
+          {loading ? (
+            <AdminLoadingScreen label="Analyse des ventes…" />
+          ) : topProducts.length > 0 ? (
+            <div className="space-y-2">
+              {topProducts.map((product, index) => (
+                <div
+                  key={product.name}
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-brand-cream/50 border border-transparent"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-green to-brand-orange flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-white">{index + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.sales} unités vendues</p>
+                  </div>
+                  <p className="text-sm font-semibold text-brand-green-dark flex-shrink-0">{product.revenue}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <EyeIcon className="h-6 w-6 text-white" />
-                  </div>
-                  <p className="text-2xl font-bold text-blue-900 mb-1">
-                  {stats.find(s => s.name === 'Total Produits')?.value || '0'}
-                </p>
-                  <p className="text-sm text-blue-700 font-medium">Vues produits</p>
-                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-blue-200 rounded-lg">
-                    <ArrowTrendingUpIcon className="w-3 h-3 text-blue-700" />
-                    <span className="text-xs text-blue-700 font-medium">+15% ce mois</span>
-                  </div>
-                </div>
-                <div className="text-center p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border border-emerald-200">
-                  <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <StarIcon className="h-6 w-6 text-white" />
-                  </div>
-                  <p className="text-2xl font-bold text-emerald-900 mb-1">4.8</p>
-                  <p className="text-sm text-emerald-700 font-medium">Note moyenne</p>
-                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-emerald-200 rounded-lg">
-                    <span className="text-xs text-emerald-700 font-medium">Basé sur 156 avis</span>
-                  </div>
-              </div>
-                <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
-                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <UsersIcon className="h-6 w-6 text-white" />
-              </div>
-                  <p className="text-2xl font-bold text-purple-900 mb-1">
-                  {stats.find(s => s.name === 'Clients Actifs')?.value || '0'}
-                </p>
-                  <p className="text-sm text-purple-700 font-medium">Nouveaux clients</p>
-                  <div className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-purple-200 rounded-lg">
-                    <ArrowTrendingUpIcon className="w-3 h-3 text-purple-700" />
-                    <span className="text-xs text-purple-700 font-medium">Cette semaine</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            </div>
-        </div>
+            <AdminEmptyState
+              icon={Package}
+              title="Aucune donnée de vente"
+              description="Les produits les plus vendus apparaîtront ici"
+            />
+          )}
+        </AdminPanel>
       </div>
-    </div>
+    </>
   );
 };
 

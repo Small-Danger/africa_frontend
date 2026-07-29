@@ -25,6 +25,13 @@ import FilterPanel from '../../components/ui/FilterPanel';
 import EmptyState from '../../components/ui/EmptyState';
 import OrderDetailsModal from '../../components/admin/OrderDetailsModal';
 import { orderService, authService } from '../../services/api';
+import {
+  AdminPageHeader,
+  AdminStatCard,
+  AdminLoadingScreen,
+  AdminAlert,
+  AdminButton,
+} from '../../components/admin/adminShared';
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -450,22 +457,9 @@ const Orders = () => {
   // Afficher l'état de chargement
   if (loading && orders.length === 0) {
     return (
-      <div className="space-y-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Commandes</h1>
-            <p className="mt-1 text-sm lg:text-base text-gray-600">
-              Gérez et suivez toutes vos commandes
-            </p>
-          </div>
-        </div>
-        
-        <EmptyState
-          icon={DocumentTextIcon}
-          title="Chargement des commandes"
-          description="Récupération des données en cours..."
-          className="py-12"
-        />
+      <div className="space-y-6">
+        <AdminPageHeader description="Gérez et suivez toutes vos commandes" />
+        <AdminLoadingScreen label="Chargement des commandes…" />
       </div>
     );
   }
@@ -473,64 +467,33 @@ const Orders = () => {
   // Afficher l'erreur
   if (error && orders.length === 0) {
     return (
-      <div className="space-y-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Commandes</h1>
-            <p className="mt-1 text-sm lg:text-base text-gray-600">
-              Gérez et suivez toutes vos commandes
-            </p>
-          </div>
-        </div>
-        
-        <Card>
-          <CardContent className="p-6">
-            <EmptyState
-              icon={ExclamationTriangleIcon}
-              title="Erreur de chargement"
-              description={error}
-              action={{
-                label: "Réessayer",
-                onClick: () => loadOrders(),
-                icon: DocumentTextIcon
-              }}
-              className="py-8"
-            />
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        <AdminPageHeader description="Gérez et suivez toutes vos commandes" />
+        <AdminAlert
+          type="error"
+          title="Erreur de chargement"
+          action={
+            <AdminButton variant="secondary" onClick={() => loadOrders()}>
+              Réessayer
+            </AdminButton>
+          }
+        >
+          {error}
+        </AdminAlert>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* En-tête */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-        <div className="flex-1">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Commandes</h1>
-          <p className="mt-1 text-sm lg:text-base text-gray-600">
-            Gérez et suivez toutes vos commandes
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-center"
-            size="sm"
-          >
-            <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2" />
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Gérez et suivez toutes vos commandes"
+        action={
+          <AdminButton variant="outline" icon={ChatBubbleLeftRightIcon}>
             <span className="hidden sm:inline">Exporter</span>
-          </Button>
-          <Button 
-            variant="primary" 
-            className="flex items-center justify-center"
-            size="sm"
-          >
-            <EyeIcon className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Vue d'ensemble</span>
-          </Button>
-        </div>
-      </div>
+          </AdminButton>
+        }
+      />
 
       {/* Filtres et recherche */}
       <Card>
@@ -601,49 +564,13 @@ const Orders = () => {
       </Card>
 
       {/* Statistiques rapides */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6">
-        <StatsCard
-          name="En attente"
-          value={summary.status_breakdown.en_attente}
-          icon={ClockIcon}
-          color="bg-yellow-500"
-          loading={loading}
-        />
-        <StatsCard
-          name="Acceptées"
-          value={summary.status_breakdown.acceptée}
-          icon={CheckCircleIcon}
-          color="bg-green-500"
-          loading={loading}
-        />
-        <StatsCard
-          name="Prêtes"
-          value={summary.status_breakdown.prête}
-          icon={CheckCircleIcon}
-          color="bg-blue-500"
-          loading={loading}
-        />
-        <StatsCard
-          name="En cours"
-          value={summary.status_breakdown.en_cours}
-          icon={ClockIcon}
-          color="bg-purple-500"
-          loading={loading}
-        />
-        <StatsCard
-          name="Disponibles"
-          value={summary.status_breakdown.disponible}
-          icon={CheckCircleIcon}
-          color="bg-green-600"
-          loading={loading}
-        />
-        <StatsCard
-          name="Total"
-          value={summary.total_orders}
-          icon={DocumentTextIcon}
-          color="bg-gray-500"
-          loading={loading}
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <AdminStatCard label="En attente" value={String(summary.status_breakdown.en_attente)} icon={ClockIcon} accent="orange" loading={loading} />
+        <AdminStatCard label="Acceptées" value={String(summary.status_breakdown.acceptée)} icon={CheckCircleIcon} accent="green" loading={loading} />
+        <AdminStatCard label="Prêtes" value={String(summary.status_breakdown.prête)} icon={CheckCircleIcon} accent="emerald" loading={loading} />
+        <AdminStatCard label="En cours" value={String(summary.status_breakdown.en_cours)} icon={ClockIcon} accent="violet" loading={loading} />
+        <AdminStatCard label="Disponibles" value={String(summary.status_breakdown.disponible)} icon={CheckCircleIcon} accent="green" loading={loading} />
+        <AdminStatCard label="Total" value={String(summary.total_orders)} icon={DocumentTextIcon} accent="violet" loading={loading} />
       </div>
 
       {/* Liste des commandes détaillée */}
@@ -655,7 +582,7 @@ const Orders = () => {
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto"></div>
                 <p className="mt-2 text-gray-600">Mise à jour...</p>
               </div>
             </div>

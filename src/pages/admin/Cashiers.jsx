@@ -10,13 +10,13 @@ import {
   KeyIcon,
 } from '@heroicons/react/24/outline';
 import { cashierService } from '../../services/api';
+import { AdminPageHeader, AdminButton, AdminLoadingScreen, AdminStatCard } from '../../components/admin/adminShared';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import NotificationToast from '../../components/ui/NotificationToast';
-import StatsCard from '../../components/ui/StatsCard';
 import DataTable from '../../components/ui/DataTable';
 
 const emptyForm = {
@@ -219,60 +219,36 @@ const Cashiers = () => {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <LoadingSpinner size="lg" text="Chargement du personnel caisse..." />
-      </div>
-    );
+    return <AdminLoadingScreen label="Chargement du personnel caisse…" />;
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Personnel caisse</h1>
-          <p className="mt-2 text-gray-600">
-            Créez et gérez les comptes autorisés à utiliser la caisse POS.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Link to="/pos">
-            <Button variant="outline" className="flex items-center gap-2">
-              <ComputerDesktopIcon className="h-5 w-5" />
-              Ouvrir la caisse
-            </Button>
-          </Link>
-          <Button variant="primary" onClick={openCreateModal} className="flex items-center gap-2">
-            <PlusIcon className="h-5 w-5" />
-            Nouveau caissier
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Créez et gérez les comptes autorisés à utiliser la caisse POS."
+        action={
+          <>
+            <Link to="/pos">
+              <AdminButton variant="outline" icon={ComputerDesktopIcon}>
+                Ouvrir la caisse
+              </AdminButton>
+            </Link>
+            <AdminButton variant="primary" icon={PlusIcon} onClick={openCreateModal}>
+              Nouveau caissier
+            </AdminButton>
+          </>
+        }
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <AdminStatCard label="Total caissiers" value={String(summary.total)} icon={UserGroupIcon} accent="green" />
+        <AdminStatCard label="Comptes actifs" value={String(summary.active)} icon={ShieldCheckIcon} accent="emerald" />
+        <AdminStatCard label="PIN configurés" value={String(summary.with_pin)} icon={KeyIcon} accent="violet" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatsCard
-          name="Total caissiers"
-          value={summary.total}
-          icon={UserGroupIcon}
-          color="bg-blue-500"
-        />
-        <StatsCard
-          name="Comptes actifs"
-          value={summary.active}
-          icon={ShieldCheckIcon}
-          color="bg-green-500"
-        />
-        <StatsCard
-          name="PIN configurés"
-          value={summary.with_pin}
-          icon={KeyIcon}
-          color="bg-purple-500"
-        />
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-        <h3 className="font-semibold text-blue-900 mb-2">Comment ça marche ?</h3>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+      <div className="bg-brand-green-light border border-brand-green/20 rounded-2xl p-5">
+        <h3 className="font-semibold text-brand-green-dark mb-2">Comment ça marche ?</h3>
+        <ul className="text-sm text-brand-green space-y-1 list-disc list-inside">
           <li>Chaque caissier se connecte avec son <strong>email</strong> et <strong>mot de passe</strong>.</li>
           <li>Accès caisse : <strong>/pos</strong> après connexion.</li>
           <li>Le <strong>PIN à 4 chiffres</strong> sert au déverrouillage rapide de la caisse (optionnel à la création).</li>

@@ -28,6 +28,12 @@ import NotificationContainer from '../../components/ui/NotificationContainer';
 import { categoryService } from '../../services/api';
 import { useNotification } from '../../hooks/useNotification';
 import { useAuth } from '../../contexts/AuthContext';
+import {
+  AdminPageHeader,
+  AdminStatCard,
+  AdminLoadingScreen,
+  AdminButton,
+} from '../../components/admin/adminShared';
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -317,95 +323,27 @@ const Categories = () => {
   const totalProducts = categories.reduce((sum, cat) => sum + (cat.products_count || 0), 0);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="space-y-8 p-6">
-          {/* Header skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded-lg w-64 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-48"></div>
-            </div>
-            <div className="mt-4 sm:mt-0 animate-pulse">
-              <div className="h-12 bg-gray-200 rounded-lg w-40"></div>
-            </div>
-          </div>
-
-          {/* Stats cards skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-24 bg-white rounded-xl border border-gray-200 p-6">
-                  <div className="h-8 bg-gray-200 rounded w-16 mx-auto mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24 mx-auto"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Search and filters skeleton */}
-          <div className="animate-pulse">
-            <div className="h-16 bg-white rounded-xl border border-gray-200"></div>
-          </div>
-
-          {/* Categories list skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-32 bg-white rounded-xl border border-gray-200"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <AdminLoadingScreen label="Chargement des catégories…" />;
   }
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="space-y-8 p-6">
-          {/* En-tête avec titre et bouton de création */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des Catégories</h1>
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Organisez votre catalogue de produits</p>
-            </div>
-            <div className="flex-shrink-0">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                onClick={handleCreateCategory}
-                className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <PlusIcon className="h-5 w-5 mr-2" />
-                <span className="hidden sm:inline">Nouvelle catégorie</span>
-                <span className="sm:hidden">Nouvelle</span>
-              </Button>
-            </div>
-          </div>
+      <div className="space-y-6">
+        <AdminPageHeader
+          description="Organisez votre catalogue de produits"
+          action={
+            <AdminButton variant="primary" icon={PlusIcon} onClick={handleCreateCategory}>
+              <span className="hidden sm:inline">Nouvelle catégorie</span>
+              <span className="sm:hidden">Nouvelle</span>
+            </AdminButton>
+          }
+        />
 
-          {/* Cartes de statistiques */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">{totalCategories}</div>
-                <p className="text-xs sm:text-sm font-medium text-blue-700">Catégories principales</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-200">
-              <CardContent className="p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">{totalSubCategories}</div>
-                <p className="text-xs sm:text-sm font-medium text-green-700">Sous-catégories</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-200 sm:col-span-2 lg:col-span-1">
-              <CardContent className="p-4 sm:p-6 text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-2">{totalProducts}</div>
-                <p className="text-xs sm:text-sm font-medium text-purple-700">Total produits</p>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <AdminStatCard label="Catégories principales" value={String(totalCategories)} icon={FolderIcon} accent="green" />
+          <AdminStatCard label="Sous-catégories" value={String(totalSubCategories)} icon={TagIcon} accent="emerald" />
+          <AdminStatCard label="Total produits" value={String(totalProducts)} icon={ArchiveBoxIcon} accent="violet" />
+        </div>
 
           {/* Barre de recherche et filtres */}
           <Card className="shadow-sm">
@@ -421,7 +359,7 @@ const Categories = () => {
                         placeholder="Rechercher une catégorie..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-3 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="pl-10 pr-4 py-3 border-gray-200 focus:border-brand-green focus:ring-brand-green/30"
                       />
                     </div>
                   </div>
@@ -433,7 +371,7 @@ const Categories = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setShowFilters(!showFilters)}
-                      className={`flex items-center gap-2 ${showFilters ? 'bg-blue-50 text-blue-600' : ''}`}
+                      className={`flex items-center gap-2 ${showFilters ? 'bg-brand-green-light text-brand-green' : ''}`}
                     >
                       <FunnelIcon className="h-4 w-4" />
                       <span className="hidden sm:inline">Filtres</span>
@@ -543,7 +481,6 @@ const Categories = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
 
         {/* Liste des catégories */}
         <Card className="shadow-sm">
@@ -828,7 +765,7 @@ const Categories = () => {
               )}
             </CardContent>
           </Card>
-        </div>
+      </div>
 
       <CategoryForm
         isOpen={showCategoryForm}

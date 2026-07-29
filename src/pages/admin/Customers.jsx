@@ -39,6 +39,11 @@ import Modal from '../../components/ui/Modal';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import NotificationToast from '../../components/ui/NotificationToast';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import {
+  AdminPageHeader,
+  AdminStatCard,
+  AdminButton,
+} from '../../components/admin/adminShared';
 
 const Customers = () => {
   // États principaux
@@ -879,15 +884,42 @@ const Customers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* En-tête simple */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Gestion des Clients</h1>
-        </div>
+    <div className="space-y-6">
+      <AdminPageHeader description="Consultez et gérez la base clients de votre boutique" />
 
-        {/* Filtres et recherche améliorés */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminStatCard
+          label="Total clients"
+          value={String(stats.total_clients ?? totalCustomers ?? 0)}
+          icon={UsersIcon}
+          accent="green"
+          loading={loading}
+        />
+        <AdminStatCard
+          label="Clients actifs"
+          value={String(stats.active_clients ?? 0)}
+          icon={CheckCircleIcon}
+          accent="emerald"
+          loading={loading}
+        />
+        <AdminStatCard
+          label="Bloqués"
+          value={String(stats.blocked_clients ?? 0)}
+          icon={XCircleIcon}
+          accent="orange"
+          loading={loading}
+        />
+        <AdminStatCard
+          label="Commandes totales"
+          value={String(stats.total_orders ?? 0)}
+          icon={ShoppingBagIcon}
+          accent="violet"
+          loading={loading}
+        />
+      </div>
+
+      {/* Filtres et recherche */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
               <div className="flex items-center space-x-4">
@@ -926,7 +958,7 @@ const Customers = () => {
                 placeholder="Rechercher par nom, email ou téléphone..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="pl-12 h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                className="pl-12 h-12 text-lg border-2 border-gray-200 focus:border-brand-green focus:ring-brand-green/30 rounded-xl"
               />
             </div>
 
@@ -1394,7 +1426,6 @@ const Customers = () => {
          />
        )}
 
-        {/* Notifications améliorées */}
       {notification && (
         <NotificationToast
           type={notification.type}
@@ -1403,7 +1434,6 @@ const Customers = () => {
           onClose={() => setNotification(null)}
         />
       )}
-      </div>
     </div>
   );
 };
