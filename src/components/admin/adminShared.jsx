@@ -209,8 +209,13 @@ export const AdminLoadingScreen = ({ label = 'Chargement…' }) => (
 
 export const ORDER_STATUS_CONFIG = {
   en_attente: { label: 'En attente', className: 'bg-amber-50 text-amber-800 border-amber-200' },
+  acceptée: { label: 'Acceptée', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
+  prête: { label: 'Prête', className: 'bg-blue-50 text-blue-800 border-blue-200' },
+  en_cours: { label: 'En préparation', className: 'bg-blue-50 text-blue-800 border-blue-200' },
+  disponible: { label: 'Disponible', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   validée: { label: 'Validée', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   annulée: { label: 'Annulée', className: 'bg-red-50 text-red-700 border-red-200' },
+  expirée: { label: 'Expirée', className: 'bg-gray-100 text-gray-600 border-gray-200' },
   pending: { label: 'En attente', className: 'bg-amber-50 text-amber-800 border-amber-200' },
   confirmed: { label: 'Confirmée', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   cancelled: { label: 'Annulée', className: 'bg-red-50 text-red-700 border-red-200' },

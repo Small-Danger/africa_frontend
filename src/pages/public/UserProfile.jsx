@@ -49,6 +49,7 @@ const STATUS_CONFIG = {
   en_cours: { label: 'En préparation', icon: Truck, badge: 'bg-blue-50 text-blue-700 border-blue-200' },
   disponible: { label: 'Disponible à la boutique', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   annulée: { label: 'Annulée', icon: XCircle, badge: 'bg-red-50 text-red-700 border-red-200' },
+  expirée: { label: 'Expirée', icon: XCircle, badge: 'bg-gray-100 text-gray-600 border-gray-200' },
 };
 
 const formatPrice = (price) => {
@@ -469,7 +470,7 @@ const UserProfile = () => {
   const stats = useMemo(() => {
     const countBy = (status) => orders.filter((order) => order.status === status).length;
     const totalSpent = orders
-      .filter((order) => order.status !== 'annulée')
+      .filter((order) => order.status !== 'annulée' && order.status !== 'expirée')
       .reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
 
     return {
@@ -481,6 +482,7 @@ const UserProfile = () => {
       en_cours: countBy('en_cours'),
       disponible: countBy('disponible'),
       annulée: countBy('annulée'),
+      expirée: countBy('expirée'),
     };
   }, [orders]);
 

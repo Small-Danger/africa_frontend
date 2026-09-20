@@ -12,7 +12,7 @@ const actionBadge = (action) => {
   if (action === 'settings.updated') return 'warning';
   if (action === 'stock.adjusted' || action === 'stock.received' || action === 'stock.reserved' || action === 'stock.preorder_allocated' || action === 'cash.closed' || action === 'order.payment_recorded') return 'info';
   if (action === 'stock.receipt_updated' || action === 'stock.reservation_released' || action === 'stock.preorder_queued') return 'warning';
-  if (action === 'stock.receipt_cancelled' || action === 'stock.reservation_expired' || action === 'stock.preorder_cancelled') return 'destructive';
+  if (action === 'stock.receipt_cancelled' || action === 'stock.reservation_expired' || action === 'stock.preorder_cancelled' || action === 'order.expired') return 'destructive';
   return 'secondary';
 };
 

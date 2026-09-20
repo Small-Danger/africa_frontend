@@ -1313,6 +1313,7 @@ const Customers = () => {
                             order.status === 'acceptée' ? 'bg-green-100 text-green-800' :
                             order.status === 'en_attente' ? 'bg-yellow-100 text-yellow-800' :
                             order.status === 'annulée' ? 'bg-red-100 text-red-800' :
+                            order.status === 'expirée' ? 'bg-gray-100 text-gray-700' :
                             'bg-gray-100 text-gray-800'
                           }`}>
                             {order.status}

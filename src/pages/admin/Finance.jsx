@@ -133,7 +133,7 @@ const Finance = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Compare l’argent mis dans les arrivages et les ventes du même mois, hors commandes annulées."
+        description="Compare l’argent mis dans les arrivages et les ventes du même mois, hors commandes annulées ou expirées."
         action={
           <div className="flex items-center gap-2">
             <AdminButton variant="outline" icon={ChevronLeft} onClick={() => go(-1)}>
@@ -163,7 +163,7 @@ const Finance = () => {
         <AdminStatCard
           label="Ventes"
           value={formatAdminMoney(report.sales)}
-          hint={`${report.orders_count} commande(s) hors annulées`}
+          hint={`${report.orders_count} commande(s) hors annulées / expirées`}
           icon={ShoppingCart}
           accent="green"
         />

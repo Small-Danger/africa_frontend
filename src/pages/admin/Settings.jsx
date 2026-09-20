@@ -153,7 +153,7 @@ const Settings = () => {
                 value={form.unpaid_expiry_hours}
                 onChange={(e) => setField('unpaid_expiry_hours', e.target.value)}
               />
-              <p className="text-xs text-gray-400 mt-1">Par défaut 24 h. Ensuite la réservation sera libérée.</p>
+              <p className="text-xs text-gray-400 mt-1">Par défaut 24 h. Ensuite la commande site passe en expirée et le stock est libéré. Un acompte la protège.</p>
               {errors.unpaid_expiry_hours && (
                 <p className="text-sm text-red-600 mt-1">{errors.unpaid_expiry_hours[0]}</p>
               )}

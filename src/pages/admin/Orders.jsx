@@ -63,7 +63,8 @@ const Orders = () => {
       prête: 0,
       en_cours: 0,
       disponible: 0,
-      annulée: 0
+      annulée: 0,
+      expirée: 0
     }
   });
   const canCancelOrder = authService.hasPermission('orders.cancel');
@@ -372,7 +373,8 @@ const Orders = () => {
       'prête': 'info',
       'en_cours': 'primary',
       'disponible': 'success',
-      'annulée': 'destructive'
+      'annulée': 'destructive',
+      'expirée': 'secondary'
     };
     return <Badge variant={variants[status]}>{status}</Badge>;
   };
@@ -384,7 +386,8 @@ const Orders = () => {
       'prête': 'text-blue-600 bg-blue-50',
       'en_cours': 'text-purple-600 bg-purple-50',
       'disponible': 'text-green-600 bg-green-50',
-      'annulée': 'text-red-600 bg-red-50'
+      'annulée': 'text-red-600 bg-red-50',
+      'expirée': 'text-gray-600 bg-gray-50'
     };
     return colors[status] || 'text-gray-600 bg-gray-50';
   };
@@ -397,7 +400,8 @@ const Orders = () => {
     { id: 'prête', name: 'Prête' },
     { id: 'en_cours', name: 'En préparation' },
     { id: 'disponible', name: 'Disponible au bureau' },
-    { id: 'annulée', name: 'Annulée' }
+    { id: 'annulée', name: 'Annulée' },
+    { id: 'expirée', name: 'Expirée' }
   ];
 
   const getPaymentBadge = (order) => {
@@ -456,7 +460,8 @@ const Orders = () => {
         { value: 'prête', label: 'Prête' },
         { value: 'en_cours', label: 'En préparation' },
         { value: 'disponible', label: 'Disponible au bureau' },
-        { value: 'annulée', label: 'Annulée' }
+        { value: 'annulée', label: 'Annulée' },
+        { value: 'expirée', label: 'Expirée' }
       ]
     },
     {

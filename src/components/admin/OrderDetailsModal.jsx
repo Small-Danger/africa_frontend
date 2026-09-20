@@ -43,6 +43,7 @@ const OrderDetailsModal = ({
   const canTypePayment = canRecordPayment
     && order.channel !== 'boutique'
     && order.status !== 'annulée'
+    && order.status !== 'expirée'
     && (order.balance ?? 0) > 0;
 
   const getStatusBadge = (status) => {
@@ -52,7 +53,8 @@ const OrderDetailsModal = ({
       'prête': 'info',
       'en_cours': 'primary',
       'disponible': 'success',
-      'annulée': 'destructive'
+      'annulée': 'destructive',
+      'expirée': 'secondary'
     };
     return <Badge variant={variants[status]}>{status}</Badge>;
   };
@@ -64,7 +66,8 @@ const OrderDetailsModal = ({
       'prête': 'text-blue-600 bg-blue-50',
       'en_cours': 'text-purple-600 bg-purple-50',
       'disponible': 'text-green-600 bg-green-50',
-      'annulée': 'text-red-600 bg-red-50'
+      'annulée': 'text-red-600 bg-red-50',
+      'expirée': 'text-gray-600 bg-gray-50'
     };
     return colors[status] || 'text-gray-600 bg-gray-50';
   };
@@ -397,13 +400,14 @@ const OrderDetailsModal = ({
                 </Button>
               )}
 
-              {(order.status === 'disponible' || order.status === 'annulée') && (
+              {(order.status === 'disponible' || order.status === 'annulée' || order.status === 'expirée') && (
                 <div className="text-center py-4">
                   <p className="text-gray-600">
-                    {order.status === 'disponible' 
-                      ? 'Commande terminée - Disponible au bureau' 
-                      : 'Commande annulée'
-                    }
+                    {order.status === 'disponible'
+                      ? 'Commande terminée - Disponible au bureau'
+                      : order.status === 'expirée'
+                        ? 'Commande expirée (non payée dans le délai)'
+                        : 'Commande annulée'}
                   </p>
                 </div>
               )}
