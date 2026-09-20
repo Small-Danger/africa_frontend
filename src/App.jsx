@@ -23,6 +23,7 @@ import Banners from './pages/admin/Banners'
 import Team from './pages/admin/Team'
 import Settings from './pages/admin/Settings'
 import Activity from './pages/admin/Activity'
+import Stock from './pages/admin/Stock'
 import PosProtectedRoute from './components/auth/PosProtectedRoute'
 import PosLayout from './pages/pos/PosLayout'
 import PosCashSessionGate from './pages/pos/PosCashSessionGate'
@@ -181,6 +182,11 @@ function App() {
               <Route path="/admin/categories" element={
                 <AdminProtectedRoute permission="products.manage">
                   <AdminLayout><Categories /></AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/stock" element={
+                <AdminProtectedRoute permission="stock.view_status">
+                  <AdminLayout><Stock /></AdminLayout>
                 </AdminProtectedRoute>
               } />
               <Route path="/admin/orders" element={

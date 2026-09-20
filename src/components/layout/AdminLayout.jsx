@@ -16,6 +16,7 @@ import {
   RefreshCw,
   ScrollText,
   Settings,
+  Boxes,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
@@ -32,6 +33,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Produits', href: '/admin/products', icon: Package, permission: 'products.manage' },
       { name: 'Catégories', href: '/admin/categories', icon: FolderTree, permission: 'products.manage' },
+      { name: 'Stock', href: '/admin/stock', icon: Boxes, permission: 'stock.view_status' },
     ],
   },
   {
@@ -56,6 +58,7 @@ const PAGE_TITLES = {
   '/admin': 'Tableau de bord',
   '/admin/products': 'Produits',
   '/admin/categories': 'Catégories',
+  '/admin/stock': 'Stock',
   '/admin/orders': 'Commandes',
   '/admin/customers': 'Clients',
   '/admin/banners': 'Bannières',

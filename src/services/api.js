@@ -802,6 +802,23 @@ export const cashierService = {
   },
 };
 
+export const stockService = {
+  async getAll({ status, search } = {}) {
+    const query = new URLSearchParams();
+    if (status) query.append('status', status);
+    if (search) query.append('search', search);
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return await apiRequest(`/admin/stock${suffix}`, { method: 'GET' });
+  },
+
+  async adjust(variantId, data) {
+    return await apiRequest(`/admin/stock/${variantId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
 export const activityService = {
   async getAll({ per_page = 20, action } = {}) {
     const query = new URLSearchParams();
