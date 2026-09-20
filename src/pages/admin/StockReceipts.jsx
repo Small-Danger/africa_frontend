@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2, Truck } from 'lucide-react';
+import { Plus, Trash2, Truck } from 'lucide-react';
 import { stockService } from '../../services/api';
 import {
   AdminButton,
@@ -11,7 +11,6 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
-import DataTable from '../../components/ui/DataTable';
 
 const emptySummary = {
   receipts_count: 0,
@@ -43,6 +42,7 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
   const [toCancel, setToCancel] = useState(null);
   const [deleteWord, setDeleteWord] = useState('');
   const [cancelling, setCancelling] = useState(false);
+  const [listSearch, setListSearch] = useState('');
 
   const resetForm = () => {
     setLines([]);
@@ -188,117 +188,18 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
     }
   };
 
-  const columns = useMemo(() => {
-    const cols = [
-      {
-        key: 'received_at',
-        label: 'Date',
-        searchable: false,
-        render: (value, row) => (
-          <span className={row.cancelled ? 'text-gray-400 line-through' : ''}>
-            {value ? new Date(value).toLocaleDateString('fr-FR') : '—'}
-          </span>
-        ),
-      },
-      {
-        key: 'items',
-        label: 'Produits',
-        render: (_, row) => (
-          <div className={`space-y-0.5 ${row.cancelled ? 'opacity-60' : ''}`}>
-            {(row.items || []).slice(0, 3).map((item) => (
-              <p key={item.id} className="text-sm text-gray-800">
-                {item.product_name} · {item.variant_name}
-                <span className="text-gray-400"> × {item.quantity}</span>
-              </p>
-            ))}
-            {(row.items || []).length > 3 && (
-              <p className="text-xs text-gray-400">+{row.items.length - 3} autre(s)</p>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: 'units',
-        label: 'Pièces',
-        searchable: false,
-      },
-      {
-        key: 'note',
-        label: 'Note',
-        render: (value, row) => (
-          <div>
-            <p>{value || '—'}</p>
-            {row.cancelled && (
-              <p className="text-xs text-gray-400 mt-0.5">
-                Annulé{row.cancelled_by_name ? ` par ${row.cancelled_by_name}` : ''}
-              </p>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: 'cancelled',
-        label: 'État',
-        searchable: false,
-        render: (value) => (
-          <Badge variant={value ? 'destructive' : 'success'}>
-            {value ? 'Annulé' : 'Actif'}
-          </Badge>
-        ),
-      },
-    ];
-
-    if (canViewFinance) {
-      cols.splice(3, 0, {
-        key: 'invested',
-        label: 'Investi',
-        searchable: false,
-        render: (value, row) => (
-          <div className={row.cancelled ? 'opacity-50' : ''}>
-            <p className="font-semibold text-gray-900">{formatAdminMoney(row.cancelled ? 0 : value)}</p>
-            <p className="text-xs text-gray-400">
-              {formatAdminMoney(row.merchandise_cost)} + transport {formatAdminMoney(row.shipping_cost)}
-            </p>
-          </div>
-        ),
-      });
-    }
-
-    if (canAdjust) {
-      cols.push({
-        key: 'id',
-        label: '',
-        searchable: false,
-        render: (_, row) => (
-          row.cancelled ? null : (
-            <div className="flex items-center justify-end gap-1">
-              <button
-                type="button"
-                className="p-2 rounded-lg text-gray-500 hover:text-brand-orange hover:bg-brand-cream"
-                title="Corriger"
-                onClick={() => startEdit(row)}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
-                title="Annuler l’arrivage"
-                onClick={() => {
-                  setToCancel(row);
-                  setDeleteWord('');
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          )
-        ),
-      });
-    }
-
-    return cols;
-  }, [canViewFinance, canAdjust]);
+  const visibleReceipts = useMemo(() => {
+    const needle = listSearch.trim().toLowerCase();
+    if (!needle) return receipts;
+    return receipts.filter((row) => {
+      const hay = [
+        row.note,
+        row.actor_name,
+        ...(row.items || []).flatMap((item) => [item.product_name, item.variant_name]),
+      ].join(' ').toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [receipts, listSearch]);
 
   if (loading) {
     return <p className="text-sm text-gray-500">Chargement des réceptions…</p>;
@@ -324,8 +225,8 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
         title={editingId ? 'Corriger l’arrivage' : 'Nouvel arrivage'}
         subtitle={
           editingId
-            ? 'Le stock sera ajusté de la différence. L’injection d’origine reste dans le journal.'
-            : 'Le stock est augmenté, pas écrasé. Une erreur de saisie se corrige ou s’annule plus bas.'
+            ? 'Le stock sera ajusté de la différence. Vous pourrez encore modifier après enregistrement.'
+            : 'Le stock est augmenté, pas écrasé. Plus bas, Modifier et Annuler restent disponibles sur chaque arrivage.'
         }
       >
         <form id="receipt-form" onSubmit={handleSubmit} className="space-y-4">
@@ -435,13 +336,97 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
         </form>
       </AdminPanel>
 
-      <DataTable
-        title="Derniers arrivages"
-        data={receipts}
-        columns={columns}
-        searchPlaceholder="Rechercher dans les réceptions…"
-        emptyMessage="Aucun arrivage enregistré pour l’instant."
-      />
+      <AdminPanel
+        title="Arrivages enregistrés"
+        subtitle="Un arrivage actif peut être corrigé autant de fois que nécessaire. L’historique reste dans le journal."
+      >
+        <div className="space-y-3">
+          <Input
+            value={listSearch}
+            onChange={(e) => setListSearch(e.target.value)}
+            placeholder="Rechercher un produit, une note…"
+          />
+          {visibleReceipts.length === 0 ? (
+            <p className="text-sm text-gray-500 py-6 text-center">
+              {receipts.length === 0 ? 'Aucun arrivage enregistré pour l’instant.' : 'Aucun arrivage ne correspond à la recherche.'}
+            </p>
+          ) : (
+            visibleReceipts.map((row) => {
+              const editing = editingId === row.id;
+              return (
+                <div
+                  key={row.id}
+                  className={`rounded-2xl border px-4 py-4 ${
+                    row.cancelled
+                      ? 'border-gray-100 bg-gray-50'
+                      : editing
+                        ? 'border-brand-orange bg-brand-cream/60'
+                        : 'border-gray-100 bg-white'
+                  }`}
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className={`font-semibold ${row.cancelled ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                          {row.received_at ? new Date(row.received_at).toLocaleDateString('fr-FR') : '—'}
+                        </p>
+                        <Badge variant={row.cancelled ? 'destructive' : 'success'}>
+                          {row.cancelled ? 'Annulé' : 'Actif'}
+                        </Badge>
+                        {editing && <Badge variant="warning">Modification en cours</Badge>}
+                      </div>
+                      <div className={row.cancelled ? 'opacity-60 space-y-0.5' : 'space-y-0.5'}>
+                        {(row.items || []).map((item) => (
+                          <p key={item.id || item.variant_id} className="text-sm text-gray-800">
+                            {item.product_name} · {item.variant_name}
+                            <span className="text-gray-400"> × {item.quantity}</span>
+                          </p>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {row.units} pièce(s)
+                        {canViewFinance && (
+                          <>
+                            {' · '}
+                            {formatAdminMoney(row.cancelled ? 0 : row.invested)}
+                            <span className="text-xs text-gray-400">
+                              {' '}({formatAdminMoney(row.merchandise_cost)} + transport {formatAdminMoney(row.shipping_cost)})
+                            </span>
+                          </>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-500">{row.note || 'Sans note'}</p>
+                      {row.cancelled && (
+                        <p className="text-xs text-gray-400">
+                          Annulé{row.cancelled_by_name ? ` par ${row.cancelled_by_name}` : ''} — conservé dans l’historique
+                        </p>
+                      )}
+                    </div>
+                    {canAdjust && !row.cancelled && (
+                      <div className="flex flex-wrap gap-2 md:flex-col md:items-stretch shrink-0">
+                        <Button type="button" size="sm" variant="outline" onClick={() => startEdit(row)}>
+                          Modifier
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            setToCancel(row);
+                            setDeleteWord('');
+                          }}
+                        >
+                          Annuler
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </AdminPanel>
 
       <Modal
         isOpen={Boolean(toCancel)}
