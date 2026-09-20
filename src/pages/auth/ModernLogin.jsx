@@ -14,6 +14,7 @@ import AuthLayout, {
   AuthDivider,
 } from '../../components/auth/AuthLayout';
 import AuthGoogleButton from '../../components/auth/AuthGoogleButton';
+import { homePathForUser } from '../../utils/staffAuth';
 
 const ModernLogin = () => {
   const navigate = useNavigate();
@@ -32,11 +33,7 @@ const ModernLogin = () => {
   const [formAlert, setFormAlert] = useState(null);
 
   const redirectAfterAuth = (user) => {
-    if (user?.role === 'admin') {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/profile', { replace: true });
-    }
+    navigate(homePathForUser(user), { replace: true });
   };
 
   const handleInputChange = (e) => {

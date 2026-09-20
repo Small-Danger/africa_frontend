@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import ModernHeader from './components/ModernHeader'
 import MobileNavigation from './components/MobileNavigation'
 import AdminLayout from './components/layout/AdminLayout'
@@ -13,14 +13,14 @@ import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import UserProfile from './pages/public/UserProfile'
 import OrderSuccess from './pages/public/OrderSuccess'
-import ProtectedRoute from './components/auth/ProtectedRoute'
+import AdminProtectedRoute from './components/auth/AdminProtectedRoute'
 import Dashboard from './pages/admin/Dashboard'
 import Products from './pages/admin/Products'
 import Categories from './pages/admin/Categories'
 import Orders from './pages/admin/Orders'
 import Customers from './pages/admin/Customers'
 import Banners from './pages/admin/Banners'
-import Cashiers from './pages/admin/Cashiers'
+import Team from './pages/admin/Team'
 import PosProtectedRoute from './components/auth/PosProtectedRoute'
 import PosLayout from './pages/pos/PosLayout'
 import PosCashSessionGate from './pages/pos/PosCashSessionGate'
@@ -167,40 +167,41 @@ function App() {
 
               {/* Routes d'administration */}
               <Route path="/admin" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="finance.view">
                   <AdminLayout><Dashboard /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/products" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="products.manage">
                   <AdminLayout><Products /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/categories" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="products.manage">
                   <AdminLayout><Categories /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/orders" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="orders.view">
                   <AdminLayout><Orders /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/customers" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="customers.view">
                   <AdminLayout><Customers /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
               <Route path="/admin/banners" element={
-                <ProtectedRoute>
+                <AdminProtectedRoute permission="banners.manage">
                   <AdminLayout><Banners /></AdminLayout>
-                </ProtectedRoute>
+                </AdminProtectedRoute>
               } />
-              <Route path="/admin/cashiers" element={
-                <ProtectedRoute>
-                  <AdminLayout><Cashiers /></AdminLayout>
-                </ProtectedRoute>
+              <Route path="/admin/team" element={
+                <AdminProtectedRoute permission={['team.manage', 'team.manage_staff']}>
+                  <AdminLayout><Team /></AdminLayout>
+                </AdminProtectedRoute>
               } />
+              <Route path="/admin/cashiers" element={<Navigate to="/admin/team" replace />} />
 
               {/* Module caisse (POS) — indépendant du site public et de l'admin */}
               <Route path="/pos" element={

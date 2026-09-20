@@ -127,11 +127,17 @@ export const AuthProvider = ({ children }) => {
 
   // Fonction utilitaire pour vérifier le rôle
   const isAdmin = () => {
-    return user && user.role === 'admin';
+    return Boolean(user?.is_admin || user?.role === 'admin');
   };
 
   const isClient = () => {
     return user && user.role === 'client';
+  };
+
+  const hasPermission = (permission) => {
+    if (!user) return false;
+    if (isAdmin()) return true;
+    return Array.isArray(user.permissions) && user.permissions.includes(permission);
   };
 
   const value = {
@@ -144,7 +150,8 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     refreshUser,
     isAdmin,
-    isClient
+    isClient,
+    hasPermission,
   };
 
   return (

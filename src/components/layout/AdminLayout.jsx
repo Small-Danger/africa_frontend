@@ -17,31 +17,32 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
+import { hasPermission, hasAnyPermission, ROLE_LABELS } from '../../utils/staffAuth';
 
 const NAV_GROUPS = [
   {
     label: 'Vue d\'ensemble',
-    items: [{ name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, end: true }],
+    items: [{ name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, end: true, permission: 'finance.view' }],
   },
   {
     label: 'Catalogue',
     items: [
-      { name: 'Produits', href: '/admin/products', icon: Package },
-      { name: 'Catégories', href: '/admin/categories', icon: FolderTree },
+      { name: 'Produits', href: '/admin/products', icon: Package, permission: 'products.manage' },
+      { name: 'Catégories', href: '/admin/categories', icon: FolderTree, permission: 'products.manage' },
     ],
   },
   {
     label: 'Ventes',
     items: [
-      { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart },
-      { name: 'Clients', href: '/admin/customers', icon: Users },
+      { name: 'Commandes', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
+      { name: 'Clients', href: '/admin/customers', icon: Users, permission: 'customers.view' },
     ],
   },
   {
     label: 'Configuration',
     items: [
-      { name: 'Bannières', href: '/admin/banners', icon: Image },
-      { name: 'Personnel caisse', href: '/admin/cashiers', icon: Monitor },
+      { name: 'Bannières', href: '/admin/banners', icon: Image, permission: 'banners.manage' },
+      { name: 'Équipe', href: '/admin/team', icon: Monitor, permissions: ['team.manage', 'team.manage_staff'] },
     ],
   },
 ];
@@ -53,7 +54,8 @@ const PAGE_TITLES = {
   '/admin/orders': 'Commandes',
   '/admin/customers': 'Clients',
   '/admin/banners': 'Bannières',
-  '/admin/cashiers': 'Personnel caisse',
+  '/admin/team': 'Équipe',
+  '/admin/cashiers': 'Équipe',
 };
 
 const navLinkClass = ({ isActive }) =>
@@ -70,6 +72,15 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (item.permissions) return hasAnyPermission(user, item.permissions);
+      if (item.permission) return hasPermission(user, item.permission);
+      return true;
+    }),
+  })).filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -90,7 +101,7 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-5">
-        {NAV_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.label}>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-3 mb-2">
               {group.label}
@@ -126,14 +137,16 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
             <Store size={14} />
             Boutique
           </Link>
-          <Link
-            to="/pos"
-            onClick={onNavigate}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-brand-green hover:bg-brand-green-dark transition-colors"
-          >
-            <Monitor size={14} />
-            Caisse
-          </Link>
+          {user?.can_access_pos && (
+            <Link
+              to="/pos"
+              onClick={onNavigate}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white bg-brand-green hover:bg-brand-green-dark transition-colors"
+            >
+              <Monitor size={14} />
+              Caisse
+            </Link>
+          )}
         </div>
 
         <div className="rounded-xl bg-white border border-gray-100 p-3">
@@ -143,7 +156,9 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</p>
-              <p className="text-[11px] text-gray-500 truncate">{user?.email || ''}</p>
+              <p className="text-[11px] text-gray-500 truncate">
+                {ROLE_LABELS[user?.role] || user?.role || ''}
+              </p>
             </div>
           </div>
         </div>

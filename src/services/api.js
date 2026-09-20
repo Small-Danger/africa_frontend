@@ -278,7 +278,14 @@ export const authService = {
   // Vérifier si l'utilisateur est admin
   isAdmin() {
     const user = this.getCurrentUser();
-    return user && user.role === 'admin';
+    return user && (user.role === 'admin' || user.is_admin);
+  },
+
+  hasPermission(permission) {
+    const user = this.getCurrentUser();
+    if (!user) return false;
+    if (this.isAdmin()) return true;
+    return Array.isArray(user.permissions) && user.permissions.includes(permission);
   },
 
   // Récupérer l'utilisateur actuel
@@ -797,6 +804,32 @@ export const cashierService = {
   },
 };
 
+export const teamService = {
+  async getAll() {
+    return await apiRequest('/admin/team');
+  },
+
+  async create(data) {
+    return await apiRequest('/admin/team', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async update(id, data) {
+    return await apiRequest(`/admin/team/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async toggleStatus(id) {
+    return await apiRequest(`/admin/team/${id}/toggle-status`, {
+      method: 'POST',
+    });
+  },
+};
+
 export const clientService = {
   // Lister tous les clients
   async getClients(filters = {}) {
@@ -865,6 +898,7 @@ export default {
   notifications: notificationService,
   clients: clientService,
   cashiers: cashierService,
+  team: teamService,
   suggestions: suggestionService,
   test: testService,
 };

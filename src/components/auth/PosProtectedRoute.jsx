@@ -19,7 +19,7 @@ const PosProtectedRoute = ({ children }) => {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  const canAccessPos = user?.role === 'admin' || user?.role === 'caissiere';
+  const canAccessPos = Boolean(user?.can_access_pos);
 
   if (!canAccessPos) {
     return <Navigate to="/" replace />;

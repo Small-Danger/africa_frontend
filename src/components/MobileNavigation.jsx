@@ -3,11 +3,12 @@ import { Home, Grid3X3, ShoppingCart, User } from 'lucide-react';
 import { authService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { homePathForUser } from '../utils/staffAuth';
 
 const MobileNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { getTotalItems } = useCart();
 
   const cartItemCount = getTotalItems();
@@ -36,9 +37,9 @@ const MobileNavigation = () => {
               if (!authService.isAuthenticated()) {
                 e.preventDefault();
                 navigate('/auth/login');
-              } else if (isAdmin()) {
+              } else if (user?.can_access_backoffice || isAdmin()) {
                 e.preventDefault();
-                navigate('/admin');
+                navigate(homePathForUser(user));
               }
             }
           };

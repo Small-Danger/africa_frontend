@@ -125,10 +125,9 @@ const Orders = () => {
       return;
     }
 
-    if (!authService.isAdmin()) {
-      setError('Vous devez avoir les droits d\'administrateur pour accéder à cette page');
+    if (!authService.hasPermission('orders.view')) {
+      setError('Vous n\'avez pas accès aux commandes');
       setLoading(false);
-      // Rediriger vers la page d'accueil après 2 secondes
       setTimeout(() => {
         navigate('/');
       }, 2000);

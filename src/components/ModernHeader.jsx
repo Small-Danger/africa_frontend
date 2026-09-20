@@ -11,7 +11,7 @@ import {
   sortBySearchRelevance,
   productSearchFields,
   categorySearchFields,
-} from '../utils/searchText';
+import { homePathForUser } from '../utils/staffAuth';
 
 const ModernHeader = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,7 +23,7 @@ const ModernHeader = () => {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { getTotalItems } = useCart();
   const searchTimeoutRef = useRef(null);
   const desktopSearchRef = useRef(null);
@@ -208,7 +208,7 @@ const ModernHeader = () => {
   const handleProfileClick = (e) => {
     e.preventDefault();
     if (!authService.isAuthenticated()) navigate('/auth/login');
-    else if (isAdmin()) navigate('/admin');
+    else if (user?.can_access_backoffice || isAdmin()) navigate(homePathForUser(user));
     else navigate('/profile');
   };
 

@@ -15,6 +15,7 @@ import AuthLayout, {
   AuthDivider,
 } from '../../components/auth/AuthLayout';
 import AuthGoogleButton from '../../components/auth/AuthGoogleButton';
+import { homePathForUser } from '../../utils/staffAuth';
 
 const formatPrice = (price) => {
   const num = Number(price);
@@ -130,8 +131,8 @@ const Register = () => {
       return;
     }
 
-    if (user?.role === 'admin') {
-      navigate('/admin', { replace: true });
+    if (user?.role === 'admin' || user?.can_access_backoffice) {
+      navigate(homePathForUser(user), { replace: true });
     } else {
       navigate('/profile', { replace: true });
     }
