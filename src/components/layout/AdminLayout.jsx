@@ -250,7 +250,9 @@ const AdminLayout = ({ children }) => {
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
                   <span>AfrikRaga</span>
                   <ChevronRight size={12} />
-                  <span className="text-brand-green font-medium">Admin</span>
+                  <span className="text-brand-green font-medium">
+                    {ROLE_LABELS[user?.role] || 'Espace interne'}
+                  </span>
                 </div>
                 <h1 className="text-base sm:text-lg font-bold text-gray-900 truncate">{pageTitle}</h1>
               </div>
