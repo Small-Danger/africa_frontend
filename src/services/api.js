@@ -715,6 +715,13 @@ export const orderService = {
     });
   },
 
+  async createCounterPreorder(data) {
+    return await apiRequest('/admin/orders/counter-preorder', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Récupérer les commandes de l'utilisateur connecté
   async getUserOrders() {
     return await apiRequest('/orders');
@@ -816,6 +823,10 @@ export const stockService = {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+  },
+
+  async listPreorders() {
+    return await apiRequest('/admin/stock/preorders', { method: 'GET' });
   },
 
   async listReceipts() {

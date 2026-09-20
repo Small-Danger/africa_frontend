@@ -24,6 +24,7 @@ import NotificationToast from '../../components/ui/NotificationToast';
 import DataTable from '../../components/ui/DataTable';
 import { STOCK_STATE } from '../../utils/stockStatus';
 import StockReceipts from './StockReceipts';
+import StockPreorders from './StockPreorders';
 
 const emptySummary = {
   total: 0,
@@ -32,6 +33,7 @@ const emptySummary = {
   sur_commande: 0,
   rupture: 0,
   low: 0,
+  waiting_units: 0,
 };
 
 const statusBadge = (item) => {
@@ -176,6 +178,18 @@ const Stock = () => {
       });
     }
 
+    cols.push({
+      key: 'waiting_units',
+      label: 'File',
+      searchable: false,
+      render: (value) =>
+        value > 0 ? (
+          <span className="font-semibold text-violet-700">{value}</span>
+        ) : (
+          <span className="text-gray-400">0</span>
+        ),
+    });
+
     if (canAdjust) {
       cols.push({
         key: 'id',
@@ -206,21 +220,30 @@ const Stock = () => {
         description={
           tab === 'receipts'
             ? 'Enregistrez un arrivage : les pièces s’ajoutent au stock. Notez le coût de la marchandise et le transport pour suivre l’investissement.'
+            : tab === 'preorders'
+              ? 'Les clients qui ont commandé un article pas encore arrivé. Le camion suivant les sert dans l’ordre.'
             : canAdjust
               ? 'Comptez les variantes encore vides, corrigez un écart, suivez les ruptures et le stock faible.'
               : 'Consultez l’état du stock : en stock, sur commande, rupture. Les quantités restent réservées à l’admin et au gérant.'
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
-            {canAdjust && (
-              <div className="flex rounded-xl bg-white border border-gray-100 p-1">
-                <AdminButton
-                  variant={tab === 'inventory' ? 'primary' : 'ghost'}
-                  className="!py-2"
-                  onClick={() => setTab('inventory')}
-                >
-                  Inventaire
-                </AdminButton>
+            <div className="flex rounded-xl bg-white border border-gray-100 p-1">
+              <AdminButton
+                variant={tab === 'inventory' ? 'primary' : 'ghost'}
+                className="!py-2"
+                onClick={() => setTab('inventory')}
+              >
+                Inventaire
+              </AdminButton>
+              <AdminButton
+                variant={tab === 'preorders' ? 'primary' : 'ghost'}
+                className="!py-2"
+                onClick={() => setTab('preorders')}
+              >
+                File d’attente
+              </AdminButton>
+              {canAdjust && (
                 <AdminButton
                   variant={tab === 'receipts' ? 'primary' : 'ghost'}
                   className="!py-2"
@@ -228,8 +251,8 @@ const Stock = () => {
                 >
                   Restockage
                 </AdminButton>
-              </div>
-            )}
+              )}
+            </div>
             {tab === 'inventory' && (
               <AdminButton variant="outline" icon={RefreshCw} loading={refreshing} onClick={() => loadStock(true)}>
                 Actualiser
@@ -241,6 +264,8 @@ const Stock = () => {
 
       {tab === 'receipts' && canAdjust ? (
         <StockReceipts onStockChanged={() => loadStock(true)} onNotify={setNotification} />
+      ) : tab === 'preorders' ? (
+        <StockPreorders onNotify={setNotification} />
       ) : (
         <>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">

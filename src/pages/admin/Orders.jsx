@@ -24,6 +24,7 @@ import StatsCard from '../../components/ui/StatsCard';
 import FilterPanel from '../../components/ui/FilterPanel';
 import EmptyState from '../../components/ui/EmptyState';
 import OrderDetailsModal from '../../components/admin/OrderDetailsModal';
+import CounterPreorderModal from '../../components/admin/CounterPreorderModal';
 import { orderService, authService } from '../../services/api';
 import {
   AdminPageHeader,
@@ -65,6 +66,8 @@ const Orders = () => {
     }
   });
   const canCancelOrder = authService.hasPermission('orders.cancel');
+  const canCounterPreorder = authService.hasPermission('orders.counter_preorder');
+  const [showCounterModal, setShowCounterModal] = useState(false);
 
   // Charger les commandes
   const loadOrders = async (page = 1) => {
@@ -280,7 +283,7 @@ const Orders = () => {
       const matchesSearch = 
         order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.client.whatsapp_phone.includes(searchTerm);
+        (order.client.whatsapp_phone || '').includes(searchTerm);
       
       return matchesSearch;
     });
@@ -491,9 +494,11 @@ const Orders = () => {
       <AdminPageHeader
         description="Gérez et suivez toutes vos commandes"
         action={
-          <AdminButton variant="outline" icon={ChatBubbleLeftRightIcon}>
-            <span className="hidden sm:inline">Exporter</span>
-          </AdminButton>
+          canCounterPreorder ? (
+            <AdminButton variant="primary" onClick={() => setShowCounterModal(true)}>
+              Précommande comptoir
+            </AdminButton>
+          ) : null
         }
       />
 
@@ -611,6 +616,11 @@ const Orders = () => {
                         <div className="text-right">
                           <p className="text-xl font-bold text-gray-900">{Math.round(Number(order.total_amount) || 0)} FCFA</p>
                           {getStatusBadge(order.status)}
+                          {order.preorder?.status === 'waiting' && (
+                            <div className="mt-2">
+                              <Badge variant="warning">En file · {order.preorder.units} pièce(s)</Badge>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -820,6 +830,11 @@ const Orders = () => {
         onStatusChange={handleStatusChange}
         updatingOrder={updatingOrder}
         canCancel={canCancelOrder}
+      />
+      <CounterPreorderModal
+        isOpen={showCounterModal}
+        onClose={() => setShowCounterModal(false)}
+        onCreated={() => loadOrders(pagination.current_page)}
       />
     </div>
   );

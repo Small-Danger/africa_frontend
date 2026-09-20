@@ -110,6 +110,15 @@ const OrderDetailsModal = ({
                     )}
                   </p>
                 )}
+                {order.preorder && (
+                  <p className="text-gray-900">
+                    <span className="font-medium">Précommande:</span>{' '}
+                    {order.preorder.label}
+                    {order.preorder.status === 'waiting' && order.preorder.units > 0 && (
+                      <span className="text-sm text-gray-500"> · {order.preorder.units} pièce(s) en file</span>
+                    )}
+                  </p>
+                )}
                 <p className="text-gray-900">
                   <span className="font-medium">Total:</span> 
                   <span className="font-bold text-lg ml-2">{Math.round(Number(order.total_amount) || 0)} FCFA</span>
