@@ -281,7 +281,21 @@ const OrderCard = ({ order }) => {
                   {formatDate(order.created_at, true) || 'Date indisponible'}
                 </p>
               </div>
-              <StatusBadge status={order.status} />
+              <div className="flex flex-col items-end gap-1">
+                <StatusBadge status={order.status} />
+                {order.payment_status && (
+                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+                    order.payment_status === 'paye'
+                      ? 'bg-brand-green-light text-brand-green-dark border-brand-green/20'
+                      : order.payment_status === 'partiel'
+                        ? 'bg-sky-50 text-sky-800 border-sky-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>
+                    {order.payment_status_label || order.payment_status}
+                    {order.balance > 0 ? ` · ${Math.round(Number(order.balance) || 0)} FCFA` : ''}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-lg font-bold text-brand-green mt-2">{formatPrice(order.total_amount)}</p>
           </div>

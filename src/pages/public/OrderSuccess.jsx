@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
-import { authService } from '../../services/api';
+import { authService, orderService, shopService } from '../../services/api';
 
 const formatPrice = (price) => {
   if (price === null || price === undefined || price === '') return '0 FCFA';
@@ -41,30 +41,42 @@ const formatDate = (dateString) => {
   });
 };
 
-const NEXT_STEPS = [
-  {
-    step: 1,
-    title: 'Commande enregistrée',
-    description: 'Votre commande est bien prise en compte par notre équipe.',
-    icon: CheckCircle2,
-    done: true,
-  },
-  {
-    step: 2,
-    title: 'Finaliser le paiement',
-    description: 'Orange Money via WhatsApp ou paiement en agence.',
-    icon: CreditCard,
-    done: false,
-    active: true,
-  },
-  {
-    step: 3,
-    title: 'Préparation & livraison',
-    description: 'Nous vous contactons sur WhatsApp pour organiser la livraison.',
-    icon: Truck,
-    done: false,
-  },
-];
+const paymentBadgeClass = {
+  non_paye: 'text-amber-700 bg-amber-50 border-amber-200/80',
+  partiel: 'text-sky-800 bg-sky-50 border-sky-200/80',
+  paye: 'text-brand-green-dark bg-brand-green-light border-brand-green/20',
+};
+
+const buildNextSteps = (paymentStatus) => {
+  const paid = paymentStatus === 'paye';
+  const partial = paymentStatus === 'partiel';
+  return [
+    {
+      step: 1,
+      title: 'Commande enregistrée',
+      description: 'Votre commande est bien prise en compte par notre équipe.',
+      icon: CheckCircle2,
+      done: true,
+    },
+    {
+      step: 2,
+      title: paid ? 'Paiement reçu' : partial ? 'Acompte reçu' : 'Finaliser le paiement',
+      description: paid
+        ? 'Nous avons enregistré votre règlement.'
+        : 'WhatsApp (Wave, Orange Money…) ou paiement en agence.',
+      icon: CreditCard,
+      done: paid,
+      active: !paid,
+    },
+    {
+      step: 3,
+      title: 'Préparation & livraison',
+      description: 'Nous vous contactons sur WhatsApp pour organiser la livraison.',
+      icon: Truck,
+      done: false,
+    },
+  ];
+};
 
 const OrderSuccess = () => {
   const location = useLocation();
@@ -73,6 +85,7 @@ const OrderSuccess = () => {
   const [order, setOrder] = useState(null);
   const [isNewUser, setIsNewUser] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shopContact, setShopContact] = useState(null);
 
   const displayUser = location.state?.user || user;
   const firstName = displayUser?.name?.split(' ')[0] || 'Client';
@@ -86,9 +99,20 @@ const OrderSuccess = () => {
     if (location.state?.order) {
       setOrder(location.state.order);
       setIsNewUser(location.state.isNewUser || false);
+      if (location.state.order.id) {
+        orderService.getMyOrder(location.state.order.id).then((response) => {
+          if (response.success && response.data) {
+            setOrder((prev) => ({ ...prev, ...response.data }));
+          }
+        }).catch(() => {});
+      }
     } else {
       navigate('/');
     }
+
+    shopService.getContact().then((response) => {
+      if (response.success) setShopContact(response.data);
+    }).catch(() => {});
   }, [location.state, navigate]);
 
   const orderNumber = order?.order_number || (order?.id ? `CMD-${String(order.id).padStart(6, '0')}` : '—');
@@ -104,13 +128,27 @@ const OrderSuccess = () => {
     }
   };
 
+  const shopPhone = shopContact?.whatsapp_link || CONTACT_CONFIG.WHATSAPP_PHONE_LINK;
+  const shopPhoneDisplay = shopContact?.whatsapp_display || CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY;
+  const paymentStatus = order?.payment_status || 'non_paye';
+  const paymentLabel = order?.payment_status_label
+    || (paymentStatus === 'paye' ? 'Payé' : paymentStatus === 'partiel' ? 'Acompte' : 'En attente de paiement');
+  const nextSteps = buildNextSteps(paymentStatus);
+  const methodNames = (shopContact?.payment_methods || [])
+    .map((item) => item.label)
+    .filter(Boolean)
+    .join(', ') || 'Wave, Orange Money ou dépôt';
+
   const handleWhatsAppPayment = () => {
-    let message = `Bonjour ${CONTACT_CONFIG.COMPANY.name} ! Je souhaite finaliser le paiement de ma commande `;
-    if (order) {
-      message += `${orderNumber} (${order.summary?.total_items || 0} article(s)) pour un total de ${formatPrice(order.total_amount)}.`;
+    const total = formatPrice(order?.total_amount);
+    const balance = formatPrice(order?.balance ?? order?.total_amount);
+    let message = `Bonjour ${CONTACT_CONFIG.COMPANY.name} ! Je souhaite finaliser le paiement de ma commande ${orderNumber}`;
+    message += ` pour un total de ${total}`;
+    if (order?.paid_amount > 0 && order?.balance > 0) {
+      message += ` (reste ${balance})`;
     }
-    message += ' Je souhaite payer par Orange Money. Merci de m\'indiquer la marche à suivre.';
-    window.open(generateWhatsAppLink(message), '_blank');
+    message += `. Modes possibles : ${methodNames}. Merci de m'indiquer la marche à suivre.`;
+    window.open(generateWhatsAppLink(message, shopPhone), '_blank');
   };
 
   const handleAgencyPayment = () => {
@@ -225,9 +263,10 @@ const OrderSuccess = () => {
               <h2 className="text-base font-bold text-gray-900">Récapitulatif</h2>
               <p className="text-xs text-gray-500 mt-0.5">{formatDate(orderDate)}</p>
             </div>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-full">
+            <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide border px-2.5 py-1 rounded-full ${paymentBadgeClass[paymentStatus] || paymentBadgeClass.non_paye}`}>
               <Clock size={12} />
-              En attente de paiement
+              {paymentLabel}
+              {order?.balance > 0 && paymentStatus !== 'non_paye' ? ` · reste ${formatPrice(order.balance)}` : ''}
             </span>
           </div>
 
@@ -298,7 +337,7 @@ const OrderSuccess = () => {
             <p className="text-xs text-gray-500 mt-0.5">Suivez l&apos;avancement de votre commande</p>
           </div>
           <ol className="px-5 py-4 space-y-0">
-            {NEXT_STEPS.map(({ step, title, description, icon: Icon, done, active }, index) => (
+            {nextSteps.map(({ step, title, description, icon: Icon, done, active }, index) => (
               <li key={step} className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div
@@ -312,11 +351,11 @@ const OrderSuccess = () => {
                   >
                     <Icon size={16} />
                   </div>
-                  {index < NEXT_STEPS.length - 1 && (
+                  {index < nextSteps.length - 1 && (
                     <div className={`w-0.5 flex-1 min-h-[2rem] my-1 ${done ? 'bg-brand-green/40' : 'bg-gray-200'}`} />
                   )}
                 </div>
-                <div className={`pb-5 ${index === NEXT_STEPS.length - 1 ? 'pb-0' : ''}`}>
+                <div className={`pb-5 ${index === nextSteps.length - 1 ? 'pb-0' : ''}`}>
                   <p className={`text-sm font-bold ${active ? 'text-brand-orange-dark' : done ? 'text-brand-green-dark' : 'text-gray-400'}`}>
                     {title}
                   </p>
@@ -335,6 +374,13 @@ const OrderSuccess = () => {
           </div>
 
           <div className="p-4 space-y-3">
+            {paymentStatus === 'paye' && (
+              <p className="text-sm text-brand-green-dark bg-brand-green-light/60 rounded-xl px-4 py-3">
+                Paiement reçu. Nous préparons votre commande.
+              </p>
+            )}
+            {paymentStatus !== 'paye' && (
+            <>
             <button
               type="button"
               onClick={handleWhatsAppPayment}
@@ -346,13 +392,13 @@ const OrderSuccess = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-gray-900">Orange Money via WhatsApp</h3>
+                    <h3 className="text-sm font-bold text-gray-900">Payer via WhatsApp</h3>
                     <span className="text-[10px] font-bold uppercase tracking-wide text-brand-green bg-brand-green-light px-2 py-0.5 rounded-full flex-shrink-0">
                       Recommandé
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                    Paiement rapide et sécurisé. Notre équipe vous guide pas à pas.
+                    {methodNames}. Notre équipe vous indique le numéro et confirme la réception.
                   </p>
                   <span className="inline-flex items-center gap-1 mt-2.5 text-xs font-bold text-brand-green group-hover:gap-2 transition-all">
                     Contacter sur WhatsApp
@@ -383,6 +429,8 @@ const OrderSuccess = () => {
                 </div>
               </div>
             </button>
+            </>
+            )}
           </div>
         </section>
 
@@ -439,7 +487,7 @@ const OrderSuccess = () => {
           </div>
           <div className="p-4 space-y-2">
             <a
-              href={generateWhatsAppLink(`Bonjour, j'ai une question sur ma commande ${orderNumber}.`)}
+              href={generateWhatsAppLink(`Bonjour, j'ai une question sur ma commande ${orderNumber}.`, shopPhone)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 rounded-xl bg-brand-green-light/40 hover:bg-brand-green-light/70 transition-colors group"
@@ -455,7 +503,7 @@ const OrderSuccess = () => {
                 <Phone size={16} className="text-gray-400" />
                 <span className="text-sm text-gray-600">Téléphone</span>
               </div>
-              <span className="text-sm font-semibold text-gray-900">{CONTACT_CONFIG.WHATSAPP_PHONE_DISPLAY}</span>
+              <span className="text-sm font-semibold text-gray-900">{shopPhoneDisplay}</span>
             </div>
           </div>
           <div className="px-5 py-3 bg-brand-cream/60 border-t border-gray-100 flex items-center justify-between gap-3">

@@ -34,8 +34,13 @@ export const CONTACT_CONFIG = {
 };
 
 // Fonction utilitaire pour générer un lien WhatsApp
+export const shopWhatsAppDigits = (phone) => {
+  const digits = String(phone || CONTACT_CONFIG.WHATSAPP_PHONE_LINK).replace(/\D/g, '');
+  return digits || CONTACT_CONFIG.WHATSAPP_PHONE_LINK;
+};
+
 export const generateWhatsAppLink = (message = '', phone = CONTACT_CONFIG.WHATSAPP_PHONE_LINK) => {
-  const baseUrl = `https://wa.me/${phone}`;
+  const baseUrl = `https://wa.me/${shopWhatsAppDigits(phone)}`;
   if (message) {
     return `${baseUrl}?text=${encodeURIComponent(message)}`;
   }

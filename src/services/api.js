@@ -903,6 +903,12 @@ export const settingsService = {
   },
 };
 
+export const shopService = {
+  async getContact() {
+    return await apiRequest('/shop/contact', { method: 'GET' });
+  },
+};
+
 export const teamService = {
   async getAll() {
     return await apiRequest('/admin/team', { method: 'GET' });
