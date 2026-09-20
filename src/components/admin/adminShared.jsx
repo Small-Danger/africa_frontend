@@ -1,6 +1,13 @@
 import { Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+/** true si on peut faire <Icon /> — évite React #130 (objet JSON / mauvais import). */
+export const isRenderableIcon = (Icon) => {
+  if (!Icon) return false;
+  if (typeof Icon === 'function') return true;
+  return typeof Icon === 'object' && Icon.$$typeof != null;
+};
+
 export const formatAdminMoney = (n) => {
   const value = Number(n);
   if (!Number.isFinite(value)) return '0 FCFA';
@@ -34,7 +41,7 @@ export const AdminButton = ({
   >
     {loading ? (
       <Loader2 size={16} className="animate-spin" />
-    ) : Icon ? (
+    ) : isRenderableIcon(Icon) ? (
       <Icon size={16} className="w-4 h-4 flex-shrink-0" />
     ) : null}
     {children}
@@ -52,7 +59,7 @@ export const AdminLinkButton = ({
     className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${BTN_VARIANTS[variant] || BTN_VARIANTS.primary} ${className}`}
     {...props}
   >
-    {Icon ? <Icon size={16} /> : null}
+    {isRenderableIcon(Icon) ? <Icon size={16} /> : null}
     {children}
   </a>
 );
@@ -148,7 +155,7 @@ export const AdminStatCard = ({
             </p>
           )}
         </div>
-        {Icon && (
+        {isRenderableIcon(Icon) && (
           <div
             className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform`}
           >
@@ -162,7 +169,7 @@ export const AdminStatCard = ({
 
 export const AdminEmptyState = ({ icon: Icon, title, description, children }) => (
   <div className="flex flex-col items-center justify-center text-center py-10 px-4">
-    {Icon && (
+    {isRenderableIcon(Icon) && (
       <div className="w-14 h-14 rounded-2xl bg-brand-cream border border-gray-100 flex items-center justify-center mb-3">
         <Icon size={26} className="text-gray-300" />
       </div>
@@ -241,7 +248,7 @@ export const AdminQuickAction = ({ to, icon: Icon, title, description, accent = 
       <div
         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${accents[accent] || accents.green}`}
       >
-        <Icon size={18} />
+        {isRenderableIcon(Icon) ? <Icon size={18} /> : null}
       </div>
       <div className="min-w-0">
         <p className="font-semibold text-gray-900 text-sm">{title}</p>
@@ -259,7 +266,7 @@ export const AdminListRow = ({ icon: Icon, title, subtitle, trailing, badge, onC
       onClick={onClick}
       className={`w-full flex items-center gap-3 p-3.5 rounded-xl bg-brand-cream/50 border border-transparent hover:border-brand-green/15 hover:bg-brand-green-light/30 transition-colors text-left ${onClick ? 'cursor-pointer' : ''}`}
     >
-      {Icon && (
+      {isRenderableIcon(Icon) && (
         <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center flex-shrink-0">
           <Icon size={18} className="text-brand-green" />
         </div>

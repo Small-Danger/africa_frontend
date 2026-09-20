@@ -6,7 +6,7 @@ import {
   FolderTree,
   ShoppingCart,
   Users,
-  Image,
+  ImageIcon,
   Monitor,
   Menu,
   X,
@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
 import { hasPermission, hasAnyPermission, ROLE_LABELS } from '../../utils/staffAuth';
+import { isRenderableIcon } from '../admin/adminShared';
 
 const NAV_GROUPS = [
   {
@@ -41,7 +42,7 @@ const NAV_GROUPS = [
   {
     label: 'Configuration',
     items: [
-      { name: 'Bannières', href: '/admin/banners', icon: Image, permission: 'banners.manage' },
+      { name: 'Bannières', href: '/admin/banners', icon: ImageIcon, permission: 'banners.manage' },
       { name: 'Équipe', href: '/admin/team', icon: Monitor, permissions: ['team.manage', 'team.manage_staff'] },
     ],
   },
@@ -107,7 +108,9 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
               {group.label}
             </p>
             <div className="space-y-0.5">
-              {group.items.map((item) => (
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                return (
                 <NavLink
                   key={item.href}
                   to={item.href}
@@ -115,13 +118,16 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
                   className={navLinkClass}
                   onClick={onNavigate}
                 >
-                  <item.icon
-                    size={18}
-                    className="flex-shrink-0 opacity-90"
-                  />
+                  {isRenderableIcon(Icon) ? (
+                    <Icon
+                      size={18}
+                      className="flex-shrink-0 opacity-90"
+                    />
+                  ) : null}
                   {item.name}
                 </NavLink>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}

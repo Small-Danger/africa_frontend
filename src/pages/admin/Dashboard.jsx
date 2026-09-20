@@ -9,7 +9,7 @@ import {
   Plus,
   Package,
   FolderTree,
-  Image,
+  ImageIcon,
   RefreshCw,
   TrendingUp,
   AlertTriangle,
@@ -38,12 +38,20 @@ const Dashboard = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   
   // Cache local pour les données du dashboard
-  const CACHE_KEY = 'dashboard_cache';
+  const CACHE_KEY = 'dashboard_cache_v2';
   const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+  const STAT_ICONS = [ShoppingBag, Users, ShoppingCart, Banknote];
+
+  const restoreStatIcons = (rows) =>
+    (Array.isArray(rows) ? rows : []).map((stat, index) => ({
+      ...stat,
+      icon: STAT_ICONS[index] || ShoppingBag,
+    }));
 
   // Fonctions de gestion du cache
   const getCachedData = () => {
     try {
+      localStorage.removeItem('dashboard_cache');
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
@@ -83,7 +91,7 @@ const Dashboard = () => {
           const cachedData = getCachedData();
           if (cachedData) {
             console.log('📦 Utilisation des données en cache');
-            setStats(cachedData.stats);
+            setStats(restoreStatIcons(cachedData.stats));
             setRecentOrders(cachedData.recentOrders);
             setTopProducts(cachedData.topProducts);
             setLastUpdated(new Date(cachedData.timestamp));
@@ -231,9 +239,10 @@ const Dashboard = () => {
         setStats(formattedStats);
         
         // Récupérer les commandes récentes avec gestion d'erreur
+        let recentOrdersData = [];
         if (ordersRes?.success && ordersRes.data?.orders) {
           console.log('🔍 Commandes trouvées:', ordersRes.data.orders);
-          const recentOrdersData = ordersRes.data.orders
+          recentOrdersData = ordersRes.data.orders
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Trier par date décroissante
             .slice(0, 5) // Prendre les 5 plus récentes
             .map(order => ({
@@ -380,8 +389,8 @@ const Dashboard = () => {
         
         // Sauvegarder en cache avec toutes les données
         const cacheData = {
-          stats: formattedStats,
-          recentOrders: recentOrders,
+          stats: formattedStats.map(({ icon, ...rest }) => rest),
+          recentOrders: recentOrdersData,
           topProducts: topProductsData || [],
           timestamp: Date.now()
         };
@@ -541,7 +550,7 @@ const Dashboard = () => {
         <AdminQuickAction to="/admin/products" icon={Package} title="Produits" description="Gérer le catalogue" accent="green" />
         <AdminQuickAction to="/admin/orders" icon={ShoppingCart} title="Commandes" description="Suivi des ventes" accent="orange" />
         <AdminQuickAction to="/admin/categories" icon={FolderTree} title="Catégories" description="Organiser la boutique" accent="blue" />
-        <AdminQuickAction to="/admin/banners" icon={Image} title="Bannières" description="Page d'accueil" accent="violet" />
+        <AdminQuickAction to="/admin/banners" icon={ImageIcon} title="Bannières" description="Page d'accueil" accent="violet" />
       </div>
 
       {/* Bandeau POS */}
