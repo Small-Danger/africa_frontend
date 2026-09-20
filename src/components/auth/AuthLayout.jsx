@@ -7,7 +7,7 @@ const HERO_IMAGE =
 
 const TRUST_ITEMS = [
   { icon: Shield, text: 'Compte sécurisé' },
-  { icon: Truck, text: 'Livraison gratuite' },
+  { icon: Truck, text: 'Retrait à la boutique' },
   { icon: MessageCircle, text: 'Support WhatsApp' },
 ];
 
@@ -183,7 +183,7 @@ const AuthHeroPanel = ({ badge }) => (
       <h2 className="text-2xl xl:text-3xl font-bold text-white leading-snug mb-3">
         Les trésors du Maroc,
         <br />
-        <span className="text-brand-orange-light">livré chez vous</span>
+        <span className="text-brand-orange-light">à récupérer à la boutique</span>
       </h2>
       <p className="text-sm text-white/80 leading-relaxed max-w-sm">
         Rejoignez la communauté {CONTACT_CONFIG.COMPANY.name} et commandez en toute confiance

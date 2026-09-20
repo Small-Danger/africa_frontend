@@ -188,11 +188,8 @@ const OrderSummaryCard = ({
         <span className="font-semibold text-gray-900">{formatPriceDisplay(totalPrice)}</span>
       </div>
       <div className="flex justify-between text-sm">
-        <span className="text-gray-600 flex items-center gap-1.5">
-          <Truck size={14} className="text-brand-green" />
-          Livraison
-        </span>
-        <span className="font-semibold text-brand-green">Gratuite</span>
+        <span className="text-gray-600">Récupération</span>
+        <span className="font-semibold text-gray-800">Boutique ou à votre charge</span>
       </div>
       <div className="flex justify-between text-sm">
         <span className="text-gray-600">Taxes</span>
@@ -243,7 +240,7 @@ const OrderSummaryCard = ({
         </span>
         <span className="inline-flex items-center gap-1">
           <Truck size={12} className="text-brand-green" />
-          Livraison offerte
+          Suivi WhatsApp
         </span>
       </div>
     </div>
@@ -261,7 +258,7 @@ const CartEmptyState = () => (
         </div>
         <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Votre panier est vide</h2>
         <p className="text-sm text-gray-500 max-w-sm mx-auto mb-8">
-          Parcourez notre catalogue et découvrez les trésors du Maroc livrés chez vous.
+          Parcourez notre catalogue et découvrez les trésors du Maroc, à récupérer à la boutique.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
@@ -895,7 +892,7 @@ const ModernCart = () => {
               </h3>
               <p className="text-xs text-gray-600 mt-2 leading-relaxed">
                 {isAuthenticated
-                  ? 'Validez votre commande — nous vous contactons via WhatsApp pour organiser la livraison.'
+                  ? 'Validez votre commande — nous vous contactons via WhatsApp pour convenir du retrait ou de l’envoi que vous organisez.'
                   : 'Créez votre compte en quelques secondes pour finaliser. Nous vous recontactons ensuite par WhatsApp. Simple et sécurisé.'}
               </p>
             </div>

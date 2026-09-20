@@ -70,8 +70,8 @@ const buildNextSteps = (paymentStatus) => {
     },
     {
       step: 3,
-      title: 'Préparation & livraison',
-      description: 'Nous vous contactons sur WhatsApp pour organiser la livraison.',
+      title: 'Récupération',
+      description: 'Nous convenons sur WhatsApp du retrait à la boutique ou de l’envoi que vous organisez.',
       icon: Truck,
       done: false,
     },
@@ -234,8 +234,8 @@ const OrderSuccess = () => {
           </h1>
 
           <p className="text-sm md:text-base text-white/75 max-w-md mx-auto leading-relaxed">
-            Il ne reste plus qu&apos;à finaliser le paiement. Notre équipe vous accompagne ensuite
-            par WhatsApp pour la livraison.
+            Il ne reste plus qu&apos;à finaliser le paiement. Notre équipe vous contacte ensuite
+            par WhatsApp pour convenir de la récupération.
           </p>
 
           <div className="mt-6 inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
@@ -314,11 +314,8 @@ const OrderSuccess = () => {
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500 flex items-center gap-1.5">
-                <Truck size={14} className="text-brand-green" />
-                Livraison
-              </span>
-              <span className="font-semibold text-brand-green">Gratuite</span>
+              <span className="text-gray-500">Récupération</span>
+              <span className="font-medium text-gray-800">Boutique ou à votre charge</span>
             </div>
             <div className="flex justify-between items-baseline pt-2 border-t border-gray-200/80">
               <span className="text-base font-bold text-gray-900">Total à payer</span>

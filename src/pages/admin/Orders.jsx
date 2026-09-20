@@ -318,7 +318,7 @@ const Orders = () => {
         const statusLabels = {
           'acceptée': 'acceptée',
           'prête': 'marquée comme prête',
-          'en_cours': 'mise en cours de livraison',
+          'en_cours': 'mise en préparation',
           'disponible': 'marquée comme disponible',
           'annulée': 'annulée'
         };
@@ -394,8 +394,8 @@ const Orders = () => {
     { id: 'a_valider', name: 'À valider' },
     { id: 'en_attente', name: 'En attente' },
     { id: 'acceptée', name: 'Acceptée' },
-    { id: 'prête', name: 'Prête à livrer' },
-    { id: 'en_cours', name: 'En cours de livraison' },
+    { id: 'prête', name: 'Prête' },
+    { id: 'en_cours', name: 'En préparation' },
     { id: 'disponible', name: 'Disponible au bureau' },
     { id: 'annulée', name: 'Annulée' }
   ];
@@ -453,8 +453,8 @@ const Orders = () => {
       options: [
         { value: 'en_attente', label: 'En attente' },
         { value: 'acceptée', label: 'Acceptée' },
-        { value: 'prête', label: 'Prête à livrer' },
-        { value: 'en_cours', label: 'En cours de livraison' },
+        { value: 'prête', label: 'Prête' },
+        { value: 'en_cours', label: 'En préparation' },
         { value: 'disponible', label: 'Disponible au bureau' },
         { value: 'annulée', label: 'Annulée' }
       ]
@@ -797,7 +797,7 @@ const Orders = () => {
                           ) : (
                             <CheckIcon className="h-4 w-4 mr-2" />
                           )}
-                          En cours de livraison
+                          En préparation
                         </Button>
                       )}
 

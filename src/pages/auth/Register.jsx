@@ -82,7 +82,7 @@ const Register = () => {
     }
 
     if (!formData.whatsapp_phone) {
-      newErrors.whatsapp_phone = 'Votre numéro WhatsApp est indispensable pour la livraison';
+      newErrors.whatsapp_phone = 'Votre numéro WhatsApp est indispensable pour le suivi de commande';
     } else {
       const phoneCheck = getPhoneValidationResult(formData.whatsapp_phone);
       if (!phoneCheck.valid) {

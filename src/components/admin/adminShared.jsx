@@ -216,7 +216,7 @@ export const ORDER_STATUS_CONFIG = {
   cancelled: { label: 'Annulée', className: 'bg-red-50 text-red-700 border-red-200' },
   processing: { label: 'En cours', className: 'bg-blue-50 text-blue-800 border-blue-200' },
   shipped: { label: 'Expédiée', className: 'bg-blue-50 text-blue-800 border-blue-200' },
-  delivered: { label: 'Livrée', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
+  delivered: { label: 'Disponible', className: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
 };
 
 export const AdminStatusBadge = ({ status }) => {

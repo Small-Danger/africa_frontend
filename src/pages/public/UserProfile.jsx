@@ -46,8 +46,8 @@ const STATUS_CONFIG = {
   en_attente: { label: 'En attente', icon: Clock, badge: 'bg-amber-50 text-amber-700 border-amber-200' },
   acceptée: { label: 'Acceptée', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   prête: { label: 'Prête', icon: Package, badge: 'bg-brand-orange-light text-brand-orange-dark border-brand-orange/20' },
-  en_cours: { label: 'En cours de livraison', icon: Truck, badge: 'bg-blue-50 text-blue-700 border-blue-200' },
-  disponible: { label: 'Livrée', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
+  en_cours: { label: 'En préparation', icon: Truck, badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+  disponible: { label: 'Disponible à la boutique', icon: CheckCircle2, badge: 'bg-brand-green-light text-brand-green-dark border-brand-green/20' },
   annulée: { label: 'Annulée', icon: XCircle, badge: 'bg-red-50 text-red-700 border-red-200' },
 };
 
@@ -656,7 +656,7 @@ const UserProfile = () => {
       label: 'Numéro WhatsApp',
       icon: Phone,
       display: user.whatsapp_phone ? formatPhoneE164Display(user.whatsapp_phone) : null,
-      note: 'Identifiant de connexion et contact livraison',
+      note: 'Identifiant de connexion et contact WhatsApp',
     },
     {
       field: 'email',

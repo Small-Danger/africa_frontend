@@ -17,7 +17,7 @@ const PhoneInput = ({
   value = '',
   onChange,
   error,
-  hint = 'Utilisé pour confirmer votre commande et la livraison',
+  hint = 'Utilisé pour confirmer et suivre votre commande',
   required = false,
   className = '',
   showLiveValidation = true,

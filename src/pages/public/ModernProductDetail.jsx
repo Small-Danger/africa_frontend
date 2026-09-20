@@ -429,7 +429,7 @@ const ModernProductDetail = () => {
                 <span className={`w-2 h-2 rounded-full ${stockDotClass(stockStatus)}`} />
                 <span className={`text-sm font-medium ${stockTextClass(stockStatus)}`}>
                   {stockSource
-                    ? `${stockLabel} · Livraison AfrikRaga`
+                    ? stockLabel
                     : 'Choisissez une option pour voir la disponibilité'}
                 </span>
               </div>

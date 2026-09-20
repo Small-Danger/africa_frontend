@@ -260,7 +260,7 @@ const ModernHome = () => {
         <div className="grid grid-cols-3 gap-3 md:gap-6">
           {[
             { icon: Leaf, label: '100% naturel', sub: 'Produits authentiques' },
-            { icon: Truck, label: 'Livraison rapide', sub: 'Partout au pays' },
+            { icon: Truck, label: 'Retrait boutique', sub: 'Ou vous organisez l’envoi' },
             { icon: ShieldCheck, label: 'Qualité garantie', sub: 'Sélection rigoureuse' },
           ].map(({ icon: Icon, label, sub }) => (
             <div key={label} className="bg-white rounded-xl md:rounded-2xl p-3 md:p-5 text-center border border-gray-100 shadow-sm">

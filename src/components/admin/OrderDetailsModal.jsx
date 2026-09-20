@@ -361,7 +361,7 @@ const OrderDetailsModal = ({
                   ) : (
                     <span>📦</span>
                   )}
-                  Marquer comme prête à livrer
+                  Marquer comme prête
                 </Button>
               )}
 
@@ -377,7 +377,7 @@ const OrderDetailsModal = ({
                   ) : (
                     <span>🚚</span>
                   )}
-                  Mettre en cours de livraison
+                  Mettre en préparation
                 </Button>
               )}
 
