@@ -297,7 +297,7 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
             </div>
           </div>
           <p className="text-xs text-gray-400">
-            Ces montants enregistrent l’investissement de l’arrivage. Les rapports mensuels (ventes vs récupération) arriveront à la brique finance.
+            Ces montants enregistrent l’investissement de l’arrivage. Le menu Finances compare ensuite ces camions aux ventes du mois.
           </p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Note (optionnel)</label>

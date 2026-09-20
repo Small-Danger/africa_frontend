@@ -830,6 +830,16 @@ export const stockService = {
   },
 };
 
+export const financeService = {
+  async getMonth({ year, month } = {}) {
+    const query = new URLSearchParams();
+    if (year) query.append('year', String(year));
+    if (month) query.append('month', String(month));
+    const suffix = query.toString() ? `?${query.toString()}` : '';
+    return await apiRequest(`/admin/finance/month${suffix}`, { method: 'GET' });
+  },
+};
+
 export const activityService = {
   async getAll({ per_page = 20, action } = {}) {
     const query = new URLSearchParams();

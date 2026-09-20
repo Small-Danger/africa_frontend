@@ -17,6 +17,7 @@ import {
   ScrollText,
   Settings,
   Boxes,
+  Banknote,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
@@ -26,7 +27,10 @@ import { isRenderableIcon } from '../admin/adminShared';
 const NAV_GROUPS = [
   {
     label: 'Vue d\'ensemble',
-    items: [{ name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, end: true, permission: 'finance.view' }],
+    items: [
+      { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, end: true, permission: 'finance.view' },
+      { name: 'Finances', href: '/admin/finance', icon: Banknote, permission: 'finance.view' },
+    ],
   },
   {
     label: 'Catalogue',
@@ -59,6 +63,7 @@ const PAGE_TITLES = {
   '/admin/products': 'Produits',
   '/admin/categories': 'Catégories',
   '/admin/stock': 'Stock',
+  '/admin/finance': 'Finances',
   '/admin/orders': 'Commandes',
   '/admin/customers': 'Clients',
   '/admin/banners': 'Bannières',

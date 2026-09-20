@@ -24,6 +24,7 @@ import Team from './pages/admin/Team'
 import Settings from './pages/admin/Settings'
 import Activity from './pages/admin/Activity'
 import Stock from './pages/admin/Stock'
+import Finance from './pages/admin/Finance'
 import PosProtectedRoute from './components/auth/PosProtectedRoute'
 import PosLayout from './pages/pos/PosLayout'
 import PosCashSessionGate from './pages/pos/PosCashSessionGate'
@@ -187,6 +188,11 @@ function App() {
               <Route path="/admin/stock" element={
                 <AdminProtectedRoute permission="stock.view_status">
                   <AdminLayout><Stock /></AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/finance" element={
+                <AdminProtectedRoute permission="finance.view">
+                  <AdminLayout><Finance /></AdminLayout>
                 </AdminProtectedRoute>
               } />
               <Route path="/admin/orders" element={

@@ -1,0 +1,159 @@
+import { useCallback, useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Banknote, Truck, ShoppingCart, RefreshCw } from 'lucide-react';
+import { financeService } from '../../services/api';
+import {
+  AdminPageHeader,
+  AdminButton,
+  AdminLoadingScreen,
+  AdminStatCard,
+  AdminPanel,
+  formatAdminMoney,
+} from '../../components/admin/adminShared';
+import NotificationToast from '../../components/ui/NotificationToast';
+
+const emptyReport = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth() + 1,
+  label: '',
+  invested: 0,
+  merchandise_cost: 0,
+  shipping_cost: 0,
+  receipts_count: 0,
+  sales: 0,
+  orders_count: 0,
+  remaining: 0,
+  progress_percent: 0,
+  recovered: false,
+};
+
+const shiftMonth = (year, month, delta) => {
+  const date = new Date(year, month - 1 + delta, 1);
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+};
+
+const Finance = () => {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [report, setReport] = useState(emptyReport);
+  const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  const load = useCallback(async (nextYear = year, nextMonth = month) => {
+    setLoading(true);
+    try {
+      const response = await financeService.getMonth({ year: nextYear, month: nextMonth });
+      if (response.success) setReport(response.data);
+    } catch (err) {
+      setNotification({
+        type: 'error',
+        message: err.message || 'Impossible de charger le rapport',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const go = (delta) => {
+    const next = shiftMonth(year, month, delta);
+    setYear(next.year);
+    setMonth(next.month);
+  };
+
+  if (loading && !report.label) {
+    return <AdminLoadingScreen label="Chargement du rapport…" />;
+  }
+
+  const remainingPositive = report.remaining > 0;
+  const insight = report.invested === 0
+    ? 'Aucun arrivage enregistré ce mois. Les ventes s’affichent quand même.'
+    : report.recovered
+      ? `L’investissement du mois est récupéré. Les ventes dépassent les camions de ${formatAdminMoney(Math.abs(report.remaining))}.`
+      : `Il reste ${formatAdminMoney(report.remaining)} à encaisser pour rentrer dans les camions de ce mois.`;
+
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        description="Compare l’argent mis dans les arrivages et les ventes du même mois, hors commandes annulées."
+        action={
+          <div className="flex items-center gap-2">
+            <AdminButton variant="outline" icon={ChevronLeft} onClick={() => go(-1)}>
+              Mois précédent
+            </AdminButton>
+            <p className="text-sm font-semibold text-gray-800 min-w-[9rem] text-center capitalize">
+              {report.label || `${month}/${year}`}
+            </p>
+            <AdminButton variant="outline" icon={ChevronRight} onClick={() => go(1)}>
+              Mois suivant
+            </AdminButton>
+            <AdminButton variant="ghost" icon={RefreshCw} onClick={() => load()}>
+              Actualiser
+            </AdminButton>
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        <AdminStatCard
+          label="Investi (camions)"
+          value={formatAdminMoney(report.invested)}
+          hint={`${report.receipts_count} arrivage(s) · marchandise ${formatAdminMoney(report.merchandise_cost)}`}
+          icon={Truck}
+          accent="orange"
+        />
+        <AdminStatCard
+          label="Ventes"
+          value={formatAdminMoney(report.sales)}
+          hint={`${report.orders_count} commande(s) hors annulées`}
+          icon={ShoppingCart}
+          accent="green"
+        />
+        <AdminStatCard
+          label={
+            report.invested === 0
+              ? 'Écart'
+              : remainingPositive
+                ? 'Reste à récupérer'
+                : 'Au-delà de l’investissement'
+          }
+          value={formatAdminMoney(Math.abs(report.remaining))}
+          icon={Banknote}
+          accent={remainingPositive ? 'violet' : 'emerald'}
+        />
+        <AdminStatCard
+          label="Avancement"
+          value={`${report.progress_percent} %`}
+          hint={report.shipping_cost ? `Dont transport ${formatAdminMoney(report.shipping_cost)}` : undefined}
+          accent="green"
+        />
+      </div>
+
+      <AdminPanel title="Lecture du mois">
+        <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
+          <div
+            className={`h-full rounded-full ${report.recovered ? 'bg-brand-green' : 'bg-brand-orange'}`}
+            style={{ width: `${report.progress_percent}%` }}
+          />
+        </div>
+        <p className="text-sm text-gray-600 mt-4">{insight}</p>
+        <p className="text-xs text-gray-400 mt-2">
+          Ce n’est pas encore une marge produit par produit : on compare le total des camions au total des ventes du mois.
+        </p>
+      </AdminPanel>
+
+      {notification && (
+        <NotificationToast
+          type={notification.type}
+          message={String(notification.message || '')}
+          onClose={() => setNotification(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Finance;
