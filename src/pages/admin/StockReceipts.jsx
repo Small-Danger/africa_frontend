@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, Truck } from 'lucide-react';
+import { Pencil, Plus, Trash2, Truck } from 'lucide-react';
 import { stockService } from '../../services/api';
 import {
   AdminButton,
@@ -9,6 +9,8 @@ import {
 } from '../../components/admin/adminShared';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Badge from '../../components/ui/Badge';
+import Modal from '../../components/ui/Modal';
 import DataTable from '../../components/ui/DataTable';
 
 const emptySummary = {
@@ -20,12 +22,14 @@ const emptySummary = {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+const dateOnly = (value) => (value ? String(value).slice(0, 10) : today());
 
 const StockReceipts = ({ onStockChanged, onNotify }) => {
   const [catalog, setCatalog] = useState([]);
   const [receipts, setReceipts] = useState([]);
   const [summary, setSummary] = useState(emptySummary);
   const [canViewFinance, setCanViewFinance] = useState(false);
+  const [canAdjust, setCanAdjust] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [lines, setLines] = useState([]);
@@ -33,8 +37,22 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
   const [shipping, setShipping] = useState('');
   const [note, setNote] = useState('');
   const [receivedAt, setReceivedAt] = useState(today);
+  const [editingId, setEditingId] = useState(null);
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [toCancel, setToCancel] = useState(null);
+  const [deleteWord, setDeleteWord] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
+  const resetForm = () => {
+    setLines([]);
+    setMerchandise('');
+    setShipping('');
+    setNote('');
+    setReceivedAt(today());
+    setEditingId(null);
+    setFormErrors({});
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,6 +66,7 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
         setReceipts(receiptsRes.data.items || []);
         setSummary({ ...emptySummary, ...(receiptsRes.data.summary || {}) });
         setCanViewFinance(Boolean(receiptsRes.data.can_view_finance));
+        setCanAdjust(Boolean(receiptsRes.data.can_adjust));
       }
     } catch (err) {
       onNotify?.({ type: 'error', message: err.message || 'Impossible de charger les réceptions' });
@@ -95,6 +114,33 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
     setLines((prev) => prev.filter((line) => line.variant_id !== variantId));
   };
 
+  const startEdit = (receipt) => {
+    setEditingId(receipt.id);
+    setLines((receipt.items || []).map((item) => ({
+      variant_id: item.variant_id,
+      product_name: item.product_name,
+      variant_name: item.variant_name,
+      quantity: String(item.quantity),
+    })));
+    setMerchandise(receipt.merchandise_cost == null ? '' : String(receipt.merchandise_cost));
+    setShipping(receipt.shipping_cost == null ? '' : String(receipt.shipping_cost));
+    setNote(receipt.note || '');
+    setReceivedAt(dateOnly(receipt.received_at));
+    setFormErrors({});
+    document.getElementById('receipt-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const payload = () => ({
+    items: lines.map((line) => ({
+      variant_id: line.variant_id,
+      quantity: Number(line.quantity),
+    })),
+    merchandise_cost: merchandise === '' ? 0 : Number(merchandise),
+    shipping_cost: shipping === '' ? 0 : Number(shipping),
+    note: note.trim() || undefined,
+    received_at: receivedAt || undefined,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (lines.length === 0) {
@@ -105,23 +151,12 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
     setFormErrors({});
 
     try {
-      const response = await stockService.createReceipt({
-        items: lines.map((line) => ({
-          variant_id: line.variant_id,
-          quantity: Number(line.quantity),
-        })),
-        merchandise_cost: merchandise === '' ? 0 : Number(merchandise),
-        shipping_cost: shipping === '' ? 0 : Number(shipping),
-        note: note.trim() || undefined,
-        received_at: receivedAt || undefined,
-      });
+      const response = editingId
+        ? await stockService.updateReceipt(editingId, payload())
+        : await stockService.createReceipt(payload());
       if (response.success) {
         onNotify?.({ type: 'success', message: response.message });
-        setLines([]);
-        setMerchandise('');
-        setShipping('');
-        setNote('');
-        setReceivedAt(today());
+        resetForm();
         await load();
         onStockChanged?.();
       }
@@ -133,19 +168,43 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
     }
   };
 
+  const handleCancelReceipt = async () => {
+    if (!toCancel || deleteWord !== 'DELETE') return;
+    setCancelling(true);
+    try {
+      const response = await stockService.cancelReceipt(toCancel.id, { confirmation: 'DELETE' });
+      if (response.success) {
+        onNotify?.({ type: 'success', message: response.message });
+        if (editingId === toCancel.id) resetForm();
+        setToCancel(null);
+        setDeleteWord('');
+        await load();
+        onStockChanged?.();
+      }
+    } catch (err) {
+      onNotify?.({ type: 'error', message: err.message || 'Annulation impossible' });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const columns = useMemo(() => {
     const cols = [
       {
         key: 'received_at',
         label: 'Date',
         searchable: false,
-        render: (value) => (value ? new Date(value).toLocaleDateString('fr-FR') : '—'),
+        render: (value, row) => (
+          <span className={row.cancelled ? 'text-gray-400 line-through' : ''}>
+            {value ? new Date(value).toLocaleDateString('fr-FR') : '—'}
+          </span>
+        ),
       },
       {
         key: 'items',
         label: 'Produits',
         render: (_, row) => (
-          <div className="space-y-0.5">
+          <div className={`space-y-0.5 ${row.cancelled ? 'opacity-60' : ''}`}>
             {(row.items || []).slice(0, 3).map((item) => (
               <p key={item.id} className="text-sm text-gray-800">
                 {item.product_name} · {item.variant_name}
@@ -166,7 +225,26 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
       {
         key: 'note',
         label: 'Note',
-        render: (value) => value || '—',
+        render: (value, row) => (
+          <div>
+            <p>{value || '—'}</p>
+            {row.cancelled && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                Annulé{row.cancelled_by_name ? ` par ${row.cancelled_by_name}` : ''}
+              </p>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: 'cancelled',
+        label: 'État',
+        searchable: false,
+        render: (value) => (
+          <Badge variant={value ? 'destructive' : 'success'}>
+            {value ? 'Annulé' : 'Actif'}
+          </Badge>
+        ),
       },
     ];
 
@@ -176,8 +254,8 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
         label: 'Investi',
         searchable: false,
         render: (value, row) => (
-          <div>
-            <p className="font-semibold text-gray-900">{formatAdminMoney(value)}</p>
+          <div className={row.cancelled ? 'opacity-50' : ''}>
+            <p className="font-semibold text-gray-900">{formatAdminMoney(row.cancelled ? 0 : value)}</p>
             <p className="text-xs text-gray-400">
               {formatAdminMoney(row.merchandise_cost)} + transport {formatAdminMoney(row.shipping_cost)}
             </p>
@@ -186,8 +264,41 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
       });
     }
 
+    if (canAdjust) {
+      cols.push({
+        key: 'id',
+        label: '',
+        searchable: false,
+        render: (_, row) => (
+          row.cancelled ? null : (
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                className="p-2 rounded-lg text-gray-500 hover:text-brand-orange hover:bg-brand-cream"
+                title="Corriger"
+                onClick={() => startEdit(row)}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
+                title="Annuler l’arrivage"
+                onClick={() => {
+                  setToCancel(row);
+                  setDeleteWord('');
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )
+        ),
+      });
+    }
+
     return cols;
-  }, [canViewFinance]);
+  }, [canViewFinance, canAdjust]);
 
   if (loading) {
     return <p className="text-sm text-gray-500">Chargement des réceptions…</p>;
@@ -210,10 +321,14 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
       )}
 
       <AdminPanel
-        title="Nouvel arrivage"
-        subtitle="Le stock est augmenté, pas écrasé. Corriger reste l’inventaire si le rayon ne correspond pas."
+        title={editingId ? 'Corriger l’arrivage' : 'Nouvel arrivage'}
+        subtitle={
+          editingId
+            ? 'Le stock sera ajusté de la différence. L’injection d’origine reste dans le journal.'
+            : 'Le stock est augmenté, pas écrasé. Une erreur de saisie se corrige ou s’annule plus bas.'
+        }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="receipt-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ajouter un produit</label>
             <Input
@@ -307,10 +422,15 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
               placeholder="Fournisseur, n° de colis, camion du 20 septembre…"
             />
           </div>
-          <div className="flex justify-start">
+          <div className="flex flex-wrap gap-2">
             <Button type="submit" variant="primary" loading={submitting} disabled={lines.length === 0}>
-              Injecter dans le stock
+              {editingId ? 'Enregistrer la correction' : 'Injecter dans le stock'}
             </Button>
+            {editingId && (
+              <AdminButton type="button" variant="outline" onClick={resetForm}>
+                Annuler la modification
+              </AdminButton>
+            )}
           </div>
         </form>
       </AdminPanel>
@@ -322,6 +442,61 @@ const StockReceipts = ({ onStockChanged, onNotify }) => {
         searchPlaceholder="Rechercher dans les réceptions…"
         emptyMessage="Aucun arrivage enregistré pour l’instant."
       />
+
+      <Modal
+        isOpen={Boolean(toCancel)}
+        onClose={() => {
+          if (!cancelling) {
+            setToCancel(null);
+            setDeleteWord('');
+          }
+        }}
+        title="Annuler cet arrivage"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Le stock sera retiré, mais l’arrivage restera visible comme <strong>annulé</strong> dans l’historique.
+            Si des pièces ont déjà été vendues, l’annulation sera refusée.
+          </p>
+          {toCancel && (
+            <p className="text-sm text-gray-800">
+              {(toCancel.items || []).map((item) => `${item.product_name} · ${item.variant_name} × ${item.quantity}`).join(', ')}
+            </p>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tapez <span className="font-mono">DELETE</span> pour confirmer
+            </label>
+            <Input
+              value={deleteWord}
+              onChange={(e) => setDeleteWord(e.target.value)}
+              placeholder="DELETE"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setToCancel(null);
+                setDeleteWord('');
+              }}
+              disabled={cancelling}
+            >
+              Retour
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelReceipt}
+              loading={cancelling}
+              disabled={deleteWord !== 'DELETE'}
+            >
+              Annuler l’arrivage
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

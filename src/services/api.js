@@ -828,6 +828,20 @@ export const stockService = {
       body: JSON.stringify(data),
     });
   },
+
+  async updateReceipt(id, data) {
+    return await apiRequest(`/admin/stock/receipts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async cancelReceipt(id, { confirmation, reason } = {}) {
+    return await apiRequest(`/admin/stock/receipts/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ confirmation, reason }),
+    });
+  },
 };
 
 export const financeService = {

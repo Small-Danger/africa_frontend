@@ -11,6 +11,8 @@ const actionBadge = (action) => {
   if (action?.startsWith('team.')) return 'primary';
   if (action === 'settings.updated') return 'warning';
   if (action === 'stock.adjusted' || action === 'stock.received') return 'info';
+  if (action === 'stock.receipt_updated') return 'warning';
+  if (action === 'stock.receipt_cancelled') return 'destructive';
   return 'secondary';
 };
 
