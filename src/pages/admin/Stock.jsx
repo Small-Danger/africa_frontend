@@ -163,6 +163,17 @@ const Stock = () => {
             <span className="font-semibold text-gray-900">{value}</span>
           ),
       });
+      cols.push({
+        key: 'stock_reserved',
+        label: 'Réservé',
+        searchable: false,
+        render: (value, row) =>
+          row.needs_inventory ? '—' : (
+            <span className={value > 0 ? 'font-semibold text-brand-orange' : 'text-gray-400'}>
+              {value || 0}
+            </span>
+          ),
+      });
     }
 
     if (canAdjust) {

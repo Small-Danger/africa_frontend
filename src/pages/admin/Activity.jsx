@@ -10,9 +10,9 @@ import DataTable from '../../components/ui/DataTable';
 const actionBadge = (action) => {
   if (action?.startsWith('team.')) return 'primary';
   if (action === 'settings.updated') return 'warning';
-  if (action === 'stock.adjusted' || action === 'stock.received') return 'info';
-  if (action === 'stock.receipt_updated') return 'warning';
-  if (action === 'stock.receipt_cancelled') return 'destructive';
+  if (action === 'stock.adjusted' || action === 'stock.received' || action === 'stock.reserved') return 'info';
+  if (action === 'stock.receipt_updated' || action === 'stock.reservation_released') return 'warning';
+  if (action === 'stock.receipt_cancelled' || action === 'stock.reservation_expired') return 'destructive';
   return 'secondary';
 };
 

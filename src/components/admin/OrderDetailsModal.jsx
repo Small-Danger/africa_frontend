@@ -99,6 +99,17 @@ const OrderDetailsModal = ({
                 <p className="text-gray-900">
                   <span className="font-medium">Statut:</span> {getStatusBadge(order.status)}
                 </p>
+                {order.reservation && (
+                  <p className="text-gray-900">
+                    <span className="font-medium">Stock:</span>{' '}
+                    {order.reservation.label}
+                    {order.reservation.status === 'active' && order.reservation.expires_at && (
+                      <span className="text-sm text-gray-500">
+                        {' '}· expire le {new Date(order.reservation.expires_at).toLocaleString('fr-FR')}
+                      </span>
+                    )}
+                  </p>
+                )}
                 <p className="text-gray-900">
                   <span className="font-medium">Total:</span> 
                   <span className="font-bold text-lg ml-2">{Math.round(Number(order.total_amount) || 0)} FCFA</span>
