@@ -37,9 +37,9 @@ const emptySummary = {
 };
 
 const statusBadge = (item) => {
-  if (item.needs_inventory) return 'info';
   if (item.stock_status === STOCK_STATE.RUPTURE) return 'destructive';
   if (item.stock_status === STOCK_STATE.SUR_COMMANDE || item.is_low) return 'warning';
+  if (item.needs_inventory) return 'info';
   return 'success';
 };
 

@@ -248,8 +248,10 @@ const ModernProductDetail = () => {
   const unitPrice = selectedVariant?.price ?? product?.min_price ?? product?.base_price ?? 0;
   const totalPrice = unitPrice * quantity;
   const stockSource = selectedVariant || (!hasMultipleVariants ? validVariants[0] : null);
-  const stockStatus = stockSource?.stock_status || STOCK_STATE.EN_STOCK;
-  const stockLabel = stockSource?.stock_label || 'En stock';
+  const stockStatus = stockSource?.stock_status || product?.stock_status || STOCK_STATE.EN_STOCK;
+  const stockLabel = stockSource?.stock_label
+    || product?.stock_label
+    || (stockStatus === STOCK_STATE.SUR_COMMANDE ? 'Sur commande' : 'En stock');
   const isRupture = stockStatus === STOCK_STATE.RUPTURE;
   const productImages = getProductImages(product);
   const breadcrumb = getBreadcrumb(product);
@@ -461,7 +463,13 @@ const ModernProductDetail = () => {
                         <span className="block text-xs mt-0.5 opacity-80">{formatPrice(variant.price)}</span>
                         {variant.stock_label && (
                           <span className="block text-[10px] mt-0.5 font-medium opacity-70">
-                            {variant.stock_status === 'rupture' ? 'Indisponible' : variant.stock_status === 'sur_commande' ? 'Sur commande' : 'En stock'}
+                            {variant.stock_status === 'rupture'
+                              ? 'Indisponible'
+                              : variant.stock_status === 'sur_commande'
+                                ? 'Sur commande'
+                                : variant.needs_inventory
+                                  ? 'Sur commande'
+                                  : 'En stock'}
                           </span>
                         )}
                       </button>
