@@ -23,6 +23,7 @@ import Modal from '../../components/ui/Modal';
 import NotificationToast from '../../components/ui/NotificationToast';
 import DataTable from '../../components/ui/DataTable';
 import { STOCK_STATE } from '../../utils/stockStatus';
+import StockReceipts from './StockReceipts';
 
 const emptySummary = {
   total: 0,
@@ -46,6 +47,7 @@ const Stock = () => {
   const [canViewQuantities, setCanViewQuantities] = useState(false);
   const [canAdjust, setCanAdjust] = useState(false);
   const [status, setStatus] = useState('all');
+  const [tab, setTab] = useState('inventory');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -191,17 +193,45 @@ const Stock = () => {
     <div className="space-y-6">
       <AdminPageHeader
         description={
-          canAdjust
-            ? 'Comptez les variantes encore vides, corrigez un écart, suivez les ruptures et le stock faible.'
-            : 'Consultez l’état du stock : en stock, sur commande, rupture. Les quantités restent réservées à l’admin et au gérant.'
+          tab === 'receipts'
+            ? 'Enregistrez un arrivage : les pièces s’ajoutent au stock. Notez le coût de la marchandise et le transport pour suivre l’investissement.'
+            : canAdjust
+              ? 'Comptez les variantes encore vides, corrigez un écart, suivez les ruptures et le stock faible.'
+              : 'Consultez l’état du stock : en stock, sur commande, rupture. Les quantités restent réservées à l’admin et au gérant.'
         }
         action={
-          <AdminButton variant="outline" icon={RefreshCw} loading={refreshing} onClick={() => loadStock(true)}>
-            Actualiser
-          </AdminButton>
+          <div className="flex flex-wrap items-center gap-2">
+            {canAdjust && (
+              <div className="flex rounded-xl bg-white border border-gray-100 p-1">
+                <AdminButton
+                  variant={tab === 'inventory' ? 'primary' : 'ghost'}
+                  className="!py-2"
+                  onClick={() => setTab('inventory')}
+                >
+                  Inventaire
+                </AdminButton>
+                <AdminButton
+                  variant={tab === 'receipts' ? 'primary' : 'ghost'}
+                  className="!py-2"
+                  onClick={() => setTab('receipts')}
+                >
+                  Restockage
+                </AdminButton>
+              </div>
+            )}
+            {tab === 'inventory' && (
+              <AdminButton variant="outline" icon={RefreshCw} loading={refreshing} onClick={() => loadStock(true)}>
+                Actualiser
+              </AdminButton>
+            )}
+          </div>
         }
       />
 
+      {tab === 'receipts' && canAdjust ? (
+        <StockReceipts onStockChanged={() => loadStock(true)} onNotify={setNotification} />
+      ) : (
+        <>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         <button type="button" className={cardActive('all')} onClick={() => filterBy('all')}>
           <AdminStatCard label="Total" value={String(summary.total)} icon={Boxes} accent="green" />
@@ -286,6 +316,8 @@ const Stock = () => {
           </form>
         )}
       </Modal>
+        </>
+      )}
 
       {notification && (
         <NotificationToast

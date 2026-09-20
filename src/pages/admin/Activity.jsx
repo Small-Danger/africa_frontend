@@ -10,7 +10,7 @@ import DataTable from '../../components/ui/DataTable';
 const actionBadge = (action) => {
   if (action?.startsWith('team.')) return 'primary';
   if (action === 'settings.updated') return 'warning';
-  if (action === 'stock.adjusted') return 'info';
+  if (action === 'stock.adjusted' || action === 'stock.received') return 'info';
   return 'secondary';
 };
 

@@ -817,6 +817,17 @@ export const stockService = {
       body: JSON.stringify(data),
     });
   },
+
+  async listReceipts() {
+    return await apiRequest('/admin/stock/receipts', { method: 'GET' });
+  },
+
+  async createReceipt(data) {
+    return await apiRequest('/admin/stock/receipts', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 export const activityService = {
