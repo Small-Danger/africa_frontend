@@ -10,7 +10,8 @@ const OrderDetailsModal = ({
   onClose, 
   onContact,
   onStatusChange,
-  updatingOrder 
+  updatingOrder,
+  canCancel = false,
 }) => {
   if (!order) return null;
 
@@ -191,6 +192,7 @@ const OrderDetailsModal = ({
                     )}
                     Accepter la commande
                   </Button>
+                  {canCancel && (
                   <Button
                     variant="destructive"
                     onClick={() => onStatusChange(order.id, 'annulée')}
@@ -204,6 +206,7 @@ const OrderDetailsModal = ({
                     )}
                     Annuler
                   </Button>
+                  )}
                 </div>
               )}
 

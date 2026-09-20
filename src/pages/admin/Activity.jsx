@@ -10,6 +10,7 @@ import DataTable from '../../components/ui/DataTable';
 const actionBadge = (action) => {
   if (action?.startsWith('team.')) return 'primary';
   if (action === 'settings.updated') return 'warning';
+  if (action === 'stock.adjusted') return 'info';
   return 'secondary';
 };
 
@@ -94,7 +95,7 @@ const Activity = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Qui a créé un compte, modifié un accès ou changé un paramètre. Les ventes et le stock s’y ajouteront ensuite."
+        description="Qui a créé un compte, modifié un accès, changé un paramètre ou corrigé un stock."
         action={
           <AdminButton variant="outline" icon={RefreshCw} loading={refreshing} onClick={() => loadActivity(true)}>
             Actualiser

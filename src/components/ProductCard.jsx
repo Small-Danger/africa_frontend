@@ -3,6 +3,7 @@ import { ArrowRight, Package, Heart } from 'lucide-react';
 import useFavorites from '../hooks/useFavorites';
 import ProductPriceBadge from './ProductPriceBadge';
 import { getProductPriceInfo } from '../utils/productPrice';
+import { stockDotClass, stockTextClass } from '../utils/stockStatus';
 
 const ProductCard = ({ product, showActions = true, className = '' }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -38,7 +39,7 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
   }
 
   const productImage = getProductImage();
-  const { availabilityLabel } = getProductPriceInfo(product);
+  const { availabilityLabel, stockStatus } = getProductPriceInfo(product);
   const productName = safeGet(product, 'name', 'Nom du produit');
   const productDescription = safeGet(product, 'description', '');
   const isFav = isFavorite(product.id);
@@ -130,8 +131,8 @@ const ProductCard = ({ product, showActions = true, className = '' }) => {
 
           <div className="flex items-center justify-between gap-2 mt-auto pt-3">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" aria-hidden />
-              <span className="text-[11px] font-medium text-gray-600 truncate">{availabilityLabel}</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${stockDotClass(stockStatus)} flex-shrink-0`} aria-hidden />
+              <span className={`text-[11px] font-medium truncate ${stockTextClass(stockStatus)}`}>{availabilityLabel}</span>
             </div>
 
             {showActions && (

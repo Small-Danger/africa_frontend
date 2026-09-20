@@ -64,6 +64,7 @@ const Orders = () => {
       annulée: 0
     }
   });
+  const canCancelOrder = authService.hasPermission('orders.cancel');
 
   // Charger les commandes
   const loadOrders = async (page = 1) => {
@@ -242,6 +243,7 @@ const Orders = () => {
               <CheckIcon className="h-4 w-4" />
             )}
           </Button>
+          {canCancelOrder && (
           <Button
             variant="ghost"
             size="sm"
@@ -256,6 +258,7 @@ const Orders = () => {
               <XMarkIcon className="h-4 w-4" />
             )}
           </Button>
+          )}
         </>
       )}
       
@@ -690,6 +693,7 @@ const Orders = () => {
                             )}
                             Accepter la commande
                           </Button>
+                          {canCancelOrder && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -704,6 +708,7 @@ const Orders = () => {
                             )}
                             Annuler
                           </Button>
+                          )}
                         </div>
                       )}
 
@@ -814,6 +819,7 @@ const Orders = () => {
         onContact={handleContact}
         onStatusChange={handleStatusChange}
         updatingOrder={updatingOrder}
+        canCancel={canCancelOrder}
       />
     </div>
   );

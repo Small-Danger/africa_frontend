@@ -347,14 +347,24 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
     }
   };
 
-  const getStockStatus = (stockQuantity) => {
-    if (stockQuantity === null || stockQuantity === undefined) {
-      return { label: 'Illimité', variant: 'info' };
+  const getStockStatus = (variant) => {
+    const state = variant?.stock_status;
+    if (state === 'sur_commande') {
+      return { label: variant.stock_label || 'Sur commande', variant: 'warning' };
     }
-    if (stockQuantity === 0) {
+    if (state === 'rupture') {
+      return { label: variant.stock_label || 'Rupture', variant: 'danger' };
+    }
+    if (variant?.needs_inventory) {
+      return { label: variant.stock_label || 'À inventorier', variant: 'info' };
+    }
+    if (variant?.stock_label) {
+      return { label: variant.stock_label, variant: 'success' };
+    }
+    if (variant?.stock_quantity === 0) {
       return { label: 'Rupture', variant: 'danger' };
     }
-    if (stockQuantity <= 5) {
+    if (typeof variant?.stock_quantity === 'number' && variant.stock_quantity <= 5) {
       return { label: 'Faible', variant: 'warning' };
     }
     return { label: 'En stock', variant: 'success' };
@@ -452,7 +462,7 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
         ) : (
           <div className="grid gap-4">
             {variants.map((variant) => {
-              const stockStatus = getStockStatus(variant.stock_quantity);
+              const stockStatus = getStockStatus(variant);
               return (
                 <div
                   key={variant.id}
@@ -491,7 +501,11 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
                         <div>
                           <span className="font-medium text-gray-700">Stock:</span>
                           <div className="text-gray-900">
-                            {variant.stock_quantity === null ? 'Illimité' : variant.stock_quantity}
+                            {variant.needs_inventory
+                              ? 'À inventorier'
+                              : variant.stock_quantity == null
+                                ? '—'
+                                : variant.stock_quantity}
                           </div>
                         </div>
                         <div>
@@ -648,13 +662,13 @@ const VariantManager = ({ product, onClose, onUpdate }) => {
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       formErrors.stock_quantity ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Laissez vide pour stock illimité"
+                    placeholder="Vide = à inventorier"
                   />
                   {formErrors.stock_quantity && (
                     <p className="mt-1 text-sm text-red-600">{formErrors.stock_quantity[0]}</p>
                   )}
                   <p className="mt-1 text-xs text-gray-500">
-                    Laissez vide pour un stock illimité
+                    Laissez vide tant que le stock n&apos;a pas été compté. 0 = rupture (ou sur commande si autorisé).
                   </p>
                 </div>
               </div>

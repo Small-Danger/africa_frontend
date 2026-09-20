@@ -1,3 +1,5 @@
+import { STOCK_STATE } from './stockStatus';
+
 /** Formate un montant en FCFA (sans décimales). */
 export function formatPrice(price) {
   if (price === null || price === undefined || price === '') return '0 FCFA';
@@ -55,10 +57,16 @@ export function getProductPriceInfo(product) {
   const minPrice = getMinPrice(product, variants);
   const optionLabel = getCheapestVariantName(product, variants);
 
-  let availabilityLabel = 'En stock';
-  if (hasMultipleVariants) {
+  const stockStatus = product?.stock_status || STOCK_STATE.EN_STOCK;
+  let availabilityLabel = product?.stock_label || 'En stock';
+
+  if (stockStatus === STOCK_STATE.RUPTURE) {
+    availabilityLabel = product?.stock_label || 'Indisponible';
+  } else if (stockStatus === STOCK_STATE.SUR_COMMANDE) {
+    availabilityLabel = product?.stock_label || 'Sur commande';
+  } else if (hasMultipleVariants) {
     availabilityLabel = `${variantsCount} formats au choix`;
-  } else if (optionLabel) {
+  } else if (optionLabel && !product?.stock_label) {
     availabilityLabel = `Format : ${optionLabel}`;
   }
 
@@ -69,6 +77,7 @@ export function getProductPriceInfo(product) {
     hasMultipleVariants,
     variantsCount,
     availabilityLabel,
+    stockStatus,
     /** Sous-titre sous le prix sur les cartes */
     priceContextLabel: optionLabel
       ? hasMultipleVariants

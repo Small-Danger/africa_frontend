@@ -25,6 +25,7 @@ import {
   PosAlert,
   PosButton,
 } from '../../components/pos/posShared';
+import { STOCK_STATE } from '../../utils/stockStatus';
 
 const PosSale = () => {
   const searchRef = useRef(null);
@@ -170,6 +171,8 @@ const PosSale = () => {
           unit_price: parseFloat(item.price) || 0,
           quantity: 1,
           stock_quantity: item.stock_quantity,
+          stock_status: item.stock_status,
+          stock_label: item.stock_label,
           image: item.image,
           category: item.category,
         },
@@ -334,9 +337,17 @@ const PosSale = () => {
                           {item.category && (
                             <span className="text-[10px] text-gray-400 truncate">{item.category}</span>
                           )}
-                          {item.stock_quantity != null && item.stock_quantity > 0 && (
-                            <span className="text-[10px] text-brand-green font-medium">
-                              Stock {item.stock_quantity}
+                          {item.stock_label && (
+                            <span className={`text-[10px] font-medium ${
+                              item.stock_status === STOCK_STATE.RUPTURE
+                                ? 'text-red-500'
+                                : item.stock_status === STOCK_STATE.SUR_COMMANDE
+                                  ? 'text-amber-600'
+                                  : 'text-brand-green'
+                            }`}>
+                              {item.stock_quantity != null
+                                ? `${item.stock_label} · ${item.stock_quantity}`
+                                : item.stock_label}
                             </span>
                           )}
                         </div>

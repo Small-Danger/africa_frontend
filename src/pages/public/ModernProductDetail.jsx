@@ -20,6 +20,7 @@ import ProductPriceBadge from '../../components/ProductPriceBadge';
 import { ShimmerTextVariants } from '../../components/ShimmerText';
 import { generateWhatsAppLink } from '../../config/contact';
 import { formatPrice } from '../../utils/productPrice';
+import { STOCK_STATE, stockDotClass, stockTextClass } from '../../utils/stockStatus';
 
 const getProductImages = (product) => {
   if (!product) return [];
@@ -174,6 +175,11 @@ const ModernProductDetail = () => {
       setError('Veuillez choisir une option');
       return;
     }
+    const stockItem = selectedVariant || variants[0];
+    if (stockItem?.stock_status === 'rupture') {
+      setError('Cet article est indisponible');
+      return;
+    }
 
     try {
       setAddingToCart(true);
@@ -241,6 +247,10 @@ const ModernProductDetail = () => {
   const needsVariant = hasVariants && !selectedVariant;
   const unitPrice = selectedVariant?.price ?? product?.min_price ?? product?.base_price ?? 0;
   const totalPrice = unitPrice * quantity;
+  const stockSource = selectedVariant || (!hasMultipleVariants ? validVariants[0] : null);
+  const stockStatus = stockSource?.stock_status || STOCK_STATE.EN_STOCK;
+  const stockLabel = stockSource?.stock_label || 'En stock';
+  const isRupture = stockStatus === STOCK_STATE.RUPTURE;
   const productImages = getProductImages(product);
   const breadcrumb = getBreadcrumb(product);
   const isFav = product ? isFavorite(product.id) : false;
@@ -277,7 +287,7 @@ const ModernProductDetail = () => {
     <button
       type="button"
       onClick={handleAddToCart}
-      disabled={addingToCart || needsVariant}
+      disabled={addingToCart || needsVariant || isRupture}
       className={`flex items-center justify-center gap-2 bg-brand-orange text-white font-bold rounded-xl hover:bg-brand-orange-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-all active:scale-[0.98] ${className}`}
     >
       {addingToCart ? (
@@ -289,7 +299,7 @@ const ModernProductDetail = () => {
         <>
           <ShoppingCart size={compact ? 20 : 22} />
           <span className={compact ? 'text-sm' : ''}>
-            {needsVariant ? 'Choisir une option' : `Ajouter · ${formatPrice(totalPrice)}`}
+            {needsVariant ? 'Choisir une option' : isRupture ? 'Indisponible' : `Ajouter · ${formatPrice(totalPrice)}`}
           </span>
         </>
       )}
@@ -414,8 +424,12 @@ const ModernProductDetail = () => {
               </div>
 
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-sm text-gray-600 font-medium">En stock · Livraison AfrikRaga</span>
+                <span className={`w-2 h-2 rounded-full ${stockDotClass(stockStatus)}`} />
+                <span className={`text-sm font-medium ${stockTextClass(stockStatus)}`}>
+                  {stockSource
+                    ? `${stockLabel} · Livraison AfrikRaga`
+                    : 'Choisissez une option pour voir la disponibilité'}
+                </span>
               </div>
 
               {product.description && (
@@ -445,6 +459,11 @@ const ModernProductDetail = () => {
                       >
                         <span className="block">{variant.name}</span>
                         <span className="block text-xs mt-0.5 opacity-80">{formatPrice(variant.price)}</span>
+                        {variant.stock_label && (
+                          <span className="block text-[10px] mt-0.5 font-medium opacity-70">
+                            {variant.stock_status === 'rupture' ? 'Indisponible' : variant.stock_status === 'sur_commande' ? 'Sur commande' : 'En stock'}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>

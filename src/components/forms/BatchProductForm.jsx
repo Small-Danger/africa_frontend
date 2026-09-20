@@ -322,7 +322,9 @@ const BatchProductForm = ({
             name: variant.name.trim(),
             price: parseFloat(variant.price) || 0,
             sku: variant.sku.trim(),
-            stock_quantity: parseInt(variant.stock_quantity) || 0,
+            stock_quantity: variant.stock_quantity === '' || variant.stock_quantity == null
+              ? null
+              : parseInt(variant.stock_quantity, 10),
             is_active: variant.is_active,
             sort_order: variant.sort_order || 0
           }));
