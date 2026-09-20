@@ -24,6 +24,61 @@ const emptyReport = {
   remaining: 0,
   progress_percent: 0,
   recovered: false,
+  series: [],
+};
+
+const barHeight = (value, max) => {
+  if (max <= 0 || value <= 0) return 4;
+  return Math.max(6, Math.round((value / max) * 160));
+};
+
+const FinanceChart = ({ series = [], currentMonth }) => {
+  const max = Math.max(1, ...series.flatMap((point) => [point.invested || 0, point.sales || 0]));
+  const hasData = series.some((point) => (point.invested || 0) > 0 || (point.sales || 0) > 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-end gap-2 sm:gap-3 h-52">
+        {series.map((point) => {
+          const active = point.year === currentMonth?.year && point.month === currentMonth?.month;
+          return (
+            <div key={`${point.year}-${point.month}`} className="flex-1 min-w-0 flex flex-col items-center gap-2">
+              <div className="w-full h-40 flex items-end justify-center gap-1">
+                <div
+                  className="w-[42%] max-w-[1.35rem] rounded-t-md bg-brand-orange"
+                  style={{ height: `${barHeight(point.invested, max)}px` }}
+                  title={`Investi ${formatAdminMoney(point.invested)}`}
+                />
+                <div
+                  className="w-[42%] max-w-[1.35rem] rounded-t-md bg-brand-green"
+                  style={{ height: `${barHeight(point.sales, max)}px` }}
+                  title={`Ventes ${formatAdminMoney(point.sales)}`}
+                />
+              </div>
+              <p className={`text-[11px] capitalize ${active ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                {point.short_label || point.label}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-brand-orange" />
+          Investi (camions)
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm bg-brand-green" />
+          Ventes
+        </span>
+      </div>
+      {!hasData && (
+        <p className="text-sm text-gray-500">
+          Pas encore de camion ni de vente sur ces 6 mois. Le diagramme se remplira dès le prochain arrivage.
+        </p>
+      )}
+    </div>
+  );
 };
 
 const shiftMonth = (year, month, delta) => {
@@ -131,6 +186,13 @@ const Finance = () => {
           accent="green"
         />
       </div>
+
+      <AdminPanel
+        title="Évolution sur 6 mois"
+        subtitle="Orange = argent mis dans les camions. Vert = ventes hors annulations."
+      >
+        <FinanceChart series={report.series || []} currentMonth={report} />
+      </AdminPanel>
 
       <AdminPanel title="Lecture du mois">
         <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
