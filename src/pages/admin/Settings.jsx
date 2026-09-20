@@ -185,7 +185,7 @@ const Settings = () => {
                 value={form.min_deposit_percent}
                 onChange={(e) => setField('min_deposit_percent', e.target.value)}
               />
-              <p className="text-xs text-gray-400 mt-1">0 % = pas d’acompte obligatoire, en attendant de trancher.</p>
+              <p className="text-xs text-gray-400 mt-1">0 % = on peut accepter sans paiement. 50 % = il faut au moins la moitié avant d’accepter.</p>
               {errors.min_deposit_percent && (
                 <p className="text-sm text-red-600 mt-1">{errors.min_deposit_percent[0]}</p>
               )}

@@ -695,6 +695,7 @@ export const orderService = {
     const queryParams = new URLSearchParams();
     
     if (filters.status) queryParams.append('status', filters.status);
+    if (filters.to_validate) queryParams.append('to_validate', '1');
     if (filters.page) queryParams.append('page', filters.page);
     if (filters.per_page) queryParams.append('per_page', filters.per_page);
 
@@ -717,6 +718,13 @@ export const orderService = {
 
   async createCounterPreorder(data) {
     return await apiRequest('/admin/orders/counter-preorder', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async recordPayment(id, data) {
+    return await apiRequest(`/admin/orders/${id}/payments`, {
       method: 'POST',
       body: JSON.stringify(data),
     });

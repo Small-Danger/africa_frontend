@@ -55,6 +55,7 @@ const Orders = () => {
   });
   const [summary, setSummary] = useState({
     total_orders: 0,
+    to_validate: 0,
     total_revenue: 0,
     status_breakdown: {
       en_attente: 0,
@@ -67,7 +68,9 @@ const Orders = () => {
   });
   const canCancelOrder = authService.hasPermission('orders.cancel');
   const canCounterPreorder = authService.hasPermission('orders.counter_preorder');
+  const canRecordPayment = authService.hasPermission('orders.record_payment');
   const [showCounterModal, setShowCounterModal] = useState(false);
+  const [recordingPayment, setRecordingPayment] = useState(false);
 
   // Charger les commandes
   const loadOrders = async (page = 1) => {
@@ -80,7 +83,9 @@ const Orders = () => {
         per_page: 20
       };
       
-      if (selectedStatus) {
+      if (selectedStatus === 'a_valider') {
+        filters.to_validate = 1;
+      } else if (selectedStatus) {
         filters.status = selectedStatus;
       }
       
@@ -386,6 +391,7 @@ const Orders = () => {
 
   const statuses = [
     { id: '', name: 'Tous les statuts' },
+    { id: 'a_valider', name: 'À valider' },
     { id: 'en_attente', name: 'En attente' },
     { id: 'acceptée', name: 'Acceptée' },
     { id: 'prête', name: 'Prête à livrer' },
@@ -393,6 +399,43 @@ const Orders = () => {
     { id: 'disponible', name: 'Disponible au bureau' },
     { id: 'annulée', name: 'Annulée' }
   ];
+
+  const getPaymentBadge = (order) => {
+    if (!order.payment_status || order.channel === 'boutique') return null;
+    const variants = { non_paye: 'warning', partiel: 'info', paye: 'success' };
+    return (
+      <div className="mt-2">
+        <Badge variant={variants[order.payment_status] || 'secondary'}>
+          {order.payment_status_label || order.payment_status}
+          {order.balance > 0 ? ` · reste ${order.balance} FCFA` : ''}
+        </Badge>
+      </div>
+    );
+  };
+
+  const handleRecordPayment = async (orderId, payload) => {
+    try {
+      setRecordingPayment(true);
+      const response = await orderService.recordPayment(orderId, payload);
+      if (response.success) {
+        const updated = response.data.order;
+        setOrders((prev) => prev.map((item) => (
+          item.id === orderId ? { ...item, ...updated } : item
+        )));
+        setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, ...updated } : prev));
+        await loadOrders(pagination.current_page);
+      } else {
+        setError(response.message || 'Erreur lors de l’enregistrement du paiement');
+      }
+      return response;
+    } catch (err) {
+      const failed = { success: false, message: err.message || 'Erreur de connexion' };
+      setError(failed.message);
+      return failed;
+    } finally {
+      setRecordingPayment(false);
+    }
+  };
 
   const periods = [
     { id: '', name: 'Toutes les périodes' },
@@ -492,7 +535,7 @@ const Orders = () => {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        description="Gérez et suivez toutes vos commandes"
+        description="Validez les paiements WhatsApp, puis suivez la préparation."
         action={
           canCounterPreorder ? (
             <AdminButton variant="primary" onClick={() => setShowCounterModal(true)}>
@@ -571,7 +614,8 @@ const Orders = () => {
       </Card>
 
       {/* Statistiques rapides */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+        <AdminStatCard label="À valider" value={String(summary.to_validate || 0)} icon={CurrencyDollarIcon} accent="orange" loading={loading} />
         <AdminStatCard label="En attente" value={String(summary.status_breakdown.en_attente)} icon={ClockIcon} accent="orange" loading={loading} />
         <AdminStatCard label="Acceptées" value={String(summary.status_breakdown.acceptée)} icon={CheckCircleIcon} accent="green" loading={loading} />
         <AdminStatCard label="Prêtes" value={String(summary.status_breakdown.prête)} icon={CheckCircleIcon} accent="emerald" loading={loading} />
@@ -616,6 +660,7 @@ const Orders = () => {
                         <div className="text-right">
                           <p className="text-xl font-bold text-gray-900">{Math.round(Number(order.total_amount) || 0)} FCFA</p>
                           {getStatusBadge(order.status)}
+                          {getPaymentBadge(order)}
                           {order.preorder?.status === 'waiting' && (
                             <div className="mt-2">
                               <Badge variant="warning">En file · {order.preorder.units} pièce(s)</Badge>
@@ -693,7 +738,7 @@ const Orders = () => {
                             variant="success"
                             size="sm"
                             onClick={() => handleStatusChange(order.id, 'acceptée')}
-                            disabled={updatingOrder === order.id}
+                            disabled={updatingOrder === order.id || order.can_validate === false}
                             className="w-full"
                           >
                             {updatingOrder === order.id ? (
@@ -830,6 +875,9 @@ const Orders = () => {
         onStatusChange={handleStatusChange}
         updatingOrder={updatingOrder}
         canCancel={canCancelOrder}
+        canRecordPayment={canRecordPayment}
+        onRecordPayment={handleRecordPayment}
+        recordingPayment={recordingPayment}
       />
       <CounterPreorderModal
         isOpen={showCounterModal}
