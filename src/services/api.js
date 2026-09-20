@@ -43,27 +43,25 @@ async function apiRequest(endpoint, options = {}) {
     console.log(`[API] ${method} ${url}`);
   }
   
-  // Configuration par défaut
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    credentials: 'include', // Important pour les cookies CSRF
+  // GET/HEAD : pas de Content-Type JSON (évite un body vide mal interprété).
+  const defaultHeaders = {
+    Accept: 'application/json',
   };
-
-  // Ajouter le token d'authentification si disponible
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+  if (options.body) {
+    defaultHeaders['Content-Type'] = 'application/json';
   }
 
-  // Fusionner les options
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    defaultHeaders.Authorization = `Bearer ${token}`;
+  }
+
   const finalOptions = {
-    ...defaultOptions,
+    credentials: 'include',
     ...options,
+    method,
     headers: {
-      ...defaultOptions.headers,
+      ...defaultHeaders,
       ...options.headers,
     },
   };
@@ -806,7 +804,7 @@ export const cashierService = {
 
 export const teamService = {
   async getAll() {
-    return await apiRequest('/admin/team');
+    return await apiRequest('/admin/team', { method: 'GET' });
   },
 
   async create(data) {

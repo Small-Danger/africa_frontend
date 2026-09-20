@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  PlusIcon,
-  PencilIcon,
-  ArrowPathIcon,
-  ComputerDesktopIcon,
-  ShieldCheckIcon,
-  UserGroupIcon,
-  UserIcon,
-} from '@heroicons/react/24/outline';
+  Plus,
+  Pencil,
+  RefreshCw,
+  Monitor,
+  ShieldCheck,
+  Users,
+  User,
+} from 'lucide-react';
 import { teamService } from '../../services/api';
 import { AdminPageHeader, AdminButton, AdminLoadingScreen, AdminStatCard } from '../../components/admin/adminShared';
 import Button from '../../components/ui/Button';
@@ -211,7 +211,7 @@ const Team = () => {
           member.can_manage ? (
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => openEditModal(member)}>
-                <PencilIcon className="h-4 w-4" />
+                <Pencil className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
@@ -241,12 +241,12 @@ const Team = () => {
         action={
           <>
             <Link to="/pos">
-              <AdminButton variant="outline" icon={ComputerDesktopIcon}>
+              <AdminButton variant="outline" icon={Monitor}>
                 Ouvrir la caisse
               </AdminButton>
             </Link>
             {assignableRoles.length > 0 && (
-              <AdminButton variant="primary" icon={PlusIcon} onClick={openCreateModal}>
+              <AdminButton variant="primary" icon={Plus} onClick={openCreateModal}>
                 Nouveau compte
               </AdminButton>
             )}
@@ -255,10 +255,10 @@ const Team = () => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AdminStatCard label="Membres" value={String(summary.total)} icon={UserGroupIcon} accent="green" />
-        <AdminStatCard label="Actifs" value={String(summary.active)} icon={ShieldCheckIcon} accent="emerald" />
-        <AdminStatCard label="Secrétaires" value={String(summary.secretaires)} icon={UserIcon} accent="orange" />
-        <AdminStatCard label="Caissiers" value={String(summary.caissiers)} icon={ComputerDesktopIcon} accent="violet" />
+        <AdminStatCard label="Membres" value={String(summary.total)} icon={Users} accent="green" />
+        <AdminStatCard label="Actifs" value={String(summary.active)} icon={ShieldCheck} accent="emerald" />
+        <AdminStatCard label="Secrétaires" value={String(summary.secretaires)} icon={User} accent="orange" />
+        <AdminStatCard label="Caissiers" value={String(summary.caissiers)} icon={Monitor} accent="violet" />
       </div>
 
       <div className="bg-brand-green-light border border-brand-green/20 rounded-2xl p-5">
@@ -278,7 +278,7 @@ const Team = () => {
         emptyMessage="Aucun membre — créez le premier compte."
         actions={
           <Button variant="ghost" onClick={() => loadTeam(true)} disabled={refreshing}>
-            <ArrowPathIcon className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
         }
@@ -388,8 +388,7 @@ const Team = () => {
       {notification && (
         <NotificationToast
           type={notification.type}
-          title={notification.title}
-          message={notification.message}
+          message={String(notification.message || notification.title || '')}
           onClose={() => setNotification(null)}
         />
       )}
