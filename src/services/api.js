@@ -863,6 +863,14 @@ export const financeService = {
     const suffix = query.toString() ? `?${query.toString()}` : '';
     return await apiRequest(`/admin/finance/month${suffix}`, { method: 'GET' });
   },
+
+  async listCloses() {
+    return await apiRequest('/admin/finance/closes', { method: 'GET' });
+  },
+
+  async getClose(id) {
+    return await apiRequest(`/admin/finance/closes/${id}`, { method: 'GET' });
+  },
 };
 
 export const activityService = {

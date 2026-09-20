@@ -18,6 +18,7 @@ import {
   Settings,
   Boxes,
   Banknote,
+  CircleDollarSign,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
@@ -30,6 +31,7 @@ const NAV_GROUPS = [
     items: [
       { name: 'Tableau de bord', href: '/admin', icon: LayoutDashboard, end: true, permission: 'finance.view' },
       { name: 'Finances', href: '/admin/finance', icon: Banknote, permission: 'finance.view' },
+      { name: 'Clôtures', href: '/admin/closes', icon: CircleDollarSign, permission: 'finance.view' },
     ],
   },
   {
@@ -64,6 +66,7 @@ const PAGE_TITLES = {
   '/admin/categories': 'Catégories',
   '/admin/stock': 'Stock',
   '/admin/finance': 'Finances',
+  '/admin/closes': 'Clôtures',
   '/admin/orders': 'Commandes',
   '/admin/customers': 'Clients',
   '/admin/banners': 'Bannières',
