@@ -802,6 +802,19 @@ export const cashierService = {
   },
 };
 
+export const settingsService = {
+  async get() {
+    return await apiRequest('/admin/settings', { method: 'GET' });
+  },
+
+  async update(data) {
+    return await apiRequest('/admin/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+};
+
 export const teamService = {
   async getAll() {
     return await apiRequest('/admin/team', { method: 'GET' });
@@ -897,6 +910,7 @@ export default {
   clients: clientService,
   cashiers: cashierService,
   team: teamService,
+  settings: settingsService,
   suggestions: suggestionService,
   test: testService,
 };

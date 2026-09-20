@@ -21,6 +21,7 @@ import Orders from './pages/admin/Orders'
 import Customers from './pages/admin/Customers'
 import Banners from './pages/admin/Banners'
 import Team from './pages/admin/Team'
+import Settings from './pages/admin/Settings'
 import PosProtectedRoute from './components/auth/PosProtectedRoute'
 import PosLayout from './pages/pos/PosLayout'
 import PosCashSessionGate from './pages/pos/PosCashSessionGate'
@@ -199,6 +200,11 @@ function App() {
               <Route path="/admin/team" element={
                 <AdminProtectedRoute permission={['team.manage', 'team.manage_staff']}>
                   <AdminLayout><Team /></AdminLayout>
+                </AdminProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <AdminProtectedRoute permission="settings.manage">
+                  <AdminLayout><Settings /></AdminLayout>
                 </AdminProtectedRoute>
               } />
               <Route path="/admin/cashiers" element={<Navigate to="/admin/team" replace />} />
