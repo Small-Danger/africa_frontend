@@ -11,6 +11,7 @@ import {
   sortBySearchRelevance,
   productSearchFields,
   categorySearchFields,
+} from '../utils/searchText';
 import { homePathForUser } from '../utils/staffAuth';
 
 const ModernHeader = () => {
