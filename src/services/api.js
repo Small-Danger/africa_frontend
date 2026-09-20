@@ -802,6 +802,15 @@ export const cashierService = {
   },
 };
 
+export const activityService = {
+  async getAll({ per_page = 20, action } = {}) {
+    const query = new URLSearchParams();
+    query.append('per_page', String(per_page));
+    if (action) query.append('action', action);
+    return await apiRequest(`/admin/activity?${query.toString()}`, { method: 'GET' });
+  },
+};
+
 export const settingsService = {
   async get() {
     return await apiRequest('/admin/settings', { method: 'GET' });
@@ -911,6 +920,7 @@ export default {
   cashiers: cashierService,
   team: teamService,
   settings: settingsService,
+  activity: activityService,
   suggestions: suggestionService,
   test: testService,
 };

@@ -14,6 +14,7 @@ import {
   Store,
   ChevronRight,
   RefreshCw,
+  ScrollText,
   Settings,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,6 +47,7 @@ const NAV_GROUPS = [
       { name: 'Bannières', href: '/admin/banners', icon: ImageIcon, permission: 'banners.manage' },
       { name: 'Équipe', href: '/admin/team', icon: Monitor, permissions: ['team.manage', 'team.manage_staff'] },
       { name: 'Paramètres', href: '/admin/settings', icon: Settings, permission: 'settings.manage' },
+      { name: 'Journal', href: '/admin/activity', icon: ScrollText, permission: 'activity.view' },
     ],
   },
 ];
@@ -60,6 +62,7 @@ const PAGE_TITLES = {
   '/admin/team': 'Équipe',
   '/admin/cashiers': 'Équipe',
   '/admin/settings': 'Paramètres',
+  '/admin/activity': 'Journal',
 };
 
 const navLinkClass = ({ isActive }) =>
