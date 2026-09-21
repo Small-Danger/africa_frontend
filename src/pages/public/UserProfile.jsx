@@ -290,7 +290,9 @@ const OrderCard = ({ order }) => {
                       ? 'bg-brand-green-light text-brand-green-dark border-brand-green/20'
                       : order.payment_status === 'partiel'
                         ? 'bg-sky-50 text-sky-800 border-sky-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                        : order.payment_status === 'rembourse'
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
                   }`}>
                     {order.payment_status_label || order.payment_status}
                     {order.balance > 0 ? ` · ${Math.round(Number(order.balance) || 0)} FCFA` : ''}
@@ -299,6 +301,12 @@ const OrderCard = ({ order }) => {
               </div>
             </div>
             <p className="text-lg font-bold text-brand-green mt-2">{formatPrice(order.total_amount)}</p>
+            {order.cancellation?.reason && (
+              <p className="text-xs text-red-700 mt-2">
+                {order.status === 'expirée' ? 'Expirée' : 'Annulée'} : {order.cancellation.reason}
+                {order.refunded_amount > 0 ? ` · avoir ${Math.round(Number(order.refunded_amount) || 0)} FCFA` : ''}
+              </p>
+            )}
           </div>
         </div>
       </div>

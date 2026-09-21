@@ -72,6 +72,8 @@ const Orders = () => {
   const canRecordPayment = authService.hasPermission('orders.record_payment');
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [recordingPayment, setRecordingPayment] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   // Charger les commandes
   const loadOrders = async (page = 1) => {
@@ -256,7 +258,7 @@ const Orders = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleStatusChange(order.id, 'annulée')}
+            onClick={() => openCancel(order)}
             disabled={updatingOrder === order.id}
             title="Annuler la commande"
             className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
@@ -296,11 +298,17 @@ const Orders = () => {
   }, [orders, searchTerm]);
 
   // Gérer le changement de statut d'une commande
-  const handleStatusChange = async (orderId, newStatus) => {
+  const openCancel = (order) => {
+    setCancelTarget(order);
+    setCancelReason('');
+    setError(null);
+  };
+
+  const handleStatusChange = async (orderId, newStatus, extra = {}) => {
     try {
       setUpdatingOrder(orderId);
       
-      const response = await orderService.updateOrderStatus(orderId, newStatus);
+      const response = await orderService.updateOrderStatus(orderId, newStatus, extra);
       
       if (response.success) {
         // Mettre à jour la commande dans la liste avec une transition fluide
@@ -406,7 +414,7 @@ const Orders = () => {
 
   const getPaymentBadge = (order) => {
     if (!order.payment_status || order.channel === 'boutique') return null;
-    const variants = { non_paye: 'warning', partiel: 'info', paye: 'success' };
+    const variants = { non_paye: 'warning', partiel: 'info', paye: 'success', rembourse: 'secondary' };
     return (
       <div className="mt-2">
         <Badge variant={variants[order.payment_status] || 'secondary'}>
@@ -757,7 +765,7 @@ const Orders = () => {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleStatusChange(order.id, 'annulée')}
+                            onClick={() => openCancel(order)}
                             disabled={updatingOrder === order.id}
                             className="w-full"
                           >
@@ -823,6 +831,19 @@ const Orders = () => {
                         </Button>
                       )}
 
+                      {canCancelOrder && !['annulée', 'expirée', 'en_attente'].includes(order.status) && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => openCancel(order)}
+                          disabled={updatingOrder === order.id}
+                          className="w-full"
+                        >
+                          <XMarkIcon className="h-4 w-4 mr-2" />
+                          Annuler
+                        </Button>
+                      )}
+
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -878,6 +899,7 @@ const Orders = () => {
         onClose={handleCloseModal}
         onContact={handleContact}
         onStatusChange={handleStatusChange}
+        onRequestCancel={openCancel}
         updatingOrder={updatingOrder}
         canCancel={canCancelOrder}
         canRecordPayment={canRecordPayment}
@@ -889,6 +911,53 @@ const Orders = () => {
         onClose={() => setShowCounterModal(false)}
         onCreated={() => loadOrders(pagination.current_page)}
       />
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-100">
+            <h3 className="font-bold text-lg mb-2">Annuler {cancelTarget.order_number}</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Le stock est libéré. S’il y a un paiement, un avoir est enregistré à rembourser au client.
+            </p>
+            <form
+              className="space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                if (cancelReason.trim().length < 3) {
+                  setError('Le motif d’annulation est obligatoire');
+                  return;
+                }
+                await handleStatusChange(cancelTarget.id, 'annulée', {
+                  cancellation_reason: cancelReason.trim(),
+                });
+                setCancelTarget(null);
+                setCancelReason('');
+              }}
+            >
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Motif d’annulation *</label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Ex. : client injoignable, rupture fournisseur…"
+                  required
+                  minLength={3}
+                  rows={3}
+                  autoFocus
+                  className="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:border-brand-green outline-none text-sm resize-none"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setCancelTarget(null)} className="flex-1">
+                  Retour
+                </Button>
+                <Button type="submit" variant="destructive" disabled={updatingOrder === cancelTarget.id} className="flex-1">
+                  Confirmer
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ const paymentBadgeVariant = {
   non_paye: 'warning',
   partiel: 'info',
   paye: 'success',
+  rembourse: 'secondary',
 };
 
 const OrderDetailsModal = ({ 
@@ -18,6 +19,7 @@ const OrderDetailsModal = ({
   onClose, 
   onContact,
   onStatusChange,
+  onRequestCancel,
   updatingOrder,
   canCancel = false,
   canRecordPayment = false,
@@ -164,6 +166,7 @@ const OrderDetailsModal = ({
                     </Badge>
                     <span className="text-sm text-gray-500">
                       {order.paid_amount || 0} / {order.due_amount || Math.round(Number(order.total_amount) || 0)} FCFA
+                      {order.refunded_amount > 0 ? ` · avoir ${order.refunded_amount} FCFA` : ''}
                     </span>
                   </p>
                 )}
@@ -188,7 +191,9 @@ const OrderDetailsModal = ({
                           {payment.reference ? ` · ${payment.reference}` : ''}
                         </p>
                       </div>
-                      <p className="font-semibold text-gray-900">{payment.amount} FCFA</p>
+                      <p className={`font-semibold ${payment.method === 'avoir' ? 'text-red-700' : 'text-gray-900'}`}>
+                        {payment.method === 'avoir' ? '−' : ''}{payment.amount} FCFA
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -332,7 +337,7 @@ const OrderDetailsModal = ({
                   {canCancel && (
                   <Button
                     variant="destructive"
-                    onClick={() => onStatusChange(order.id, 'annulée')}
+                    onClick={() => onRequestCancel?.(order)}
                     disabled={updatingOrder === order.id}
                     className="flex-1"
                   >
@@ -350,6 +355,17 @@ const OrderDetailsModal = ({
                 <p className="text-sm text-amber-700">
                   Acompte requis : {order.min_deposit_amount} FCFA ({order.min_deposit_percent} %)
                 </p>
+              )}
+
+              {canCancel && !['annulée', 'expirée', 'en_attente'].includes(order.status) && (
+                <Button
+                  variant="destructive"
+                  onClick={() => onRequestCancel?.(order)}
+                  disabled={updatingOrder === order.id}
+                  className="w-full"
+                >
+                  Annuler la commande
+                </Button>
               )}
 
               {order.status === 'acceptée' && (
@@ -409,6 +425,12 @@ const OrderDetailsModal = ({
                         ? 'Commande expirée (non payée dans le délai)'
                         : 'Commande annulée'}
                   </p>
+                  {order.cancellation?.reason && (
+                    <p className="text-sm text-red-700 mt-2">
+                      Motif : {order.cancellation.reason}
+                      {order.cancellation.cancelled_by ? ` · ${order.cancellation.cancelled_by}` : ''}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

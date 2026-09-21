@@ -204,7 +204,7 @@ const PosOrderHistory = () => {
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-gray-100">
             <h3 className="font-bold text-lg mb-2">Annuler {cancelTarget.order_number}</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Le stock sera remis à jour. La vente restera visible dans l&apos;historique.
+              Le stock sera remis à jour. S’il y a un paiement, un avoir est enregistré. La vente reste dans l&apos;historique.
             </p>
             <form onSubmit={handleCancel} className="space-y-4">
               <div>

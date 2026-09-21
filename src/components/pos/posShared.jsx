@@ -12,7 +12,9 @@ export const formatPosMoney = (n) => {
 };
 
 export const methodLabel = (method) =>
-  PAYMENT_METHODS.find((m) => m.value === method)?.label || method;
+  method === 'avoir'
+    ? 'Avoir'
+    : PAYMENT_METHODS.find((m) => m.value === method)?.label || method;
 
 export const PAYMENT_METHOD_CONFIG = {
   especes: {

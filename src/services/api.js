@@ -709,10 +709,10 @@ export const orderService = {
   },
 
   // Mettre à jour le statut d'une commande (Admin)
-  async updateOrderStatus(id, status) {
+  async updateOrderStatus(id, status, extra = {}) {
     return await apiRequest(`/admin/orders/${id}/status`, {
       method: 'PUT',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     });
   },
 
