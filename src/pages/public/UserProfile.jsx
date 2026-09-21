@@ -24,10 +24,11 @@ import {
   Heart,
   Sparkles,
   Wallet,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
-import { orderService, authService, productService } from '../../services/api';
+import { orderService, authService, productService, notificationService } from '../../services/api';
 import { generateWhatsAppLink, CONTACT_CONFIG } from '../../config/contact';
 import { formatPhoneE164Display, sanitizePhoneE164, getPhoneValidationResult } from '../../utils/phone';
 import { parseAuthFormError } from '../../utils/authErrors';
@@ -356,6 +357,9 @@ const UserProfile = () => {
   const [favoritesError, setFavoritesError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [inbox, setInbox] = useState([]);
+  const [unreadInbox, setUnreadInbox] = useState(0);
+  const [loadingInbox, setLoadingInbox] = useState(false);
 
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -459,21 +463,43 @@ const UserProfile = () => {
     }
   }, [favorites]);
 
+  const loadInbox = useCallback(async () => {
+    setLoadingInbox(true);
+    try {
+      const response = await notificationService.getNotifications({ per_page: 30 });
+      if (response.success) {
+        setInbox(response.data.notifications || []);
+        setUnreadInbox(response.data.statistics?.unread || 0);
+      }
+    } catch {
+      setInbox([]);
+    } finally {
+      setLoadingInbox(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!authService.isAuthenticated()) {
       navigate('/auth/login', { replace: true });
       return;
     }
     loadOrders();
+    loadInbox();
     refreshUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, loadOrders]);
+  }, [navigate, loadOrders, loadInbox]);
 
   useEffect(() => {
     if (activeTab === 'favorites' || activeTab === 'overview') {
       loadFavorites();
     }
   }, [activeTab, loadFavorites]);
+
+  useEffect(() => {
+    if (activeTab === 'inbox') {
+      loadInbox();
+    }
+  }, [activeTab, loadInbox]);
 
   const stats = useMemo(() => {
     const countBy = (status) => orders.filter((order) => order.status === status).length;
@@ -650,6 +676,7 @@ const UserProfile = () => {
     { id: 'overview', label: 'Vue d\'ensemble', icon: User },
     { id: 'favorites', label: 'Favoris', icon: Heart, badge: favorites.length },
     { id: 'orders', label: 'Commandes', icon: ShoppingBag, badge: stats.totalOrders },
+    { id: 'inbox', label: 'Notifications', icon: Bell, badge: unreadInbox },
     { id: 'settings', label: 'Paramètres', icon: Settings },
   ];
 
@@ -1114,6 +1141,47 @@ const UserProfile = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'inbox' && (
+          <div className="space-y-5">
+            <SectionCard
+              title="Notifications"
+              description="Les mises à jour de vos commandes apparaissent ici. Un e-mail part aussi si vous en avez un."
+              action={
+                unreadInbox > 0 ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await notificationService.markAllAsRead();
+                      loadInbox();
+                    }}
+                    className="text-xs font-bold text-brand-green"
+                  >
+                    Tout marquer lu
+                  </button>
+                ) : null
+              }
+            >
+              {loadingInbox ? (
+                <p className="text-sm text-gray-500">Chargement…</p>
+              ) : inbox.length === 0 ? (
+                <p className="text-sm text-gray-500">Aucune notification pour le moment.</p>
+              ) : (
+                <ul className="divide-y divide-gray-50">
+                  {inbox.map((item) => (
+                    <li key={item.id} className={`py-3 ${item.is_read ? '' : 'bg-brand-green-light/30 -mx-2 px-2 rounded-xl'}`}>
+                      <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                      <p className="text-sm text-gray-600 mt-0.5">{item.message}</p>
+                      {item.created_at && (
+                        <p className="text-[11px] text-gray-400 mt-1">{formatDate(item.created_at, true)}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </SectionCard>
           </div>
         )}
 

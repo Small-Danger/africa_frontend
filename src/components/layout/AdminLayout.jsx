@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,11 +19,13 @@ import {
   Boxes,
   Banknote,
   CircleDollarSign,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CONTACT_CONFIG } from '../../config/contact';
 import { hasPermission, hasAnyPermission, ROLE_LABELS } from '../../utils/staffAuth';
 import { isRenderableIcon } from '../admin/adminShared';
+import { alertService } from '../../services/api';
 
 const NAV_GROUPS = [
   {
@@ -201,9 +203,31 @@ const SidebarContent = ({ user, onNavigate, onLogout }) => {
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [alerts, setAlerts] = useState({ total: 0, items: [] });
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await alertService.get();
+        if (!cancelled && response.success) {
+          setAlerts(response.data);
+        }
+      } catch {
+        if (!cancelled) setAlerts({ total: 0, items: [] });
+      }
+    };
+    load();
+    const timer = setInterval(load, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [location.pathname]);
 
   const pageTitle = useMemo(() => {
     const exact = PAGE_TITLES[location.pathname];
@@ -276,6 +300,37 @@ const AdminLayout = ({ children }) => {
             </div>
 
             <div className="flex items-center gap-2">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setAlertsOpen((value) => !value)}
+                  className="p-2.5 rounded-xl text-gray-500 hover:bg-brand-cream hover:text-brand-green transition-colors relative"
+                  title="Alertes"
+                >
+                  <Bell size={18} />
+                  {alerts.total > 0 && (
+                    <span className="absolute top-1 right-1 bg-brand-orange text-white text-[10px] rounded-full min-w-[1rem] h-4 px-1 flex items-center justify-center font-bold">
+                      {alerts.total > 9 ? '9+' : alerts.total}
+                    </span>
+                  )}
+                </button>
+                {alertsOpen && (
+                  <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+                    <p className="px-4 py-3 text-sm font-bold text-gray-900 border-b border-gray-50">À traiter</p>
+                    {(alerts.items || []).map((item) => (
+                      <Link
+                        key={item.key}
+                        to={item.href}
+                        onClick={() => setAlertsOpen(false)}
+                        className="flex items-center justify-between px-4 py-3 text-sm hover:bg-brand-cream"
+                      >
+                        <span className="text-gray-700">{item.label}</span>
+                        <span className="font-bold text-brand-green">{item.count}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => window.location.reload()}

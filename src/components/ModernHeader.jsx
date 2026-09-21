@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, User } from 'lucide-react';
 import { cartService, authService, productService, categoryService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 import { useCart } from '../contexts/CartContext';
 import SearchOverlay from './SearchOverlay';
 import SearchSuggestionRow from './SearchSuggestionRow';
@@ -24,7 +25,7 @@ const ModernHeader = () => {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, user } = useAuth();
+  const { isAdmin, user, isAuthenticated } = useAuth();
   const { getTotalItems } = useCart();
   const searchTimeoutRef = useRef(null);
   const desktopSearchRef = useRef(null);
@@ -297,6 +298,8 @@ const ModernHeader = () => {
                 </span>
               )}
             </Link>
+
+            {isAuthenticated && user?.role === 'client' && <NotificationBell />}
 
             <button
               type="button"

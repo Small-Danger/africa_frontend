@@ -739,8 +739,10 @@ export const orderService = {
 // Service des notifications
 export const notificationService = {
   // Lister les notifications de l'utilisateur
-  async getNotifications() {
-    return await apiRequest('/notifications');
+  async getNotifications(params = {}) {
+    const query = new URLSearchParams();
+    if (params.per_page) query.append('per_page', params.per_page);
+    return await apiRequest(`/notifications${query.toString() ? `?${query.toString()}` : ''}`);
   },
 
   // Marquer une notification comme lue
@@ -890,6 +892,12 @@ export const activityService = {
   },
 };
 
+export const alertService = {
+  async get() {
+    return await apiRequest('/admin/alerts', { method: 'GET' });
+  },
+};
+
 export const settingsService = {
   async get() {
     return await apiRequest('/admin/settings', { method: 'GET' });
@@ -1006,6 +1014,7 @@ export default {
   team: teamService,
   settings: settingsService,
   activity: activityService,
+  alerts: alertService,
   suggestions: suggestionService,
   test: testService,
 };

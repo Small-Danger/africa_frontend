@@ -262,6 +262,9 @@ const Settings = () => {
                 />
                 Notifications e-mail
               </label>
+              <p className="text-xs text-gray-400 w-full">
+                L’e-mail part tout seul aux étapes importantes. WhatsApp automatique n’est pas encore actif : le client ou la secrétaire ouvrent toujours wa.me.
+              </p>
             </div>
           </div>
         </AdminPanel>
